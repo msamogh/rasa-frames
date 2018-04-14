@@ -1,25 +1,27 @@
-from setuptools import setup, find_packages
 import io
+import os
+
+from setuptools import setup, find_packages
+
+here = os.path.abspath(os.path.dirname(__file__))
 
 # Avoids IDE errors, but actual version is read from version.py
 __version__ = None
 exec(open('rasa_nlu/version.py').read())
 
-try:
-    import pypandoc
-
-    readme = pypandoc.convert_file('README.md', 'rst')
-except (IOError, ImportError):
-    with io.open('README.md', encoding='utf-8') as f:
-        readme = f.read()
+# Get the long description from the README file
+with io.open(os.path.join(here, 'README.md'), encoding='utf-8') as f:
+    long_description = f.read()
 
 tests_requires = [
     "pytest",
     "pytest-pep8",
     "pytest-services",
     "pytest-cov",
-    "pytest-twisted<1.6",
-    "treq"
+    "pytest-twisted",
+    "treq",
+    "mock",
+    "moto",
 ]
 
 install_requires = [
@@ -39,19 +41,39 @@ install_requires = [
     "numpy>=1.13",
     "simplejson",
     "pyyaml",
+    "coloredlogs",
+]
+
+spacy_requires = [
+    "scikit-learn",
+    "sklearn-crfsuite",
+    "scipy",
+    "spacy>2.0",
+]
+
+tensorflow_requires = [
+    "scikit-learn",
+    "tensorflow",
+]
+
+mitie_requires = [
+    "mitie",
+]
+
+other_optional_requires = [
+    "duckling",
+    "Jpype1",
 ]
 
 extras_requires = {
-    'test': tests_requires,
-    'spacy': ["scikit-learn",
-              "sklearn-crfsuite",
-              "scipy",
-              "spacy>2.0",
-              ],
-    'tensorflow': ["scikit-learn",
-                   "tensorflow",
-                   ],
-    'mitie': ["mitie"],
+    'test': (tests_requires +
+             spacy_requires +
+             tensorflow_requires +
+             mitie_requires +
+             other_optional_requires),
+    'spacy': spacy_requires,
+    'tensorflow': tensorflow_requires,
+    'mitie': mitie_requires,
 }
 
 setup(
@@ -71,9 +93,11 @@ setup(
     install_requires=install_requires,
     tests_require=tests_requires,
     extras_require=extras_requires,
+    setup_requires=['pytest-runner'],
     include_package_data=True,
     description="Rasa NLU a natural language parser for bots",
-    long_description=readme,
+    long_description=long_description,
+    long_description_content_type='text/markdown',
     author='Rasa Technologies GmbH',
     author_email='hi@rasa.com',
     license='Apache 2.0',
@@ -82,7 +106,11 @@ setup(
              "botkit rasa conversational-agents conversational-ai chatbot"
              "chatbot-framework bot-framework",
     download_url="https://github.com/RasaHQ/rasa_nlu/archive/{}.tar.gz"
-                 "".format(__version__)
+                 "".format(__version__),
+    project_urls={
+        'Bug Reports': 'https://github.com/rasahq/rasa_nlu/issues',
+        'Source': 'https://github.com/rasahq/rasa_nlu',
+    },
 )
 
 print("\nWelcome to Rasa NLU!")

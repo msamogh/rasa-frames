@@ -1,0 +1,43 @@
+[[source]]
+
+url = "https://pypi.python.org/simple"
+verify_ssl = true
+
+
+[dev-packages]
+
+spacy = ">=2.0"
+scikit-learn = ">=0.19"
+scipy = ">=1.0"
+sklearn-crfsuite = "*"
+tensorflow = "*"
+google-cloud-storage = "*"
+sphinx = "*"
+sphinx-rtd-theme = {git = "git://github.com/RasaHQ/sphinx_rtd_theme.git", editable = true}
+sphinx-autobuild = "*"
+sphinxcontrib-versioning = "*"
+sphinxcontrib-programoutput = "*"
+nbsphinx = "*"
+docutils = "*"
+"flake8" = "*"
+tox = "*"
+detox = "*"
+twine = "*"
+python-coveralls = "*"
+"pytest-pep8" = "*"
+pytest-services = "*"
+pytest-cov = "*"
+pytest-twisted = "*"
+pytest = "*"
+treq = "*"
+moto = "*"
+mock = "*"
+wheel = "*"
+duckling = "*"
+"jpype1" = "*"
+mitie = {git = "git://github.com/tmbo/MITIE.git", editable = true}
+
+
+[packages]
+
+"e1839a8" = {path = ".", editable = true}

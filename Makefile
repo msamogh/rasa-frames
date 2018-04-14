@@ -1,6 +1,4 @@
-.PHONY: clean test lint
-
-TEST_PATH=./
+.PHONY: clean test lint init
 
 help:
 	@echo "    clean"
@@ -11,6 +9,10 @@ help:
 	@echo "        Run py.test"
 	@echo "    check-readme"
 	@echo "        Check if the readme can be converted from md to rst for pypi"
+
+init:
+	pip install pipenv --upgrade
+	pipenv install --dev --skip-lock
 
 clean:
 	find . -name '*.pyc' -exec rm -f {} +
@@ -24,12 +26,24 @@ clean:
 lint:
 	py.test --pep8 -m pep8
 
-test: clean
-	py.test tests --verbose --pep8 --color=yes $(TEST_PATH)
+test:
+	detox
+
+ci:
+	pipenv run py.test --pep8 -m pep8
+	pipenv run py.test tests/base -n 8 --boxed --cov rasa_nlu -v --cov-append
+	pipenv run py.test tests/training -n 8 --boxed --cov rasa_nlu -v --cov-append
 
 livedocs:
 	cd docs && make livehtml
 
 check-readme:
 	# if this runs through we can be sure the readme is properly shown on pypi
-	python setup.py check --restructuredtext --strict
+	@pipenv run python setup.py check --restructuredtext --strict
+
+flake8:
+	pipenv run flake8 --ignore=E501,F401,E128,E402,E731,F821 rasa_nlu
+
+
+coverage:
+	pipenv run py.test --cov-config .coveragerc --verbose --cov-report term --cov-report xml --cov=requests tests
