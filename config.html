@@ -1,0 +1,279 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>Server Configuration &#8212; Rasa NLU 0.13.0a1 documentation</title>
+    <link rel="stylesheet" href="_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="_static/banner.css" type="text/css" />
+    <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="HTTP API" href="http.html" />
+    <link rel="prev" title="Pipeline and Component Configuration" href="pipeline.html" />
+   
+  <!--<link rel="stylesheet" href="_static/custom.css" type="text/css" />-->
+  <link rel="stylesheet" href="_static/xq-light.css" type="text/css" />
+  <link rel="stylesheet" href="_static/fontawesome/css/fontawesome-all.css" type="text/css" />
+  <script defer type="text/javascript" src="_static/config.js"></script>
+  <script defer type="text/javascript" src="_static/klaro.js"></script>
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+
+<div class="nav-top" style="background-color: #3D44BC;">
+  <h1 class="brand">
+      <img src="_static/rasa_logo.svg" width="80px" height="40px" title="Rasa" alt="Rasa logo">
+  </h1>
+  <ul class="nav">
+    
+      
+        <li><a href=https://newdocs.rasa.com/about>About</a></li>
+      
+    
+      
+        <li class="active"><a href=https://newdocs.rasa.com/nlu>NLU</a></li>
+      
+    
+      
+        <li><a href=https://newdocs.rasa.com/core>Core</a></li>
+      
+    
+      
+        <li><a href=https://newdocs.rasa.com/platform>Platform</a></li>
+      
+    
+  </ul>
+</div>
+
+
+  <div class="document">
+    
+    
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper"><p class="caption"><span class="caption-text">Getting Started</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="quickstart.html">Quickstart</a></li>
+</ul>
+<p class="caption"><span class="caption-text">User Guide</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="choosing_pipeline.html">Choosing a Pipeline</a></li>
+<li class="toctree-l1"><a class="reference internal" href="entities.html">Entity Extraction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="languages.html">Language Support</a></li>
+<li class="toctree-l1"><a class="reference internal" href="evaluation.html">Evaluating and Improving Models</a></li>
+<li class="toctree-l1"><a class="reference internal" href="fallback.html">Confidence and Fallback Intents</a></li>
+<li class="toctree-l1"><a class="reference internal" href="faq.html">Frequently Asked Questions</a></li>
+</ul>
+<p class="caption"><span class="caption-text">API Reference</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="dataformat.html">Training Data Format</a></li>
+<li class="toctree-l1"><a class="reference internal" href="pipeline.html">Pipeline and Component Configuration</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Server Configuration</a></li>
+<li class="toctree-l1"><a class="reference internal" href="http.html">HTTP API</a></li>
+<li class="toctree-l1"><a class="reference internal" href="python.html">Python API</a></li>
+<li class="toctree-l1"><a class="reference internal" href="persist.html">Storing Models in the Cloud</a></li>
+<li class="toctree-l1"><a class="reference internal" href="docker.html">Running in Docker</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Developer Documentation</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="customcomponents.html">Custom Components</a></li>
+<li class="toctree-l1"><a class="reference internal" href="migrations.html">Migration Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="license.html">License</a></li>
+<li class="toctree-l1"><a class="reference internal" href="changelog.html">Change Log</a></li>
+</ul>
+
+<h3>Versions</h3>
+<ul>
+    <li><a href="docs_reorg/config.html">docs_reorg</a></li>
+</ul>
+        </div>
+      </div>
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <div class="section" id="server-configuration">
+<span id="section-configuration"></span><h1>Server Configuration<a class="headerlink" href="#server-configuration" title="Permalink to this headline">¶</a></h1>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">Before you can use the server, you should train a model!
+See <a class="reference internal" href="quickstart.html#training-your-model"><span class="std std-ref">Training a New Model for your Project</span></a></p>
+</div>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">In older versions of Rasa NLU, the server and models were configured with a single file.
+Now, the server only takes command line arguments (see <a class="reference internal" href="#server-parameters"><span class="std std-ref">Server Parameters</span></a>).
+The configuration file only refers to the model that you want to train,
+i.e. the pipeline and components.</p>
+</div>
+<div class="section" id="running-the-server">
+<h2>Running the server<a class="headerlink" href="#running-the-server" title="Permalink to this headline">¶</a></h2>
+<p>You can run a simple http server that handles requests using your projects with :</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>$ python -m rasa_nlu.server --path projects
+</pre></div>
+</div>
+<p>The server will look for existing projects under the folder defined by
+the <code class="docutils literal notranslate"><span class="pre">path</span></code> parameter. By default a project will load the latest
+trained model.</p>
+</div>
+<div class="section" id="serving-multiple-apps">
+<span id="section-http-config"></span><h2>Serving Multiple Apps<a class="headerlink" href="#serving-multiple-apps" title="Permalink to this headline">¶</a></h2>
+<p>Depending on your choice of backend, Rasa NLU can use quite a lot of memory.
+So if you are serving multiple models in production, you want to serve these
+from the same process &amp; avoid duplicating the memory load.</p>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">Although this saves the backend from loading the same set of word vectors twice,
+if you have projects in multiple languages your memory usage will still be high.</p>
+</div>
+<p>As stated previously, Rasa NLU naturally handles serving multiple apps.
+By default the server will load all projects found
+under the <code class="docutils literal notranslate"><span class="pre">path</span></code> directory passed at run time.
+The file structure under <code class="docutils literal notranslate"><span class="pre">path</span> <span class="pre">directory</span></code> is as follows :</p>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>- &lt;path&gt;
+ - &lt;project_A&gt;
+  - &lt;model_XXXXXX&gt;
+  - &lt;model_XXXXXX&gt;
+   ...
+ - &lt;project_B&gt;
+  - &lt;model_XXXXXX&gt;
+   ...
+  ...
+</pre></div>
+</div>
+<p>You can specify which project to use in your <code class="docutils literal notranslate"><span class="pre">/parse</span></code> requests:</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">$</span> curl <span class="s1">&#39;localhost:5000/parse?q=hello&amp;project=my_restaurant_search_bot&#39;</span>
+</pre></div>
+</div>
+<p>or</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">$</span> curl -XPOST localhost:5000/parse -d <span class="s1">&#39;{&quot;q&quot;:&quot;I am looking for Chinese food&quot;, &quot;project&quot;:&quot;my_restaurant_search_bot&quot;}&#39;</span>
+</pre></div>
+</div>
+<p>You can also specify the model you want to use for a given project, the default used being the latest trained:</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">$</span> curl -XPOST localhost:5000/parse -d <span class="s1">&#39;{&quot;q&quot;:&quot;I am looking for Chinese food&quot;, &quot;project&quot;:&quot;my_restaurant_search_bot&quot;, &quot;model&quot;:&lt;model_XXXXXX&gt;}&#39;</span>
+</pre></div>
+</div>
+<p>If no project is found by the server under the <code class="docutils literal notranslate"><span class="pre">path</span></code> directory, a <code class="docutils literal notranslate"><span class="pre">&quot;default&quot;</span></code> one will be used, using a simple fallback model.</p>
+</div>
+<div class="section" id="server-parameters">
+<span id="id1"></span><h2>Server Parameters<a class="headerlink" href="#server-parameters" title="Permalink to this headline">¶</a></h2>
+<p>There are a number of parameters you can pass when running the server.</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">$</span> python -m rasa_nlu.server
+</pre></div>
+</div>
+<p>Here is a quick overview:</p>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>usage: server.py [-h] [-e {wit,luis,dialogflow}] [-P PORT]
+                 [--pre_load PRE_LOAD [PRE_LOAD ...]] [-t TOKEN] [-w WRITE]
+                 --path PATH [--cors [CORS [CORS ...]]]
+                 [--max_training_processes MAX_TRAINING_PROCESSES]
+                 [--num_threads NUM_THREADS] [--response_log RESPONSE_LOG]
+                 [--storage STORAGE] [-c CONFIG] [--debug] [-v]
+
+parse incoming text
+
+optional arguments:
+  -h, --help            show this help message and exit
+  -e {wit,luis,dialogflow}, --emulate {wit,luis,dialogflow}
+                        which service to emulate (default: None i.e. use
+                        simple built in format)
+  -P PORT, --port PORT  port on which to run server
+  --pre_load PRE_LOAD [PRE_LOAD ...]
+                        Preload models into memory before starting the server.
+                        If given `all` as input all the models will be loaded.
+                        Else you can specify a list of specific project names.
+                        Eg: python -m rasa_nlu.server -p project1 project2
+                        --path projects
+  -t TOKEN, --token TOKEN
+                        auth token. If set, reject requests which don&#39;t
+                        provide this token as a query parameter
+  -w WRITE, --write WRITE
+                        file where logs will be saved
+  --path PATH           working directory of the server. Models areloaded from
+                        this directory and trained models will be saved here.
+  --cors [CORS [CORS ...]]
+                        List of domain patterns from where CORS (cross-origin
+                        resource sharing) calls are allowed. The default value
+                        is `[]` which forbids all CORS requests.
+  --max_training_processes MAX_TRAINING_PROCESSES
+                        Number of processes used to handle training requests.
+                        Increasing this value will have a great impact on
+                        memory usage. It is recommended to keep the default
+                        value.
+  --num_threads NUM_THREADS
+                        Number of parallel threads to use for handling parse
+                        requests.
+  --response_log RESPONSE_LOG
+                        Directory where logs will be saved (containing queries
+                        and responses).If set to ``null`` logging will be
+                        disabled.
+  --storage STORAGE     Set the remote location where models are stored. E.g.
+                        on AWS. If nothing is configured, the server will only
+                        serve the models that are on disk in the configured
+                        `path`.
+  -c CONFIG, --config CONFIG
+                        Default model configuration file used for training.
+  --debug               Print lots of debugging statements. Sets logging level
+                        to DEBUG
+  -v, --verbose         Be verbose. Sets logging level to INFO
+</pre></div>
+</div>
+</div>
+<div class="section" id="authentication">
+<span id="section-auth"></span><h2>Authentication<a class="headerlink" href="#authentication" title="Permalink to this headline">¶</a></h2>
+<p>To protect your server, you can specify a token in your Rasa NLU configuration,
+by passing the <code class="docutils literal notranslate"><span class="pre">--token</span></code> argument when starting the server,
+or by setting the <code class="docutils literal notranslate"><span class="pre">RASA_TOKEN</span></code> environment variable.
+If set, this token must be passed as a query parameter in all requests, e.g. :</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>$ curl localhost:5000/status?token<span class="o">=</span><span class="m">12345</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="cors">
+<h2>CORS<a class="headerlink" href="#cors" title="Permalink to this headline">¶</a></h2>
+<p>By default CORS (cross-origin resource sharing) calls are not allowed. If you want to call your Rasa NLU server from another domain (for example from a training web UI) then you can whitelist that domain by adding it to the config value <code class="docutils literal notranslate"><span class="pre">cors_origin</span></code>.</p>
+</div>
+</div>
+
+
+          </div>
+          
+        </div>
+      </div>
+    <div class="clearer"></div>
+  </div>
+    <div class="footer">
+      &copy;2018, Rasa Technologies GmbH | <a href="https://rasa.com/privacy-policy/" target="_blank">Imprint</a> | <a href="https://rasa.com/privacy-policy/" target="_blank">Privacy Policy</a> 
+      
+
+    </div>
+
+    
+
+  <!-- Global site tag (gtag.js) - Google Analytics -->
+  <script async type="opt-in" data-name="googleanalytics" data-type="text/javascript" data-src="https://www.googletagmanager.com/gtag/js?id=UA-87333416-1"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+
+    function gtag() {
+      dataLayer.push(arguments);
+    }
+    gtag('js', new Date());
+    gtag('config', 'UA-87333416-1', {
+      'anonymize_ip': true,
+    });
+  </script>
+  </body>
+</html>

@@ -1,0 +1,178 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>Entity Extraction &#8212; Rasa NLU 0.13.0a1 documentation</title>
+    <link rel="stylesheet" href="_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="_static/banner.css" type="text/css" />
+    <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Language Support" href="languages.html" />
+    <link rel="prev" title="Choosing a Pipeline" href="choosing_pipeline.html" />
+   
+  <!--<link rel="stylesheet" href="_static/custom.css" type="text/css" />-->
+  <link rel="stylesheet" href="_static/xq-light.css" type="text/css" />
+  <link rel="stylesheet" href="_static/fontawesome/css/fontawesome-all.css" type="text/css" />
+  <script defer type="text/javascript" src="_static/config.js"></script>
+  <script defer type="text/javascript" src="_static/klaro.js"></script>
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+
+<div class="nav-top" style="background-color: #3D44BC;">
+  <h1 class="brand">
+      <img src="_static/rasa_logo.svg" width="80px" height="40px" title="Rasa" alt="Rasa logo">
+  </h1>
+  <ul class="nav">
+    
+      
+        <li><a href=https://newdocs.rasa.com/about>About</a></li>
+      
+    
+      
+        <li class="active"><a href=https://newdocs.rasa.com/nlu>NLU</a></li>
+      
+    
+      
+        <li><a href=https://newdocs.rasa.com/core>Core</a></li>
+      
+    
+      
+        <li><a href=https://newdocs.rasa.com/platform>Platform</a></li>
+      
+    
+  </ul>
+</div>
+
+
+  <div class="document">
+    
+    
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper"><p class="caption"><span class="caption-text">Getting Started</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="quickstart.html">Quickstart</a></li>
+</ul>
+<p class="caption"><span class="caption-text">User Guide</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="choosing_pipeline.html">Choosing a Pipeline</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Entity Extraction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="languages.html">Language Support</a></li>
+<li class="toctree-l1"><a class="reference internal" href="evaluation.html">Evaluating and Improving Models</a></li>
+<li class="toctree-l1"><a class="reference internal" href="fallback.html">Confidence and Fallback Intents</a></li>
+<li class="toctree-l1"><a class="reference internal" href="faq.html">Frequently Asked Questions</a></li>
+</ul>
+<p class="caption"><span class="caption-text">API Reference</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="dataformat.html">Training Data Format</a></li>
+<li class="toctree-l1"><a class="reference internal" href="pipeline.html">Pipeline and Component Configuration</a></li>
+<li class="toctree-l1"><a class="reference internal" href="config.html">Server Configuration</a></li>
+<li class="toctree-l1"><a class="reference internal" href="http.html">HTTP API</a></li>
+<li class="toctree-l1"><a class="reference internal" href="python.html">Python API</a></li>
+<li class="toctree-l1"><a class="reference internal" href="persist.html">Storing Models in the Cloud</a></li>
+<li class="toctree-l1"><a class="reference internal" href="docker.html">Running in Docker</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Developer Documentation</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="customcomponents.html">Custom Components</a></li>
+<li class="toctree-l1"><a class="reference internal" href="migrations.html">Migration Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="license.html">License</a></li>
+<li class="toctree-l1"><a class="reference internal" href="changelog.html">Change Log</a></li>
+</ul>
+
+<h3>Versions</h3>
+<ul>
+    <li><a href="entities.html">docs_reorg</a></li>
+</ul>
+        </div>
+      </div>
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <div class="section" id="entity-extraction">
+<span id="section-entities"></span><h1>Entity Extraction<a class="headerlink" href="#entity-extraction" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="custom-entities">
+<h2>Custom Entities<a class="headerlink" href="#custom-entities" title="Permalink to this headline">¶</a></h2>
+<p>Almost every chatbot and voice app will have some custom entities.
+In a restaurant bot, <code class="docutils literal notranslate"><span class="pre">chinese</span></code> is a cuisine, but in a language-learning app it would mean something very different.
+The <code class="docutils literal notranslate"><span class="pre">ner_crf</span></code> component can learn custom entities in any language.</p>
+</div>
+<div class="section" id="regular-expressions-regex">
+<h2>Regular Expressions (regex)<a class="headerlink" href="#regular-expressions-regex" title="Permalink to this headline">¶</a></h2>
+</div>
+<div class="section" id="extracting-places-dates-people-organisations">
+<h2>Extracting Places, Dates, People, Organisations<a class="headerlink" href="#extracting-places-dates-people-organisations" title="Permalink to this headline">¶</a></h2>
+<p>spaCy has excellent pre-trained named-entity recognisers for a few different langauges.
+You can test them out in this
+<a class="reference external" href="https://demos.explosion.ai/displacy-ent/">awesome interactive demo</a>.
+We don’t recommend that you try to train your own NER using spaCy,
+unless you have a lot of data and know what you are doing.
+Note that some spaCy models are highly case-sensitive.</p>
+</div>
+<div class="section" id="dates-amounts-of-money-durations-distances-ordinals">
+<h2>Dates, Amounts of Money, Durations, Distances, Ordinals<a class="headerlink" href="#dates-amounts-of-money-durations-distances-ordinals" title="Permalink to this headline">¶</a></h2>
+<p>The <a class="reference external" href="https://duckling.wit.ai/">duckling</a> library does a great job
+of turning expressions like “next Thursday at 8pm” into actual datetime
+objects that you can use, e.g.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="s2">&quot;next Thursday at 8pm&quot;</span>
+<span class="o">=&gt;</span> <span class="p">{</span><span class="s2">&quot;value&quot;</span><span class="p">:</span><span class="s2">&quot;2018-05-31T20:00:00.000+01:00&quot;</span><span class="p">}</span>
+</pre></div>
+</div>
+<p>The list of supported langauges is <a class="reference external" href="https://github.com/facebook/duckling/tree/master/Duckling/Dimensions">here</a>.
+Duckling can also handle durations like “two hours”,
+amounts of money, distances, and ordinals.
+Fortunately, there is also a
+<a class="reference external" href="https://github.com/FraBle/python-duckling">python wrapper</a> for
+duckling! You can use this component by installing the duckling
+package from PyPI and adding <code class="docutils literal notranslate"><span class="pre">ner_duckling</span></code> to your pipeline.
+Alternatively, you can run duckling separately (natively or in a docker container)
+and use the <code class="docutils literal notranslate"><span class="pre">ner_duckling_http</span></code> component.</p>
+</div>
+</div>
+
+
+          </div>
+          
+        </div>
+      </div>
+    <div class="clearer"></div>
+  </div>
+    <div class="footer">
+      &copy;2018, Rasa Technologies GmbH | <a href="https://rasa.com/privacy-policy/" target="_blank">Imprint</a> | <a href="https://rasa.com/privacy-policy/" target="_blank">Privacy Policy</a> 
+      
+
+    </div>
+
+    
+
+  <!-- Global site tag (gtag.js) - Google Analytics -->
+  <script async type="opt-in" data-name="googleanalytics" data-type="text/javascript" data-src="https://www.googletagmanager.com/gtag/js?id=UA-87333416-1"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+
+    function gtag() {
+      dataLayer.push(arguments);
+    }
+    gtag('js', new Date());
+    gtag('config', 'UA-87333416-1', {
+      'anonymize_ip': true,
+    });
+  </script>
+  </body>
+</html>
