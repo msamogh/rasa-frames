@@ -1,0 +1,273 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>Custom Components &#8212; Rasa NLU 0.13.0a1 documentation</title>
+    <link rel="stylesheet" href="../_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/banner.css" type="text/css" />
+    <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+    <script type="text/javascript" src="../_static/jquery.js"></script>
+    <script type="text/javascript" src="../_static/underscore.js"></script>
+    <script type="text/javascript" src="../_static/doctools.js"></script>
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <link rel="index" title="Index" href="../genindex/" />
+    <link rel="search" title="Search" href="../search/" />
+    <link rel="next" title="Migration Guide" href="../migrations/" />
+    <link rel="prev" title="Running in Docker" href="../docker/" />
+   
+  <!--<link rel="stylesheet" href="../_static/custom.css" type="text/css" />-->
+  <link rel="stylesheet" href="../_static/xq-light.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/fontawesome/css/fontawesome-all.css" type="text/css" />
+  <script defer type="text/javascript" src="../_static/config.js"></script>
+  <script defer type="text/javascript" src="../_static/klaro.js"></script>
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+
+<div class="nav-top" style="background-color: #3D44BC;">
+  <h1 class="brand">
+      <img src="/_static/rasa_logo.svg" width="80px" height="40px" title="Rasa" alt="Rasa logo">
+  </h1>
+  <ul class="nav">
+    
+      
+        <li><a href=https://newdocs.rasa.com/about>About</a></li>
+      
+    
+      
+        <li class="active"><a href=https://newdocs.rasa.com/nlu>NLU</a></li>
+      
+    
+      
+        <li><a href=https://newdocs.rasa.com/core>Core</a></li>
+      
+    
+      
+        <li><a href=https://newdocs.rasa.com/platform>Platform</a></li>
+      
+    
+  </ul>
+</div>
+
+
+  <div class="document">
+    
+    
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper"><p class="caption"><span class="caption-text">Getting Started</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../installation/">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../quickstart/">Quickstart</a></li>
+</ul>
+<p class="caption"><span class="caption-text">User Guide</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../choosing_pipeline/">Choosing a Pipeline</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../entities/">Entity Extraction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../languages/">Language Support</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../evaluation/">Evaluating and Improving Models</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../fallback/">Confidence and Fallback Intents</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../faq/">Frequently Asked Questions</a></li>
+</ul>
+<p class="caption"><span class="caption-text">API Reference</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../dataformat/">Training Data Format</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../pipeline/">Pipeline and Component Configuration</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../config/">Server Configuration</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../http/">HTTP API</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../python/">Python API</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../persist/">Storing Models in the Cloud</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../docker/">Running in Docker</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Developer Documentation</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Custom Components</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#component">Component</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../migrations/">Migration Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../license/">License</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../changelog/">Change Log</a></li>
+</ul>
+
+<h3>Versions</h3>
+<ul>
+    <li><a href="customcomponents.html">docs_reorg</a></li>
+</ul>
+        </div>
+      </div>
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <div class="section" id="custom-components">
+<span id="section-customcomponents"></span><h1>Custom Components<a class="headerlink" href="#custom-components" title="Permalink to this headline">¶</a></h1>
+<p>You can create a custom Component to perform a specific task which NLU doesn’t currently offer (for example, sentiment analysis).
+Below is the specification of the <a class="reference internal" href="#rasa_nlu.components.Component" title="rasa_nlu.components.Component"><code class="xref py py-class docutils literal notranslate"><span class="pre">rasa_nlu.components.Component</span></code></a> class with the methods you’ll need to implement.</p>
+<p>You can add a custom component to your pipeline by adding the module path.
+So if you have a module called <code class="docutils literal notranslate"><span class="pre">sentiment</span></code>
+containing a <code class="docutils literal notranslate"><span class="pre">SentimentAnalyzer</span></code> class:</p>
+<blockquote>
+<div><div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="l l-Scalar l-Scalar-Plain">pipeline</span><span class="p p-Indicator">:</span>
+<span class="p p-Indicator">-</span> <span class="l l-Scalar l-Scalar-Plain">name</span><span class="p p-Indicator">:</span> <span class="s">&quot;sentiment.SentimentAnalyzer&quot;</span>
+</pre></div>
+</div>
+</div></blockquote>
+<p>Also be sure to read the section on the <a class="reference internal" href="../pipeline/#section-component-lifecycle"><span class="std std-ref">Component Lifecycle</span></a> .</p>
+<div class="section" id="component">
+<h2>Component<a class="headerlink" href="#component" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="rasa_nlu.components.Component">
+<em class="property">class </em><code class="descclassname">rasa_nlu.components.</code><code class="descname">Component</code><span class="sig-paren">(</span><em>component_config=None</em><span class="sig-paren">)</span><a class="headerlink" href="#rasa_nlu.components.Component" title="Permalink to this definition">¶</a></dt>
+<dd><p>A component is a message processing unit in a pipeline.</p>
+<p>Components are collected sequentially in a pipeline. Each component
+is called one after another. This holds for
+initialization, training, persisting and loading the components.
+If a component comes first in a pipeline, its
+methods will be called first.</p>
+<p>E.g. to process an incoming message, the <code class="docutils literal notranslate"><span class="pre">process</span></code> method of
+each component will be called. During the processing
+(as well as the training, persisting and initialization)
+components can pass information to other components.
+The information is passed to other components by providing
+attributes to the so called pipeline context. The
+pipeline context contains all the information of the previous
+components a component can use to do its own
+processing. For example, a featurizer component can provide
+features that are used by another component down
+the pipeline to do intent classification.</p>
+<dl class="classmethod">
+<dt id="rasa_nlu.components.Component.required_packages">
+<em class="property">classmethod </em><code class="descname">required_packages</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#rasa_nlu.components.Component.required_packages" title="Permalink to this definition">¶</a></dt>
+<dd><p>Specify which python packages need to be installed to use this
+component, e.g. <code class="docutils literal notranslate"><span class="pre">[&quot;spacy&quot;]</span></code>.</p>
+<p>This list of requirements allows us to fail early during training
+if a required package is not installed.</p>
+</dd></dl>
+
+<dl class="classmethod">
+<dt id="rasa_nlu.components.Component.create">
+<em class="property">classmethod </em><code class="descname">create</code><span class="sig-paren">(</span><em>cfg</em><span class="sig-paren">)</span><a class="headerlink" href="#rasa_nlu.components.Component.create" title="Permalink to this definition">¶</a></dt>
+<dd><p>Creates this component (e.g. before a training is started).</p>
+<p>Method can access all configuration parameters.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="rasa_nlu.components.Component.provide_context">
+<code class="descname">provide_context</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#rasa_nlu.components.Component.provide_context" title="Permalink to this definition">¶</a></dt>
+<dd><p>Initialize this component for a new pipeline</p>
+<p>This function will be called before the training
+is started and before the first message is processed using
+the interpreter. The component gets the opportunity to
+add information to the context that is passed through
+the pipeline during training and message parsing. Most
+components do not need to implement this method.
+It’s mostly used to initialize framework environments
+like MITIE and spacy
+(e.g. loading word vectors for the pipeline).</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="rasa_nlu.components.Component.train">
+<code class="descname">train</code><span class="sig-paren">(</span><em>training_data</em>, <em>cfg</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#rasa_nlu.components.Component.train" title="Permalink to this definition">¶</a></dt>
+<dd><p>Train this component.</p>
+<p>This is the components chance to train itself provided
+with the training data. The component can rely on
+any context attribute to be present, that gets created
+by a call to <code class="xref py py-meth docutils literal notranslate"><span class="pre">components.Component.pipeline_init()</span></code>
+of ANY component and
+on any context attributes created by a call to
+<code class="xref py py-meth docutils literal notranslate"><span class="pre">components.Component.train()</span></code>
+of components previous to this one.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="rasa_nlu.components.Component.process">
+<code class="descname">process</code><span class="sig-paren">(</span><em>message</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#rasa_nlu.components.Component.process" title="Permalink to this definition">¶</a></dt>
+<dd><p>Process an incoming message.</p>
+<p>This is the components chance to process an incoming
+message. The component can rely on
+any context attribute to be present, that gets created
+by a call to <code class="xref py py-meth docutils literal notranslate"><span class="pre">components.Component.pipeline_init()</span></code>
+of ANY component and
+on any context attributes created by a call to
+<code class="xref py py-meth docutils literal notranslate"><span class="pre">components.Component.process()</span></code>
+of components previous to this one.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="rasa_nlu.components.Component.persist">
+<code class="descname">persist</code><span class="sig-paren">(</span><em>model_dir</em><span class="sig-paren">)</span><a class="headerlink" href="#rasa_nlu.components.Component.persist" title="Permalink to this definition">¶</a></dt>
+<dd><p>Persist this component to disk for future loading.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="rasa_nlu.components.Component.prepare_partial_processing">
+<code class="descname">prepare_partial_processing</code><span class="sig-paren">(</span><em>pipeline</em>, <em>context</em><span class="sig-paren">)</span><a class="headerlink" href="#rasa_nlu.components.Component.prepare_partial_processing" title="Permalink to this definition">¶</a></dt>
+<dd><p>Sets the pipeline and context used for partial processing.</p>
+<p>The pipeline should be a list of components that are
+previous to this one in the pipeline and
+have already finished their training (and can therefore
+be safely used to process messages).</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="rasa_nlu.components.Component.partially_process">
+<code class="descname">partially_process</code><span class="sig-paren">(</span><em>message</em><span class="sig-paren">)</span><a class="headerlink" href="#rasa_nlu.components.Component.partially_process" title="Permalink to this definition">¶</a></dt>
+<dd><p>Allows the component to process messages during
+training (e.g. external training data).</p>
+<p>The passed message will be processed by all components
+previous to this one in the pipeline.</p>
+</dd></dl>
+
+<dl class="classmethod">
+<dt id="rasa_nlu.components.Component.can_handle_language">
+<em class="property">classmethod </em><code class="descname">can_handle_language</code><span class="sig-paren">(</span><em>language</em><span class="sig-paren">)</span><a class="headerlink" href="#rasa_nlu.components.Component.can_handle_language" title="Permalink to this definition">¶</a></dt>
+<dd><p>Check if component supports a specific language.</p>
+<p>This method can be overwritten when needed. (e.g. dynamically
+determine which language is supported.)</p>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+</div>
+
+
+          </div>
+          
+        </div>
+      </div>
+    <div class="clearer"></div>
+  </div>
+    <div class="footer">
+      &copy;2018, Rasa Technologies GmbH | <a href="https://rasa.com/privacy-policy/" target="_blank">Imprint</a> | <a href="https://rasa.com/privacy-policy/" target="_blank">Privacy Policy</a> 
+      
+
+    </div>
+
+    
+
+  <!-- Global site tag (gtag.js) - Google Analytics -->
+  <script async type="opt-in" data-name="googleanalytics" data-type="text/javascript" data-src="https://www.googletagmanager.com/gtag/js?id=UA-87333416-1"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+
+    function gtag() {
+      dataLayer.push(arguments);
+    }
+    gtag('js', new Date());
+    gtag('config', 'UA-87333416-1', {
+      'anonymize_ip': true,
+    });
+  </script>
+  </body>
+</html>
