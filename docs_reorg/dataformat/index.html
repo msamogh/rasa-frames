@@ -55,6 +55,11 @@
         <li><a href=https://newdocs.rasa.com/platform>Platform</a></li>
       
     
+    
+    <li>
+      <a href="https://www.github.com/RasaHQ" target="_blank"><button class="button btn-ghost btn-small"><i class="fab fa-github"></i>GitHub</button></a>
+    </li>
+    
   </ul>
 </div>
 
@@ -95,31 +100,34 @@
 <li class="toctree-l1"><a class="reference internal" href="../changelog/">Change Log</a></li>
 </ul>
 
-
-<div class="rst-versions" data-toggle="rst-versions" role="note" aria-label="versions">
-    <span class="rst-current-version" data-toggle="rst-current-version">
-        <span class="fa fa-book"> Other Versions</span>
+<div class="versions">
+    <div>
+      <span class="current-version">
         v: docs_reorg
-        <span class="fa fa-caret-down"></span>
-    </span>
-    <div class="rst-other-versions">
-        <dl>
-            <dt>Tags</dt>
-            <dd><a href="../0.12.3/dataformat.html">0.12.3</a></dd>
-            <dd><a href="../0.12.2/dataformat.html">0.12.2</a></dd>
-            <dd><a href="../0.12.1/dataformat.html">0.12.1</a></dd>
-            <dd><a href="../0.12.0/dataformat.html">0.12.0</a></dd>
-            <dd><a href="../0.11.4/dataformat.html">0.11.4</a></dd>
-            <dd><a href="../0.10.6/dataformat.html">0.10.6</a></dd>
-            <dd><a href="../0.9.2/dataformat.html">0.9.2</a></dd>
-            <dd><a href="../0.8.12/dataformat.html">0.8.12</a></dd>
-            <dd><a href="../0.7.4/dataformat.html">0.7.4</a></dd>
-        </dl>
-        <dl>
-            <dt>Branches</dt>
-            <dd><a href="dataformat.html">docs_reorg</a></dd>
-            <dd><a href="../master/dataformat.html">master</a></dd>
-        </dl>
+      </span>
+    </div>
+    <div class="other-versions">
+        <div class="dropdown">
+          <button class="dropdown-btn">tags</button>
+          <div class="dropdown-content">
+              <a href="../0.12.3/dataformat.html">0.12.3</a>
+              <a href="../0.12.2/dataformat.html">0.12.2</a>
+              <a href="../0.12.1/dataformat.html">0.12.1</a>
+              <a href="../0.12.0/dataformat.html">0.12.0</a>
+              <a href="../0.11.4/dataformat.html">0.11.4</a>
+              <a href="../0.10.6/dataformat.html">0.10.6</a>
+              <a href="../0.9.2/dataformat.html">0.9.2</a>
+              <a href="../0.8.12/dataformat.html">0.8.12</a>
+              <a href="../0.7.4/dataformat.html">0.7.4</a>
+          </div>
+        </div>
+        <div class="dropdown">
+          <button class="dropdown-btn">tags</button>
+          <div class="dropdown-content">
+              <a href="dataformat.html">docs_reorg</a>
+              <a href="../master/dataformat.html">master</a>
+          </div>
+        </div>
     </div>
 </div>
 
@@ -147,7 +155,6 @@
 <h2>Data Format<a class="headerlink" href="#data-format" title="Permalink to this headline">¶</a></h2>
 <p>You can provide training data as markdown or as json, as a single file or as a directory containing multiple files.
 Note that markdown is usually easier to work with.</p>
-<p>You can use <a class="reference external" href="https://rodrigopivi.github.io/Chatito/">Chatito</a> , a tool for generating training datasets in rasa’s format using a simple DSL or <a class="reference external" href="https://yuukanoo.github.io/tracy">Tracy</a>, a simple GUI to create training datasets for rasa.</p>
 <div class="section" id="markdown-format">
 <h3>Markdown Format<a class="headerlink" href="#markdown-format" title="Permalink to this headline">¶</a></h3>
 <p>Markdown is the easiest Rasa NLU format for humans to read and write.
@@ -205,6 +212,13 @@ and it’s also extremely helpful for inspecting and modifying existing data.</p
 <img alt="../_images/rasa_nlu_intent_gui.png" src="../_images/rasa_nlu_intent_gui.png" />
 <p>If you use the json format it is <strong>strongly</strong> recommended that you view your training
 data in the GUI before training.</p>
+</div>
+<div class="section" id="generating-more-entity-examples">
+<h3>Generating More Entity Examples<a class="headerlink" href="#generating-more-entity-examples" title="Permalink to this headline">¶</a></h3>
+<p>It is sometimes helpful to generate a bunch of entity examples, for
+example if you have a database of restaurant names. There are a couple
+of great tools built by the community to help with that.</p>
+<p>You can use <a class="reference external" href="https://rodrigopivi.github.io/Chatito/">Chatito</a> , a tool for generating training datasets in rasa’s format using a simple DSL or <a class="reference external" href="https://yuukanoo.github.io/tracy">Tracy</a>, a simple GUI to create training datasets for rasa.</p>
 </div>
 <div class="section" id="common-examples">
 <h3>Common Examples<a class="headerlink" href="#common-examples" title="Permalink to this headline">¶</a></h3>
@@ -331,12 +345,26 @@ training data!</p>
 <div class="section" id="organization">
 <h3>Organization<a class="headerlink" href="#organization" title="Permalink to this headline">¶</a></h3>
 <p>The training data can either be stored in a single file or split into multiple files.
-For larger training examples, splitting the training data into multiple files, e.g. one per intent, increases maintainability.</p>
-<p>Storing files with different file formats, i.e. mixing markdown and JSON, is currently not supported.</p>
+This can make it easier to keep things organised, or to share data between projects.
+For example, if you have a restaurant bot which can also handle some basic smalltalk,
+you could have a folder called <code class="docutils literal notranslate"><span class="pre">nlu_data</span></code>:</p>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>nlu_data/
+├── restaurants.md
+├── smalltalk.md
+</pre></div>
+</div>
+<p>To train a model with this data, pass the path to the directory to the train script:</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">$</span> python -m rasa_nlu.train <span class="se">\</span>
+    --config config.yml <span class="se">\</span>
+    --data nlu_data/ <span class="se">\</span>
+    --path projects
+</pre></div>
+</div>
 <div class="admonition note">
 <p class="first admonition-title">Note</p>
 <p class="last">Splitting the training data into multiple files currently only works for markdown and JSON data.
-For other file formats you have to use the single-file approach.</p>
+For other file formats you have to use the single-file approach. You also cannot mix markdown
+and json</p>
 </div>
 </div>
 </div>

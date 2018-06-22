@@ -55,6 +55,11 @@
         <li><a href=https://newdocs.rasa.com/platform>Platform</a></li>
       
     
+    
+    <li>
+      <a href="https://www.github.com/RasaHQ" target="_blank"><button class="button btn-ghost btn-small"><i class="fab fa-github"></i>GitHub</button></a>
+    </li>
+    
   </ul>
 </div>
 
@@ -95,31 +100,34 @@
 <li class="toctree-l1"><a class="reference internal" href="../changelog/">Change Log</a></li>
 </ul>
 
-
-<div class="rst-versions" data-toggle="rst-versions" role="note" aria-label="versions">
-    <span class="rst-current-version" data-toggle="rst-current-version">
-        <span class="fa fa-book"> Other Versions</span>
+<div class="versions">
+    <div>
+      <span class="current-version">
         v: docs_reorg
-        <span class="fa fa-caret-down"></span>
-    </span>
-    <div class="rst-other-versions">
-        <dl>
-            <dt>Tags</dt>
-            <dd><a href="../0.12.3/entities.html">0.12.3</a></dd>
-            <dd><a href="../0.12.2/entities.html">0.12.2</a></dd>
-            <dd><a href="../0.12.1/entities.html">0.12.1</a></dd>
-            <dd><a href="../0.12.0/entities.html">0.12.0</a></dd>
-            <dd><a href="../0.11.4/entities.html">0.11.4</a></dd>
-            <dd><a href="../0.10.6/entities.html">0.10.6</a></dd>
-            <dd><a href="../0.9.2/entities.html">0.9.2</a></dd>
-            <dd><a href="../0.8.12/entities.html">0.8.12</a></dd>
-            <dd><a href="../0.7.4/index.html">0.7.4</a></dd>
-        </dl>
-        <dl>
-            <dt>Branches</dt>
-            <dd><a href="entities.html">docs_reorg</a></dd>
-            <dd><a href="../master/entities.html">master</a></dd>
-        </dl>
+      </span>
+    </div>
+    <div class="other-versions">
+        <div class="dropdown">
+          <button class="dropdown-btn">tags</button>
+          <div class="dropdown-content">
+              <a href="../0.12.3/entities.html">0.12.3</a>
+              <a href="../0.12.2/entities.html">0.12.2</a>
+              <a href="../0.12.1/entities.html">0.12.1</a>
+              <a href="../0.12.0/entities.html">0.12.0</a>
+              <a href="../0.11.4/entities.html">0.11.4</a>
+              <a href="../0.10.6/entities.html">0.10.6</a>
+              <a href="../0.9.2/entities.html">0.9.2</a>
+              <a href="../0.8.12/entities.html">0.8.12</a>
+              <a href="../0.7.4/index.html">0.7.4</a>
+          </div>
+        </div>
+        <div class="dropdown">
+          <button class="dropdown-btn">tags</button>
+          <div class="dropdown-content">
+              <a href="entities.html">docs_reorg</a>
+              <a href="../master/entities.html">master</a>
+          </div>
+        </div>
     </div>
 </div>
 
@@ -186,9 +194,6 @@
 In a restaurant bot, <code class="docutils literal notranslate"><span class="pre">chinese</span></code> is a cuisine, but in a language-learning app it would mean something very different.
 The <code class="docutils literal notranslate"><span class="pre">ner_crf</span></code> component can learn custom entities in any language.</p>
 </div>
-<div class="section" id="regular-expressions-regex">
-<h2>Regular Expressions (regex)<a class="headerlink" href="#regular-expressions-regex" title="Permalink to this headline">¶</a></h2>
-</div>
 <div class="section" id="extracting-places-dates-people-organisations">
 <h2>Extracting Places, Dates, People, Organisations<a class="headerlink" href="#extracting-places-dates-people-organisations" title="Permalink to this headline">¶</a></h2>
 <p>spaCy has excellent pre-trained named-entity recognisers for a few different langauges.
@@ -216,6 +221,17 @@ duckling! You can use this component by installing the duckling
 package from PyPI and adding <code class="docutils literal notranslate"><span class="pre">ner_duckling</span></code> to your pipeline.
 Alternatively, you can run duckling separately (natively or in a docker container)
 and use the <code class="docutils literal notranslate"><span class="pre">ner_duckling_http</span></code> component.</p>
+</div>
+<div class="section" id="regular-expressions-regex">
+<h2>Regular Expressions (regex)<a class="headerlink" href="#regular-expressions-regex" title="Permalink to this headline">¶</a></h2>
+<p>You can use regular expressions to help the CRF model learn to recognize entities.
+In the <span class="xref std std-ref">dataformat</span> you can provide a list of regular expressions, each of which provides
+the <code class="docutils literal notranslate"><span class="pre">ner_crf</span></code> with an extra binary feature, which says if the regex was found (1) or not (0).</p>
+<p>For example, the names of German streets often end in <code class="docutils literal notranslate"><span class="pre">strasse</span></code>. By adding this as a regex,
+we are telling the model to pay attention to words ending this way, and will quickly learn to
+associate that with a location entity.</p>
+<p>If you just want to match regular expressions exactly, you can do this in your code,
+as a postprocessing step after receiving the response form Rasa NLU.</p>
 <div class="section" id="returned-entities-object">
 <h3>Returned Entities Object<a class="headerlink" href="#returned-entities-object" title="Permalink to this headline">¶</a></h3>
 <p>In the object returned after parsing there are two fields that show information
