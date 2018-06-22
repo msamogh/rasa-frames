@@ -1,150 +1,368 @@
 
-<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
-  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 
-<html xmlns="http://www.w3.org/1999/xhtml">
-  <head>
-    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
-    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-    <title>Change Log &#8212; Rasa NLU 0.13.0a1 documentation</title>
-    <link rel="stylesheet" href="../_static/alabaster.css" type="text/css" />
-    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>Change Log &mdash; Rasa NLU 0.12.3 documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  
+  
+    <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  
+
+  
     <link rel="stylesheet" href="../_static/banner.css" type="text/css" />
-    <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
-    <script type="text/javascript" src="../_static/jquery.js"></script>
-    <script type="text/javascript" src="../_static/underscore.js"></script>
-    <script type="text/javascript" src="../_static/doctools.js"></script>
-    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
-    <link rel="index" title="Index" href="../genindex/" />
-    <link rel="search" title="Search" href="../search/" />
-    <link rel="prev" title="License" href="../license/" />
+  
+    <link rel="stylesheet" href="../_static/css/custom.css" type="text/css" />
+  
+
+  
+        <link rel="index" title="Index"
+              href="../genindex/"/>
+        <link rel="search" title="Search" href="../search/"/>
+    <link rel="top" title="Rasa NLU 0.12.3 documentation" href="../"/>
+        <link rel="prev" title="Contributing" href="../contribute/"/> 
+
+  
+  <script src="../_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
    
-  <!--<link rel="stylesheet" href="../_static/custom.css" type="text/css" />-->
-  <link rel="stylesheet" href="../_static/xq-light.css" type="text/css" />
-  <link rel="stylesheet" href="../_static/fontawesome/css/fontawesome-all.css" type="text/css" />
-  <script defer type="text/javascript" src="../_static/config.js"></script>
-  <script defer type="text/javascript" src="../_static/klaro.js"></script>
-  
-  
-  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+  <div class="wy-grid-for-nav">
 
-  </head><body>
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
 
-<div class="nav-top" style="background-color: #3D44BC;">
-  <h1 class="brand">
-      <img src="/_static/rasa_logo.svg" width="80px" height="40px" title="Rasa" alt="Rasa logo">
-  </h1>
-  <ul class="nav">
-    
-      
-        <li><a href=https://newdocs.rasa.com/about>About</a></li>
-      
-    
-      
-        <li class="active"><a href=https://newdocs.rasa.com/nlu>NLU</a></li>
-      
-    
-      
-        <li><a href=https://newdocs.rasa.com/core>Core</a></li>
-      
-    
-      
-        <li><a href=https://newdocs.rasa.com/platform>Platform</a></li>
-      
-    
-  </ul>
+          
+            <a href="../" class="icon icon-home"> Rasa NLU
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                0.12
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search/" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
 </div>
 
+          
+        </div>
 
-  <div class="document">
-    
-    
-      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
-        <div class="sphinxsidebarwrapper"><p class="caption"><span class="caption-text">Getting Started</span></p>
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Getting Started</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../installation/">Installation</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../quickstart/">Quickstart</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../tutorial/">Tutorial: A simple restaurant search bot</a></li>
 </ul>
-<p class="caption"><span class="caption-text">User Guide</span></p>
+<p class="caption"><span class="caption-text">User Documentation</span></p>
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="../choosing_pipeline/">Choosing a Pipeline</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../config/">Configuration</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../migrating/">Migrating an existing app</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../dataformat/">Training and Data Format</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../http/">Using Rasa NLU as a HTTP server</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../python/">Using Rasa NLU from python</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../entities/">Entity Extraction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../closeloop/">Improving your models from feedback</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../persist/">Model Persistence</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../languages/">Language Support</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../evaluation/">Evaluating and Improving Models</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../fallback/">Confidence and Fallback Intents</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../pipeline/">Processing Pipeline</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../evaluation/">Evaluation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../context/">Context-aware Dialogue</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../faq/">Frequently Asked Questions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../migrations/">Migration Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../license/">License</a></li>
 </ul>
-<p class="caption"><span class="caption-text">API Reference</span></p>
+<p class="caption"><span class="caption-text">Resources</span></p>
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="../dataformat/">Training Data Format</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../pipeline/">Pipeline and Component Configuration</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../config/">Server Configuration</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../http/">HTTP API</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../python/">Python API</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../persist/">Storing Models in the Cloud</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../docker/">Running in Docker</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../community/">Community Contributions</a></li>
 </ul>
 <p class="caption"><span class="caption-text">Developer Documentation</span></p>
 <ul class="current">
-<li class="toctree-l1"><a class="reference internal" href="../customcomponents/">Custom Components</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../migrations/">Migration Guide</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../license/">License</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../contribute/">Contributing</a></li>
 <li class="toctree-l1 current"><a class="current reference internal" href="#">Change Log</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="#unreleased-0-13-0-ax-master">[Unreleased 0.13.0.aX] - master</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#id1">[0.12.3] - 2018-05-02</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#id4">[0.12.2] - 2018-04-20</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#id6">[0.12.1] - 2018-04-18</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#id9">[0.12.0] - 2018-04-17</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#id13">[0.11.4] - 2018-03-19</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#id15">[0.11.3] - 2018-02-13</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#id17">[0.11.2] - 2018-02-06</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#id19">[0.11.1] - 2018-02-02</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#id21">[0.11.0] - 2018-01-30</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#id24">[0.10.6] - 2018-01-02</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#id27">[0.10.5] - 2017-12-01</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#id29">[0.10.4] - 2017-10-27</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#id31">[0.10.3] - 2017-10-26</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#id34">[0.10.1] - 2017-10-06</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#id36">[0.10.0] - 2017-09-27</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#id40">[0.9.2] - 2017-08-16</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#id42">[0.9.1] - 2017-07-11</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#id44">[0.9.0] - 2017-07-07</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#id49">[0.8.12] - 2017-06-29</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#id51">[0.8.11] - 2017-06-07</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#id53">[0.8.10] - 2017-05-31</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#id55">[0.8.9] - 2017-05-26</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#id57">[0.8.8] - 2017-05-26</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#id59">[0.8.7] - 2017-05-24</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#id61">[0.8.6] - 2017-05-15</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#id63">[0.8.5] - 2017-05-10</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#id65">[0.8.4] - 2017-05-10</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#id67">[0.8.3] - 2017-05-10</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#id69">[0.8.2] - 2017-05-08</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#id71">[0.8.1] - 2017-05-08</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#id73">[0.8.0] - 2017-05-08</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#id82">[0.7.4] - 2017-03-27</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#id84">[0.7.3] - 2017-03-15</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#id86">[0.7.2] - 2017-03-13</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#id88">[0.7.1] - 2017-03-10</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#id91">[0.7.0] - 2017-03-10</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#unreleased-0-13-0-ax-master">[Unreleased 0.13.0.aX] - master</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#added">Added</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#changed">Changed</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#removed">Removed</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#fixed">Fixed</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#id1">[0.12.3] - 2018-05-02</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#id2">Added</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#id3">Fixed</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#id4">[0.12.2] - 2018-04-20</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#id5">Fixed</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#id6">[0.12.1] - 2018-04-18</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#id7">Added</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#id8">Fixed</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#id9">[0.12.0] - 2018-04-17</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#id10">Added</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#id11">Changed</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#id12">Fixed</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#id13">[0.11.4] - 2018-03-19</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#id14">Fixed</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#id15">[0.11.3] - 2018-02-13</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#id16">Fixed</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#id17">[0.11.2] - 2018-02-06</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#id18">Fixed</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#id19">[0.11.1] - 2018-02-02</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#id20">Fixed</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#id21">[0.11.0] - 2018-01-30</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#id22">Added</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#id23">Changed</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#id24">[0.10.6] - 2018-01-02</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#id25">Added</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#id26">Fixed</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#id27">[0.10.5] - 2017-12-01</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#id28">Fixed</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#id29">[0.10.4] - 2017-10-27</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#id30">Fixed</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#id31">[0.10.3] - 2017-10-26</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#id32">Added</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#id33">Fixed</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#id34">[0.10.1] - 2017-10-06</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#id35">Fixed</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#id36">[0.10.0] - 2017-09-27</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#id37">Added</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#id38">Changed</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#id39">Fixed</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#id40">[0.9.2] - 2017-08-16</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#id41">Fixed</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#id42">[0.9.1] - 2017-07-11</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#id43">Fixed</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#id44">[0.9.0] - 2017-07-07</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#id45">Added</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#id46">Changed</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#id47">Removed</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#id48">Fixed</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#id49">[0.8.12] - 2017-06-29</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#id50">Fixed</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#id51">[0.8.11] - 2017-06-07</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#id52">Fixed</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#id53">[0.8.10] - 2017-05-31</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#id54">Fixed</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#id55">[0.8.9] - 2017-05-26</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#id56">Fixed</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#id57">[0.8.8] - 2017-05-26</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#id58">Fixed</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#id59">[0.8.7] - 2017-05-24</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#id60">Fixed</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#id61">[0.8.6] - 2017-05-15</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#id62">Fixed</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#id63">[0.8.5] - 2017-05-10</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#id64">Fixed</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#id65">[0.8.4] - 2017-05-10</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#id66">Fixed</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#id67">[0.8.3] - 2017-05-10</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#id68">Fixed</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#id69">[0.8.2] - 2017-05-08</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#id70">Fixed</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#id71">[0.8.1] - 2017-05-08</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#id72">Fixed</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#id73">[0.8.0] - 2017-05-08</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#id74">Added</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#id76">Changed</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#id77">Fixed</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#id82">[0.7.4] - 2017-03-27</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#id83">Fixed</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#id84">[0.7.3] - 2017-03-15</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#id85">Fixed</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#id86">[0.7.2] - 2017-03-13</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#id87">Fixed</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#id88">[0.7.1] - 2017-03-10</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#id89">Fixed</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#id91">[0.7.0] - 2017-03-10</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#id92">Added</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#id93">Fixed</a></li>
+</ul>
+</li>
 <li class="toctree-l2"><a class="reference internal" href="#beta-2017-01-31">[0.6-beta] - 2017-01-31</a></li>
 </ul>
 </li>
 </ul>
 
-<h3>Versions</h3>
-<ul>
-    <li><a href="docs_reorg/changelog.html">docs_reorg</a></li>
-</ul>
+            
+          
         </div>
       </div>
-      <div class="documentwrapper">
-        <div class="bodywrapper">
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../">Rasa NLU</a>
+        
+      </nav>
+
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
           
 
-          <div class="body" role="main">
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../">Docs</a> &raquo;</li>
+        
+      <li>Change Log</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
             
-  <div class="section" id="change-log">
+            <a href="../_sources/changelog.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  
+
+
+
+
+
+<div class="section" id="change-log">
 <h1>Change Log<a class="headerlink" href="#change-log" title="Permalink to this headline">¶</a></h1>
 <p>All notable changes to this project will be documented in this file.
 This project adheres to <a class="reference external" href="http://semver.org/">Semantic Versioning</a> starting with version 0.7.0.</p>
@@ -154,44 +372,17 @@ This project adheres to <a class="reference external" href="http://semver.org/">
 <p class="first admonition-title">Note</p>
 <p class="last">This version is not yet released and is under active development.</p>
 </div>
-<div class="admonition warning">
-<p class="first admonition-title">Warning</p>
-<p class="last">This is a release <strong>breaking backwards compatibility</strong>.
-Unfortunately, it is not possible to load previously trained models as
-the parameters for the tensorflow and CRF models changed.</p>
-</div>
 <div class="section" id="added">
 <h3>Added<a class="headerlink" href="#added" title="Permalink to this headline">¶</a></h3>
-<ul class="simple">
-<li>doc link to a community contribution for Rasa NLU in Chinese</li>
-<li>support for component <code class="docutils literal notranslate"><span class="pre">count_vectors_featurizer</span></code> use <code class="docutils literal notranslate"><span class="pre">tokens</span></code> feature provide by tokenizer</li>
-<li>2-character and a 5-character prefix features to <code class="docutils literal notranslate"><span class="pre">ner_crf</span></code></li>
-<li><code class="docutils literal notranslate"><span class="pre">ner_crf</span></code> with whitespaced tokens to <code class="docutils literal notranslate"><span class="pre">tensorflow_embedding</span></code> pipeline</li>
-<li>predict empty string instead of None for intent name</li>
-<li>update default parameters for tensorflow embedding classifier</li>
-<li>do not predict anything if feature vector contains only zeros in tensorflow embedding classifier</li>
-<li>change persistence keywords in tensorflow embedding classifier (make previously trained models impossible to load)</li>
-<li>intent_featurizer_count_vectors adds features to text_features instead of overwriting them</li>
-<li>add basic OOV support to intent_featurizer_count_vectors (make previously trained models impossible to load)</li>
-</ul>
 </div>
 <div class="section" id="changed">
 <h3>Changed<a class="headerlink" href="#changed" title="Permalink to this headline">¶</a></h3>
-<ul class="simple">
-<li>L1 and L2 regularisation defaults in <code class="docutils literal notranslate"><span class="pre">ner_crf</span></code> both set to 0.1</li>
-</ul>
 </div>
 <div class="section" id="removed">
 <h3>Removed<a class="headerlink" href="#removed" title="Permalink to this headline">¶</a></h3>
-<ul class="simple">
-<li>dependence on spaCy when training <code class="docutils literal notranslate"><span class="pre">ner_crf</span></code> without POS features</li>
-</ul>
 </div>
 <div class="section" id="fixed">
 <h3>Fixed<a class="headerlink" href="#fixed" title="Permalink to this headline">¶</a></h3>
-<ul class="simple">
-<li>Fixed Luis emulation output to add start, end position and confidence for each entity.</li>
-</ul>
 </div>
 </div>
 <div class="section" id="id1">
@@ -797,32 +988,113 @@ share the same backend</li>
 </div>
 
 
+           </div>
+           <div class="articleComments">
+            
+           </div>
           </div>
-          
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+      
+        <a href="../contribute/" class="btn btn-neutral" title="Contributing" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2017, Rasa Technologies GmbH.
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
         </div>
       </div>
-    <div class="clearer"></div>
+
+    </section>
+
   </div>
-    <div class="footer">
-      &copy;2018, Rasa Technologies GmbH | <a href="https://rasa.com/privacy-policy/" target="_blank">Imprint</a> | <a href="https://rasa.com/privacy-policy/" target="_blank">Privacy Policy</a> 
-      
-
+  
+<div class="rst-versions" data-toggle="rst-versions" role="note" aria-label="versions">
+    <span class="rst-current-version" data-toggle="rst-current-version">
+        <span class="fa fa-book"> Other Versions</span>
+        v: 0.12.3
+        <span class="fa fa-caret-down"></span>
+    </span>
+    <div class="rst-other-versions">
+        <dl>
+            <dt>Tags</dt>
+            <dd><a href="0.12.3/changelog.html">0.12.3</a></dd>
+            <dd><a href="0.12.2/changelog.html">0.12.2</a></dd>
+            <dd><a href="0.12.1/changelog.html">0.12.1</a></dd>
+            <dd><a href="0.12.0/changelog.html">0.12.0</a></dd>
+            <dd><a href="0.11.4/changelog.html">0.11.4</a></dd>
+            <dd><a href="0.10.6/changelog.html">0.10.6</a></dd>
+            <dd><a href="0.9.2/changelog.html">0.9.2</a></dd>
+            <dd><a href="0.8.12/changelog.html">0.8.12</a></dd>
+            <dd><a href="0.7.4/changelog.html">0.7.4</a></dd>
+        </dl>
+        <dl>
+            <dt>Branches</dt>
+            <dd><a href="docs_reorg/changelog.html">docs_reorg</a></dd>
+            <dd><a href="master/changelog.html">master</a></dd>
+        </dl>
     </div>
+</div>
 
-    
 
-  <!-- Global site tag (gtag.js) - Google Analytics -->
-  <script async type="opt-in" data-name="googleanalytics" data-type="text/javascript" data-src="https://www.googletagmanager.com/gtag/js?id=UA-87333416-1"></script>
-  <script>
-    window.dataLayer = window.dataLayer || [];
+  
 
-    function gtag() {
-      dataLayer.push(arguments);
-    }
-    gtag('js', new Date());
-    gtag('config', 'UA-87333416-1', {
-      'anonymize_ip': true,
-    });
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'../',
+            VERSION:'0.12.3',
+            LANGUAGE:'None',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'',
+            HAS_SOURCE:  true,
+            SOURCELINK_SUFFIX: '.txt'
+        };
+    </script>
+      <script type="text/javascript" src="../_static/jquery.js"></script>
+      <script type="text/javascript" src="../_static/underscore.js"></script>
+      <script type="text/javascript" src="../_static/doctools.js"></script>
+      <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+
+  
+
+  
+  
+    <script type="text/javascript" src="../_static/js/theme.js"></script>
+  
+
+  
+  
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.StickyNav.enable();
+      });
   </script>
-  </body>
+  
+ 
+<!-- Global Site Tag (gtag.js) - Google Analytics -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=UA-87333416-1"></script>
+<script>
+window.dataLayer = window.dataLayer || [];
+function gtag(){dataLayer.push(arguments)};
+gtag('js', new Date());
+
+gtag('config', 'UA-87333416-1');
+</script>
+<script type="text/javascript" src="//script.crazyegg.com/pages/scripts/0074/3851.js" async="async"></script>
+
+
+</body>
 </html>

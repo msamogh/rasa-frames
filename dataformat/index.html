@@ -1,147 +1,215 @@
 
-<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
-  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 
-<html xmlns="http://www.w3.org/1999/xhtml">
-  <head>
-    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
-    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-    <title>Training Data Format &#8212; Rasa NLU 0.13.0a1 documentation</title>
-    <link rel="stylesheet" href="../_static/alabaster.css" type="text/css" />
-    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>Training and Data Format &mdash; Rasa NLU 0.12.3 documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  
+  
+    <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  
+
+  
     <link rel="stylesheet" href="../_static/banner.css" type="text/css" />
-    <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
-    <script type="text/javascript" src="../_static/jquery.js"></script>
-    <script type="text/javascript" src="../_static/underscore.js"></script>
-    <script type="text/javascript" src="../_static/doctools.js"></script>
-    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
-    <link rel="index" title="Index" href="../genindex/" />
-    <link rel="search" title="Search" href="../search/" />
-    <link rel="next" title="Pipeline and Component Configuration" href="../pipeline/" />
-    <link rel="prev" title="Frequently Asked Questions" href="../faq/" />
+  
+    <link rel="stylesheet" href="../_static/css/custom.css" type="text/css" />
+  
+
+  
+        <link rel="index" title="Index"
+              href="../genindex/"/>
+        <link rel="search" title="Search" href="../search/"/>
+    <link rel="top" title="Rasa NLU 0.12.3 documentation" href="../"/>
+        <link rel="next" title="Using Rasa NLU as a HTTP server" href="../http/"/>
+        <link rel="prev" title="Migrating an existing app" href="../migrating/"/> 
+
+  
+  <script src="../_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
    
-  <!--<link rel="stylesheet" href="../_static/custom.css" type="text/css" />-->
-  <link rel="stylesheet" href="../_static/xq-light.css" type="text/css" />
-  <link rel="stylesheet" href="../_static/fontawesome/css/fontawesome-all.css" type="text/css" />
-  <script defer type="text/javascript" src="../_static/config.js"></script>
-  <script defer type="text/javascript" src="../_static/klaro.js"></script>
-  
-  
-  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+  <div class="wy-grid-for-nav">
 
-  </head><body>
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
 
-<div class="nav-top" style="background-color: #3D44BC;">
-  <h1 class="brand">
-      <img src="/_static/rasa_logo.svg" width="80px" height="40px" title="Rasa" alt="Rasa logo">
-  </h1>
-  <ul class="nav">
-    
-      
-        <li><a href=https://newdocs.rasa.com/about>About</a></li>
-      
-    
-      
-        <li class="active"><a href=https://newdocs.rasa.com/nlu>NLU</a></li>
-      
-    
-      
-        <li><a href=https://newdocs.rasa.com/core>Core</a></li>
-      
-    
-      
-        <li><a href=https://newdocs.rasa.com/platform>Platform</a></li>
-      
-    
-  </ul>
+          
+            <a href="../" class="icon icon-home"> Rasa NLU
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                0.12
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search/" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
 </div>
 
+          
+        </div>
 
-  <div class="document">
-    
-    
-      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
-        <div class="sphinxsidebarwrapper"><p class="caption"><span class="caption-text">Getting Started</span></p>
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Getting Started</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../installation/">Installation</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../quickstart/">Quickstart</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../tutorial/">Tutorial: A simple restaurant search bot</a></li>
 </ul>
-<p class="caption"><span class="caption-text">User Guide</span></p>
-<ul>
-<li class="toctree-l1"><a class="reference internal" href="../choosing_pipeline/">Choosing a Pipeline</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../entities/">Entity Extraction</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../languages/">Language Support</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../evaluation/">Evaluating and Improving Models</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../fallback/">Confidence and Fallback Intents</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../faq/">Frequently Asked Questions</a></li>
-</ul>
-<p class="caption"><span class="caption-text">API Reference</span></p>
+<p class="caption"><span class="caption-text">User Documentation</span></p>
 <ul class="current">
-<li class="toctree-l1 current"><a class="current reference internal" href="#">Training Data Format</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../pipeline/">Pipeline and Component Configuration</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../config/">Server Configuration</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../http/">HTTP API</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../python/">Python API</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../persist/">Storing Models in the Cloud</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../docker/">Running in Docker</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../config/">Configuration</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../migrating/">Migrating an existing app</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Training and Data Format</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#data-format">Data Format</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#common-examples">Common Examples</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#entity-synonyms">Entity Synonyms</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#regular-expression-features">Regular Expression Features</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#markdown-format">Markdown Format</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#organization">Organization</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#train-a-model">Train a Model</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../http/">Using Rasa NLU as a HTTP server</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../python/">Using Rasa NLU from python</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../entities/">Entity Extraction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../closeloop/">Improving your models from feedback</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../persist/">Model Persistence</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../languages/">Language Support</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../pipeline/">Processing Pipeline</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../evaluation/">Evaluation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../context/">Context-aware Dialogue</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../faq/">Frequently Asked Questions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../migrations/">Migration Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../license/">License</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Resources</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../community/">Community Contributions</a></li>
 </ul>
 <p class="caption"><span class="caption-text">Developer Documentation</span></p>
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="../customcomponents/">Custom Components</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../migrations/">Migration Guide</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../license/">License</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../contribute/">Contributing</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../changelog/">Change Log</a></li>
 </ul>
 
-<h3>Versions</h3>
-<ul>
-    <li><a href="docs_reorg/dataformat.html">docs_reorg</a></li>
-</ul>
+            
+          
         </div>
       </div>
-      <div class="documentwrapper">
-        <div class="bodywrapper">
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../">Rasa NLU</a>
+        
+      </nav>
+
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
           
 
-          <div class="body" role="main">
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../">Docs</a> &raquo;</li>
+        
+      <li>Training and Data Format</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
             
-  <div class="section" id="training-data-format">
-<span id="section-dataformat"></span><h1>Training Data Format<a class="headerlink" href="#training-data-format" title="Permalink to this headline">¶</a></h1>
+            <a href="../_sources/dataformat.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  
+
+
+
+
+
+<div class="section" id="training-and-data-format">
+<span id="section-dataformat"></span><h1>Training and Data Format<a class="headerlink" href="#training-and-data-format" title="Permalink to this headline">¶</a></h1>
 <div class="section" id="data-format">
 <h2>Data Format<a class="headerlink" href="#data-format" title="Permalink to this headline">¶</a></h2>
-<p>You can provide training data as markdown or as json, as a single file or as a directory containing multiple files.
-Note that markdown is usually easier to work with.</p>
-<p>You can use <a class="reference external" href="https://rodrigopivi.github.io/Chatito/">Chatito</a> , a tool for generating training datasets in rasa’s format using a simple DSL or <a class="reference external" href="https://yuukanoo.github.io/tracy">Tracy</a>, a simple GUI to create training datasets for rasa.</p>
-<div class="section" id="markdown-format">
-<h3>Markdown Format<a class="headerlink" href="#markdown-format" title="Permalink to this headline">¶</a></h3>
-<p>Markdown is the easiest Rasa NLU format for humans to read and write.
-Examples are listed using the unordered
-list syntax, e.g. minus <code class="docutils literal notranslate"><span class="pre">-</span></code>, asterisk <code class="docutils literal notranslate"><span class="pre">*</span></code>, or plus <code class="docutils literal notranslate"><span class="pre">+</span></code>.
-Examples are grouped by intent, and entities are annotated as markdown links.</p>
-<div class="highlight-md notranslate"><div class="highlight"><pre><span></span><span class="gu">##</span> intent:check_balance
-<span class="k">-</span> what is my balance &lt;!-- no entity --&gt;
-<span class="k">-</span> how much do I have on my [<span class="nt">savings</span>](<span class="na">source_account</span>) &lt;!-- entity &quot;source_account&quot; has value &quot;savings&quot; --&gt;
-<span class="k">-</span> how much do I have on my [<span class="nt">my savings account</span>](<span class="na">source_account:savings</span>) &lt;!-- synonyms, method 1--&gt;
-
-<span class="gu">##</span> intent:greet
-<span class="k">-</span> hey
-<span class="k">-</span> hello
-
-<span class="gu">##</span> synonym:savings   &lt;!-- synonyms, method 2 --&gt;
-<span class="k">-</span> pink pig
-
-<span class="gu">##</span> regex:zipcode
-<span class="k">-</span> [0-9]{5}
-</pre></div>
-</div>
-<p>The training data for Rasa NLU is structured into different parts:
-examples, synonyms, and regex features.</p>
-<p>Synonyms will map extracted entities to the same name, for example mapping “my savings account” to simply “savings”.
-However, this only happens <em>after</em> the entities have been extracted, so you need to provide examples with the synonyms present so that Rasa can learn to pick them up.</p>
-</div>
-<div class="section" id="json-format">
-<h3>JSON Format<a class="headerlink" href="#json-format" title="Permalink to this headline">¶</a></h3>
-<p>The JSON format consist of a top-level object called <code class="docutils literal notranslate"><span class="pre">rasa_nlu_data</span></code>, with the keys
+<p>The training data for Rasa NLU is structured into different parts,
 <code class="docutils literal notranslate"><span class="pre">common_examples</span></code>, <code class="docutils literal notranslate"><span class="pre">entity_synonyms</span></code> and <code class="docutils literal notranslate"><span class="pre">regex_features</span></code>.
 The most important one is <code class="docutils literal notranslate"><span class="pre">common_examples</span></code>.</p>
 <div class="highlight-json notranslate"><div class="highlight"><pre><span></span><span class="p">{</span>
@@ -153,23 +221,10 @@ The most important one is <code class="docutils literal notranslate"><span class
 <span class="p">}</span>
 </pre></div>
 </div>
-<p>The <code class="docutils literal notranslate"><span class="pre">common_examples</span></code> are used to train your model. You should put all of your training
-examples in the <code class="docutils literal notranslate"><span class="pre">common_examples</span></code> array.
+<p>The <code class="docutils literal notranslate"><span class="pre">common_examples</span></code> are used to train both the entity and the intent models. You should put all of your training
+examples in the <code class="docutils literal notranslate"><span class="pre">common_examples</span></code> array. The next section describes in detail how an example looks like.
 Regex features are a tool to help the classifier detect entities or intents and improve the performance.</p>
-</div>
-<div class="section" id="visualizing-the-training-data">
-<h3>Visualizing the Training Data<a class="headerlink" href="#visualizing-the-training-data" title="Permalink to this headline">¶</a></h3>
-<p>If you’re using the json format, it’s always a good idea to <cite>look</cite> at your data before, during,
-and after training a model. Luckily, there’s a
-<a class="reference external" href="https://github.com/RasaHQ/rasa-nlu-trainer">great tool</a>
-for creating training data in rasa’s format.
-- created by <a class="reference external" href="https://github.com/azazdeaz">&#64;azazdeaz</a> -
-and it’s also extremely helpful for inspecting and modifying existing data.</p>
-<p>For the demo data the output should look like this:</p>
-<img alt="../_images/rasa_nlu_intent_gui.png" src="../_images/rasa_nlu_intent_gui.png" />
-<p>If you use the json format it is <strong>strongly</strong> recommended that you view your training
-data in the GUI before training.</p>
-</div>
+<p>You can use <a class="reference external" href="https://rodrigopivi.github.io/Chatito/">Chatito</a> , a tool for generating training datasets in rasa’s format using a simple DSL or <a class="reference external" href="https://yuukanoo.github.io/tracy">Tracy</a>, a simple GUI to create training datasets for rasa.</p>
 <div class="section" id="common-examples">
 <h3>Common Examples<a class="headerlink" href="#common-examples" title="Permalink to this headline">¶</a></h3>
 <p>Common examples have three components: <code class="docutils literal notranslate"><span class="pre">text</span></code>, <code class="docutils literal notranslate"><span class="pre">intent</span></code>, and <code class="docutils literal notranslate"><span class="pre">entities</span></code>. The first two are strings while the last one is an array.</p>
@@ -236,7 +291,7 @@ example states <code class="docutils literal notranslate"><span class="pre">NYC<
 and end index of the entity, you can define a synonym. Whenever the same text will be found, the value will use the
 synonym instead of the actual text in the message.</p>
 <p>To use the synonyms defined in your training data, you need to make sure the pipeline contains the <code class="docutils literal notranslate"><span class="pre">ner_synonyms</span></code>
-component (see <a class="reference internal" href="../pipeline/#section-pipeline"><span class="std std-ref">Pipeline and Component Configuration</span></a>).</p>
+component (see <a class="reference internal" href="../pipeline/#section-pipeline"><span class="std std-ref">Processing Pipeline</span></a>).</p>
 <p>Alternatively, you can add an “entity_synonyms” array to define several synonyms to one entity value. Here is an example of that:</p>
 <div class="highlight-json notranslate"><div class="highlight"><pre><span></span><span class="p">{</span>
   <span class="nt">&quot;rasa_nlu_data&quot;</span><span class="p">:</span> <span class="p">{</span>
@@ -292,6 +347,28 @@ recognize entities and related intents. Hence, you still need to provide intent 
 training data!</p>
 </div>
 </div>
+<div class="section" id="markdown-format">
+<h3>Markdown Format<a class="headerlink" href="#markdown-format" title="Permalink to this headline">¶</a></h3>
+<p>Alternatively training data can be used in the following markdown format. Examples are listed using the unordered
+list syntax, e.g. minus <code class="docutils literal notranslate"><span class="pre">-</span></code>, asterisk <code class="docutils literal notranslate"><span class="pre">*</span></code>, or plus <code class="docutils literal notranslate"><span class="pre">+</span></code>:</p>
+<div class="highlight-md notranslate"><div class="highlight"><pre><span></span><span class="gu">##</span> intent:check_balance
+<span class="k">-</span> what is my balance &lt;!-- no entity --&gt;
+<span class="k">-</span> how much do I have on my [<span class="nt">savings</span>](<span class="na">source_account</span>) &lt;!-- entity &quot;source_account&quot; has value &quot;savings&quot; --&gt;
+<span class="k">-</span> how much do I have on my [<span class="nt">my savings account</span>](<span class="na">source_account:savings</span>) &lt;!-- synonyms, method 1--&gt;
+
+<span class="gu">##</span> intent:greet
+<span class="k">-</span> hey
+<span class="k">-</span> hello
+
+<span class="gu">##</span> synonym:savings   &lt;!-- synonyms, method 2 --&gt;
+<span class="k">-</span> pink pig
+
+
+<span class="gu">##</span> regex:zipcode
+<span class="k">-</span> [0-9]{5}
+</pre></div>
+</div>
+</div>
 <div class="section" id="organization">
 <h3>Organization<a class="headerlink" href="#organization" title="Permalink to this headline">¶</a></h3>
 <p>The training data can either be stored in a single file or split into multiple files.
@@ -304,35 +381,162 @@ For other file formats you have to use the single-file approach.</p>
 </div>
 </div>
 </div>
+<div class="section" id="train-a-model">
+<span id="train-parameters"></span><h2>Train a Model<a class="headerlink" href="#train-a-model" title="Permalink to this headline">¶</a></h2>
+<p>There is a helper script that allows you to train a model.</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>$ python -m rasa_nlu.train
+</pre></div>
+</div>
+<p>Here is a quick overview over the parameters you can pass to that script:</p>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>usage: train.py [-h] [-o PATH] (-d DATA | -u URL) -c CONFIG [-t NUM_THREADS]
+                [--project PROJECT] [--fixed_model_name FIXED_MODEL_NAME]
+                [--storage STORAGE] [--debug] [-v]
+
+train a custom language parser
+
+optional arguments:
+  -h, --help            show this help message and exit
+  -o PATH, --path PATH  Path where model files will be saved
+  -d DATA, --data DATA  Location of the training data. For JSON and markdown
+                        data, this can either be a single file or a directory
+                        containing multiple training data files.
+  -u URL, --url URL     URL from which to retrieve training data.
+  -c CONFIG, --config CONFIG
+                        Rasa NLU configuration file
+  -t NUM_THREADS, --num_threads NUM_THREADS
+                        Number of threads to use during model training
+  --project PROJECT     Project this model belongs to.
+  --fixed_model_name FIXED_MODEL_NAME
+                        If present, a model will always be persisted in the
+                        specified directory instead of creating a folder like
+                        &#39;model_20171020-160213&#39;
+  --storage STORAGE     Set the remote location where models are stored. E.g.
+                        on AWS. If nothing is configured, the server will only
+                        serve the models that are on disk in the configured
+                        `path`.
+  --debug               Print lots of debugging statements. Sets logging level
+                        to DEBUG
+  -v, --verbose         Be verbose. Sets logging level to INFO
+</pre></div>
+</div>
+<p>The other ways to train a model are</p>
+<ul class="simple">
+<li>training it using your own python code</li>
+<li>training it using the HTTP api (<a class="reference internal" href="../http/#section-http"><span class="std std-ref">Using Rasa NLU as a HTTP server</span></a>)</li>
+</ul>
+</div>
 </div>
 
 
+           </div>
+           <div class="articleComments">
+            
+           </div>
           </div>
-          
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="../http/" class="btn btn-neutral float-right" title="Using Rasa NLU as a HTTP server" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="../migrating/" class="btn btn-neutral" title="Migrating an existing app" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2017, Rasa Technologies GmbH.
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
         </div>
       </div>
-    <div class="clearer"></div>
+
+    </section>
+
   </div>
-    <div class="footer">
-      &copy;2018, Rasa Technologies GmbH | <a href="https://rasa.com/privacy-policy/" target="_blank">Imprint</a> | <a href="https://rasa.com/privacy-policy/" target="_blank">Privacy Policy</a> 
-      
-
+  
+<div class="rst-versions" data-toggle="rst-versions" role="note" aria-label="versions">
+    <span class="rst-current-version" data-toggle="rst-current-version">
+        <span class="fa fa-book"> Other Versions</span>
+        v: 0.12.3
+        <span class="fa fa-caret-down"></span>
+    </span>
+    <div class="rst-other-versions">
+        <dl>
+            <dt>Tags</dt>
+            <dd><a href="0.12.3/dataformat.html">0.12.3</a></dd>
+            <dd><a href="0.12.2/dataformat.html">0.12.2</a></dd>
+            <dd><a href="0.12.1/dataformat.html">0.12.1</a></dd>
+            <dd><a href="0.12.0/dataformat.html">0.12.0</a></dd>
+            <dd><a href="0.11.4/dataformat.html">0.11.4</a></dd>
+            <dd><a href="0.10.6/dataformat.html">0.10.6</a></dd>
+            <dd><a href="0.9.2/dataformat.html">0.9.2</a></dd>
+            <dd><a href="0.8.12/dataformat.html">0.8.12</a></dd>
+            <dd><a href="0.7.4/dataformat.html">0.7.4</a></dd>
+        </dl>
+        <dl>
+            <dt>Branches</dt>
+            <dd><a href="docs_reorg/dataformat.html">docs_reorg</a></dd>
+            <dd><a href="master/dataformat.html">master</a></dd>
+        </dl>
     </div>
+</div>
 
-    
 
-  <!-- Global site tag (gtag.js) - Google Analytics -->
-  <script async type="opt-in" data-name="googleanalytics" data-type="text/javascript" data-src="https://www.googletagmanager.com/gtag/js?id=UA-87333416-1"></script>
-  <script>
-    window.dataLayer = window.dataLayer || [];
+  
 
-    function gtag() {
-      dataLayer.push(arguments);
-    }
-    gtag('js', new Date());
-    gtag('config', 'UA-87333416-1', {
-      'anonymize_ip': true,
-    });
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'../',
+            VERSION:'0.12.3',
+            LANGUAGE:'None',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'',
+            HAS_SOURCE:  true,
+            SOURCELINK_SUFFIX: '.txt'
+        };
+    </script>
+      <script type="text/javascript" src="../_static/jquery.js"></script>
+      <script type="text/javascript" src="../_static/underscore.js"></script>
+      <script type="text/javascript" src="../_static/doctools.js"></script>
+      <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+
+  
+
+  
+  
+    <script type="text/javascript" src="../_static/js/theme.js"></script>
+  
+
+  
+  
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.StickyNav.enable();
+      });
   </script>
-  </body>
+  
+ 
+<!-- Global Site Tag (gtag.js) - Google Analytics -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=UA-87333416-1"></script>
+<script>
+window.dataLayer = window.dataLayer || [];
+function gtag(){dataLayer.push(arguments)};
+gtag('js', new Date());
+
+gtag('config', 'UA-87333416-1');
+</script>
+<script type="text/javascript" src="//script.crazyegg.com/pages/scripts/0074/3851.js" async="async"></script>
+
+
+</body>
 </html>
