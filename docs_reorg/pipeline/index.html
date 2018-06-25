@@ -6,7 +6,7 @@
   <head>
     <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-    <title>Pipeline and Component Configuration &#8212; Rasa NLU 0.13.0a1 documentation</title>
+    <title>Pipeline and Component Configuration &#8212; Rasa NLU 0.13.0a2 documentation</title>
     <link rel="stylesheet" href="../_static/alabaster.css" type="text/css" />
     <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
     <link rel="stylesheet" href="../_static/banner.css" type="text/css" />
@@ -33,7 +33,9 @@
 
 <div class="nav-top">
   <h1 class="brand">
+    <a href="/">
       <img src="/_static/rasa_logo.svg" width="80px" height="40px" title="Rasa" alt="Rasa logo">
+    </a>
   </h1>
   <span class="logo extension">docs</span>
   
@@ -862,7 +864,7 @@ See <a class="reference external" href="https://arxiv.org/abs/1709.03856">starsp
 <tr class="field-even field"><th class="field-name">Outputs:</th><td class="field-body"><code class="docutils literal notranslate"><span class="pre">text_features</span></code> and <code class="docutils literal notranslate"><span class="pre">tokens.pattern</span></code></td>
 </tr>
 <tr class="field-odd field"><th class="field-name">Description:</th><td class="field-body">During training, the regex intent featurizer creates a list of <cite>regular expressions</cite> defined in the training data format.
-If an expression is found in the input, a feature will be set, that will later be fed into intent classifier / entity
+For each regex, a feature will be set marking whether this expression was found in the input, which will later be fed into intent classifier / entity
 extractor to simplify classification (assuming the classifier has learned during the training phase, that this set
 feature indicates a certain intent). Regex features for entity extraction are currently only supported by the
 <code class="docutils literal notranslate"><span class="pre">ner_crf</span></code> component!

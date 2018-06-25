@@ -6,7 +6,7 @@
   <head>
     <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-    <title>Training Data Format &#8212; Rasa NLU 0.13.0a1 documentation</title>
+    <title>Training Data Format &#8212; Rasa NLU 0.13.0a2 documentation</title>
     <link rel="stylesheet" href="../_static/alabaster.css" type="text/css" />
     <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
     <link rel="stylesheet" href="../_static/banner.css" type="text/css" />
@@ -33,7 +33,9 @@
 
 <div class="nav-top">
   <h1 class="brand">
+    <a href="/">
       <img src="/_static/rasa_logo.svg" width="80px" height="40px" title="Rasa" alt="Rasa logo">
+    </a>
   </h1>
   <span class="logo extension">docs</span>
   
@@ -328,7 +330,7 @@ the zipcode example it might look like this:</p>
 </pre></div>
 </div>
 <p>The name doesn’t define the entity nor the intent, it is just a human readable description for you to remember what
-this regex is used for. As you can see in the above example, you can also use the regex features to improve the intent
+this regex is used for and is the title of the corresponding pattern feature. As you can see in the above example, you can also use the regex features to improve the intent
 classification performance.</p>
 <p>Try to create your regular expressions in a way that they match as few words as possible. E.g. using <code class="docutils literal notranslate"><span class="pre">hey[^\s]*</span></code>
 instead of <code class="docutils literal notranslate"><span class="pre">hey.*</span></code>, as the later one might match the whole message whereas the first one only matches a single word.</p>
