@@ -20,24 +20,37 @@
     <link rel="next" title="Quickstart" href="../quickstart/" />
     <link rel="prev" title="Language Understanding with Rasa NLU" href="../" />
    
-  <!--<link rel="stylesheet" href="../_static/custom.css" type="text/css" />-->
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+  <meta name="description" content="">
+  <meta property="og:title" content="" />
+  <meta property="og:type" content="website" />
+  <meta property="og:image" content="" />
+  <meta property="og:url" content="" />
+  <meta property="og:description" content="" />
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:site" content="@Rasa_HQ">
+  <meta name="twitter:title" content="">
+  <meta name="twitter:description" content="">
+  <meta name="twitter:creator" content="@Rasa_HQ">
+  <meta name="twitter:image" content="">
+    
   <link rel="stylesheet" href="../_static/xq-light.css" type="text/css" />
   <link rel="stylesheet" href="../_static/fontawesome/css/fontawesome-all.css" type="text/css" />
   <script defer type="text/javascript" src="../_static/config.js"></script>
   <script defer type="text/javascript" src="../_static/klaro.js"></script>
   
   
-  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+  
 
   </head><body>
 
 <div class="nav-top">
-  <h1 class="brand">
-    <a href="/">
-      <img src="/_static/rasa_logo.svg" width="80px" height="40px" title="Rasa" alt="Rasa logo">
-    </a>
-  </h1>
-  <span class="logo extension">docs</span>
+  <a href="/" class="brand-link">
+      <h1 class="brand">
+          <img src="../_static/rasa_logo.svg" width="80px" height="40px" title="Rasa" alt="Rasa logo">
+      </h1>
+      <span class="logo extension">docs</span>
+  </a>
   
   <ul class="nav">
     
@@ -65,7 +78,7 @@
   </ul>
 </div>
 
-
+  <div class="sidebar-extended"></div>
   <div class="document">
     
     
@@ -152,6 +165,15 @@
     <p class="scv-banner"><a href="../0.12.3/installation.html"><b>Warning:</b> This document is for the development version of Rasa NLU. The latest version is 0.12.3.</a></p>
 <div class="section" id="installation">
 <span id="section-backends"></span><h1>Installation<a class="headerlink" href="#installation" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="prerequisites">
+<h2>Prerequisites<a class="headerlink" href="#prerequisites" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="for-windows">
+<h3>For windows<a class="headerlink" href="#for-windows" title="Permalink to this headline">¶</a></h3>
+<p>Make sure the Microsoft VC++ Compiler is installed, so python can compile any dependencies. You can get the compiler from:
+<a class="reference external" href="https://visualstudio.microsoft.com/visual-cpp-build-tools/">https://visualstudio.microsoft.com/visual-cpp-build-tools/</a>
+Download the installer and select VC++ Build tools in the list.</p>
+</div>
+</div>
 <div class="section" id="setting-up-rasa-nlu">
 <h2>Setting up Rasa NLU<a class="headerlink" href="#setting-up-rasa-nlu" title="Permalink to this headline">¶</a></h2>
 <p>The recommended way to install Rasa NLU is using pip:</p>

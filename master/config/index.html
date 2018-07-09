@@ -20,24 +20,37 @@
     <link rel="next" title="HTTP API" href="../http/" />
     <link rel="prev" title="Pipeline and Component Configuration" href="../pipeline/" />
    
-  <!--<link rel="stylesheet" href="../_static/custom.css" type="text/css" />-->
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+  <meta name="description" content="">
+  <meta property="og:title" content="" />
+  <meta property="og:type" content="website" />
+  <meta property="og:image" content="" />
+  <meta property="og:url" content="" />
+  <meta property="og:description" content="" />
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:site" content="@Rasa_HQ">
+  <meta name="twitter:title" content="">
+  <meta name="twitter:description" content="">
+  <meta name="twitter:creator" content="@Rasa_HQ">
+  <meta name="twitter:image" content="">
+    
   <link rel="stylesheet" href="../_static/xq-light.css" type="text/css" />
   <link rel="stylesheet" href="../_static/fontawesome/css/fontawesome-all.css" type="text/css" />
   <script defer type="text/javascript" src="../_static/config.js"></script>
   <script defer type="text/javascript" src="../_static/klaro.js"></script>
   
   
-  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+  
 
   </head><body>
 
 <div class="nav-top">
-  <h1 class="brand">
-    <a href="/">
-      <img src="/_static/rasa_logo.svg" width="80px" height="40px" title="Rasa" alt="Rasa logo">
-    </a>
-  </h1>
-  <span class="logo extension">docs</span>
+  <a href="/" class="brand-link">
+      <h1 class="brand">
+          <img src="../_static/rasa_logo.svg" width="80px" height="40px" title="Rasa" alt="Rasa logo">
+      </h1>
+      <span class="logo extension">docs</span>
+  </a>
   
   <ul class="nav">
     
@@ -65,7 +78,7 @@
   </ul>
 </div>
 
-
+  <div class="sidebar-extended"></div>
   <div class="document">
     
     
@@ -186,8 +199,19 @@ if you have projects in multiple languages your memory usage will still be high.
 </div>
 <p>As stated previously, Rasa NLU naturally handles serving multiple apps.
 By default the server will load all projects found
-under the <code class="docutils literal notranslate"><span class="pre">path</span></code> directory passed at run time.
-The file structure under <code class="docutils literal notranslate"><span class="pre">path</span> <span class="pre">directory</span></code> is as follows :</p>
+under the <code class="docutils literal notranslate"><span class="pre">path</span></code> directory passed at run time.</p>
+<p>Rasa NLU naturally handles serving multiple apps, by default the server will load all projects found
+under the directory specified with <code class="docutils literal notranslate"><span class="pre">--path</span></code> option. unless you have provide <code class="docutils literal notranslate"><span class="pre">--pre_load</span></code> option
+to load a specific project.</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">$</span> <span class="c1"># This will load all projects under projects/ directory</span>
+<span class="gp">$</span> python -m rasa_nlu.server -c config.yaml --path projects/
+</pre></div>
+</div>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">$</span> <span class="c1"># This will load only hotels project under projects/ directory</span>
+<span class="gp">$</span> python -m rasa_nlu.server -c config.yaml --pre_load hotels --path projects/
+</pre></div>
+</div>
+<p>The file structure under <code class="docutils literal notranslate"><span class="pre">path</span> <span class="pre">directory</span></code> is as follows:</p>
 <div class="highlight-text notranslate"><div class="highlight"><pre><span></span>- &lt;path&gt;
  - &lt;project_A&gt;
   - &lt;model_XXXXXX&gt;
@@ -239,8 +263,8 @@ optional arguments:
                         Preload models into memory before starting the server.
                         If given `all` as input all the models will be loaded.
                         Else you can specify a list of specific project names.
-                        Eg: python -m rasa_nlu.server -p project1 project2
-                        --path projects
+                        Eg: python -m rasa_nlu.server --pre_load project1
+                        --path projects -c config.yaml
   -t TOKEN, --token TOKEN
                         auth token. If set, reject requests which don&#39;t
                         provide this token as a query parameter
