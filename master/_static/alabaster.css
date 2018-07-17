@@ -456,6 +456,7 @@ div.body p, div.body dd, div.body li {
   -moz-border-radius: 8px;
   border-radius: 8px;
   padding: 24px;
+  min-height: 150px;
 }
 
 .card h4 {
@@ -619,13 +620,6 @@ div.topic {
 
 .contents.topic ul.simple li, .contents.topic .simple ul > li > ul {
     list-style:none;
-}
-
-.contents.topic .simple ul li:before {
-    color: #aebacb;
-    content: '#';
-    left: -16px;
-    margin-right:12px;
 }
 
 .contents.topic .simple a.reference {
@@ -1083,6 +1077,10 @@ nav#breadcrumbs li+li:before {
     font-weight:600;
     text-decoration:none;
     color: #617287;
+}
+
+a.brand-link {
+    text-decoration: none;
 }
 
 .nav-top .nav {
