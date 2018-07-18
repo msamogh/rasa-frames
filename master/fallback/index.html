@@ -45,7 +45,7 @@
   </head><body>
 
 <div class="nav-top">
-  <a href="/" class="brand-link">
+  <a href="/docs" class="brand-link">
       <h1 class="brand">
           <img src="../_static/rasa_logo.svg" width="80px" height="40px" title="Rasa" alt="Rasa logo">
       </h1>
@@ -55,19 +55,19 @@
   <ul class="nav">
     
       
-        <li><a href=https://newdocs.rasa.com/about>About</a></li>
+        <li><a href=/docs/about>About</a></li>
       
     
       
-        <li class="active"><a href=https://newdocs.rasa.com/nlu>NLU</a></li>
+        <li class="active"><a href=/docs/nlu>NLU</a></li>
       
     
       
-        <li><a href=https://newdocs.rasa.com/core>Core</a></li>
+        <li><a href=/docs/core>Core</a></li>
       
     
       
-        <li><a href=https://newdocs.rasa.com/platform>Platform</a></li>
+        <li><a href=/docs/platform>Platform</a></li>
       
     
     
@@ -165,6 +165,26 @@
     <p class="scv-banner"><b>Warning:</b> This document is for the development version of Rasa NLU.</p>
 <div class="section" id="confidence-and-fallback-intents">
 <span id="section-fallback"></span><h1>Confidence and Fallback Intents<a class="headerlink" href="#confidence-and-fallback-intents" title="Permalink to this headline">¶</a></h1>
+<p>Each of the pipelines will report a <code class="docutils literal notranslate"><span class="pre">confidence</span></code> score along with the predicted intent,
+and the <code class="docutils literal notranslate"><span class="pre">ner_crf</span></code> component will do the same for the extracted entities.</p>
+<p>You can use the confidence score to choose when to ignore Rasa NLU’s prediction and trigger
+fallback behaviour, for example asking the user to rephrase. If you are using Rasa Core,
+you can do this using a <a class="reference external" href="/core/fallbacks/">Fallback Policy</a>.</p>
+<div class="section" id="choosing-a-confidence-cutoff">
+<h2>Choosing a Confidence Cutoff<a class="headerlink" href="#choosing-a-confidence-cutoff" title="Permalink to this headline">¶</a></h2>
+<p>A good way to choose a confidence cutoff is to calculate the model’s confidence on a test set,
+and compare the confidence values on the correctly and incorrectly predicted examples.</p>
+</div>
+<div class="section" id="a-note-about-confidence-scores">
+<h2>A Note about Confidence Scores<a class="headerlink" href="#a-note-about-confidence-scores" title="Permalink to this headline">¶</a></h2>
+<p>Always keep in mind that the confidence score is not a true probability that the prediction
+is correct, it’s just a metric defined by the model that approximately describes how similar
+your input was to the training data.</p>
+<p>The intent classifier in the <code class="docutils literal notranslate"><span class="pre">spacy_sklearn</span></code> pipeline, for example, usually reports very low
+confidence numbers, whereas the <code class="docutils literal notranslate"><span class="pre">tensorflow_embedding</span></code> pipeline usually provides very high confidences.
+One common misconception is that if your model reports high confidence on your training examples,
+it is a “better” model. In fact, this usually means that your model is overfitting.</p>
+</div>
 </div>
 
 

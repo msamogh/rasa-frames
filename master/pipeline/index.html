@@ -45,7 +45,7 @@
   </head><body>
 
 <div class="nav-top">
-  <a href="/" class="brand-link">
+  <a href="/docs" class="brand-link">
       <h1 class="brand">
           <img src="../_static/rasa_logo.svg" width="80px" height="40px" title="Rasa" alt="Rasa logo">
       </h1>
@@ -55,19 +55,19 @@
   <ul class="nav">
     
       
-        <li><a href=https://newdocs.rasa.com/about>About</a></li>
+        <li><a href=/docs/about>About</a></li>
       
     
       
-        <li class="active"><a href=https://newdocs.rasa.com/nlu>NLU</a></li>
+        <li class="active"><a href=/docs/nlu>NLU</a></li>
       
     
       
-        <li><a href=https://newdocs.rasa.com/core>Core</a></li>
+        <li><a href=/docs/core>Core</a></li>
       
     
       
-        <li><a href=https://newdocs.rasa.com/platform>Platform</a></li>
+        <li><a href=/docs/platform>Platform</a></li>
       
     
     
@@ -208,9 +208,10 @@
 </li>
 </ul>
 </div>
-<p>The process of incoming messages is split into different components. These components are executed one after another
+<p>Incoming messages are processed by a sequence of components. These components are executed one after another
 in a so called processing pipeline. There are components for entity extraction, for intent classification,
-pre-processing and there will be many more in the future.</p>
+pre-processing, and others. If you want to add your own component, for example to run a spell-check or to
+do sentiment analysis, check out <a class="reference internal" href="../customcomponents/#section-customcomponents"><span class="std std-ref">Custom Components</span></a>.</p>
 <p>Each component processes the input and creates an output. The ouput can be used by any component that comes after
 this component in the pipeline. There are components which only produce information that is used by other components
 in the pipeline and there are other components that produce <code class="docutils literal notranslate"><span class="pre">Output</span></code> attributes which will be returned after

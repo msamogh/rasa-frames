@@ -45,7 +45,7 @@
   </head><body>
 
 <div class="nav-top">
-  <a href="/" class="brand-link">
+  <a href="/docs" class="brand-link">
       <h1 class="brand">
           <img src="../_static/rasa_logo.svg" width="80px" height="40px" title="Rasa" alt="Rasa logo">
       </h1>
@@ -55,19 +55,19 @@
   <ul class="nav">
     
       
-        <li><a href=https://newdocs.rasa.com/about>About</a></li>
+        <li><a href=/docs/about>About</a></li>
       
     
       
-        <li class="active"><a href=https://newdocs.rasa.com/nlu>NLU</a></li>
+        <li class="active"><a href=/docs/nlu>NLU</a></li>
       
     
       
-        <li><a href=https://newdocs.rasa.com/core>Core</a></li>
+        <li><a href=/docs/core>Core</a></li>
       
     
       
-        <li><a href=https://newdocs.rasa.com/platform>Platform</a></li>
+        <li><a href=/docs/platform>Platform</a></li>
       
     
     
@@ -239,7 +239,7 @@ and use the <code class="docutils literal notranslate"><span class="pre">ner_duc
 <div class="section" id="regular-expressions-regex">
 <h2>Regular Expressions (regex)<a class="headerlink" href="#regular-expressions-regex" title="Permalink to this headline">¶</a></h2>
 <p>You can use regular expressions to help the CRF model learn to recognize entities.
-In the <span class="xref std std-ref">dataformat</span> you can provide a list of regular expressions, each of which provides
+In the <a class="reference internal" href="../dataformat/#section-dataformat"><span class="std std-ref">Training Data Format</span></a> you can provide a list of regular expressions, each of which provides
 the <code class="docutils literal notranslate"><span class="pre">ner_crf</span></code> with an extra binary feature, which says if the regex was found (1) or not (0).</p>
 <p>For example, the names of German streets often end in <code class="docutils literal notranslate"><span class="pre">strasse</span></code>. By adding this as a regex,
 we are telling the model to pay attention to words ending this way, and will quickly learn to
