@@ -236,6 +236,8 @@ the parameters for the tensorflow and CRF models changed.</p>
 <li>add a feature for each regex in the training set for crf_entity_extractor</li>
 <li>Current training processes count for server and projects.</li>
 <li>the <code class="docutils literal notranslate"><span class="pre">/version</span></code> endpoint returns a new field <code class="docutils literal notranslate"><span class="pre">minimum_compatible_version</span></code></li>
+<li>added logging of intent prediction errors to evaluation script</li>
+<li>added histogram of confidence scores to evaluation script</li>
 </ul>
 </div>
 <div class="section" id="changed">
@@ -246,6 +248,7 @@ the parameters for the tensorflow and CRF models changed.</p>
 <li>Allow multiple training processes per project</li>
 <li>Changed AlreadyTrainingError to MaxTrainingError. The first one was used to indicate that the project was already training. The latest will show an error when the server isn’t able to training more models.</li>
 <li><code class="docutils literal notranslate"><span class="pre">Interpreter.ensure_model_compatibility</span></code> takes a new parameters for the version to compare the model version against</li>
+<li>confusion matrix plot gets saved to file automatically during evaluation</li>
 </ul>
 </div>
 <div class="section" id="removed">
