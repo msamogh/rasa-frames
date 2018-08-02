@@ -164,46 +164,46 @@
 
     <p class="scv-banner"><a href="../0.12.3/pipeline.html"><b>Warning:</b> This document is for the development version of Rasa NLU. The latest version is 0.12.3.</a></p>
 <div class="section" id="pipeline-and-component-configuration">
-<span id="section-pipeline"></span><h1><a class="toc-backref" href="#id2">Pipeline and Component Configuration</a><a class="headerlink" href="#pipeline-and-component-configuration" title="Permalink to this headline">¶</a></h1>
+<span id="section-pipeline"></span><h1><a class="toc-backref" href="#id3">Pipeline and Component Configuration</a><a class="headerlink" href="#pipeline-and-component-configuration" title="Permalink to this headline">¶</a></h1>
 <div class="contents topic" id="contents">
 <p class="topic-title first">Contents</p>
 <ul class="simple">
-<li><a class="reference internal" href="#pipeline-and-component-configuration" id="id2">Pipeline and Component Configuration</a><ul>
-<li><a class="reference internal" href="#pre-configured-pipelines" id="id3">Pre-configured Pipelines</a><ul>
-<li><a class="reference internal" href="#spacy-sklearn" id="id4">spacy_sklearn</a></li>
-<li><a class="reference internal" href="#tensorflow-embedding" id="id5">tensorflow_embedding</a></li>
-<li><a class="reference internal" href="#mitie" id="id6">mitie</a></li>
-<li><a class="reference internal" href="#mitie-sklearn" id="id7">mitie_sklearn</a></li>
-<li><a class="reference internal" href="#keyword" id="id8">keyword</a></li>
-<li><a class="reference internal" href="#multiple-intents" id="id9">Multiple Intents</a></li>
-<li><a class="reference internal" href="#custom-pipelines" id="id10">Custom pipelines</a></li>
+<li><a class="reference internal" href="#pipeline-and-component-configuration" id="id3">Pipeline and Component Configuration</a><ul>
+<li><a class="reference internal" href="#pre-configured-pipelines" id="id4">Pre-configured Pipelines</a><ul>
+<li><a class="reference internal" href="#spacy-sklearn" id="id5">spacy_sklearn</a></li>
+<li><a class="reference internal" href="#tensorflow-embedding" id="id6">tensorflow_embedding</a></li>
+<li><a class="reference internal" href="#mitie" id="id7">mitie</a></li>
+<li><a class="reference internal" href="#mitie-sklearn" id="id8">mitie_sklearn</a></li>
+<li><a class="reference internal" href="#keyword" id="id9">keyword</a></li>
+<li><a class="reference internal" href="#multiple-intents" id="id10">Multiple Intents</a></li>
+<li><a class="reference internal" href="#custom-pipelines" id="id11">Custom pipelines</a></li>
 </ul>
 </li>
-<li><a class="reference internal" href="#built-in-components" id="id11">Built-in Components</a><ul>
-<li><a class="reference internal" href="#nlp-mitie" id="id12">nlp_mitie</a></li>
-<li><a class="reference internal" href="#nlp-spacy" id="id13">nlp_spacy</a></li>
-<li><a class="reference internal" href="#intent-featurizer-mitie" id="id14">intent_featurizer_mitie</a></li>
-<li><a class="reference internal" href="#intent-featurizer-spacy" id="id15">intent_featurizer_spacy</a></li>
-<li><a class="reference internal" href="#intent-featurizer-ngrams" id="id16">intent_featurizer_ngrams</a></li>
-<li><a class="reference internal" href="#intent-featurizer-count-vectors" id="id17">intent_featurizer_count_vectors</a></li>
-<li><a class="reference internal" href="#intent-classifier-keyword" id="id18">intent_classifier_keyword</a></li>
-<li><a class="reference internal" href="#intent-classifier-mitie" id="id19">intent_classifier_mitie</a></li>
-<li><a class="reference internal" href="#intent-classifier-sklearn" id="id20">intent_classifier_sklearn</a></li>
-<li><a class="reference internal" href="#intent-classifier-tensorflow-embedding" id="id21">intent_classifier_tensorflow_embedding</a></li>
-<li><a class="reference internal" href="#intent-entity-featurizer-regex" id="id22">intent_entity_featurizer_regex</a></li>
-<li><a class="reference internal" href="#tokenizer-whitespace" id="id23">tokenizer_whitespace</a></li>
-<li><a class="reference internal" href="#tokenizer-jieba" id="id24">tokenizer_jieba</a></li>
-<li><a class="reference internal" href="#tokenizer-mitie" id="id25">tokenizer_mitie</a></li>
-<li><a class="reference internal" href="#tokenizer-spacy" id="id26">tokenizer_spacy</a></li>
-<li><a class="reference internal" href="#ner-mitie" id="id27">ner_mitie</a></li>
-<li><a class="reference internal" href="#ner-spacy" id="id28">ner_spacy</a></li>
-<li><a class="reference internal" href="#ner-synonyms" id="id29">ner_synonyms</a></li>
-<li><a class="reference internal" href="#ner-crf" id="id30">ner_crf</a></li>
-<li><a class="reference internal" href="#ner-duckling" id="id31">ner_duckling</a></li>
+<li><a class="reference internal" href="#built-in-components" id="id12">Built-in Components</a><ul>
+<li><a class="reference internal" href="#nlp-mitie" id="id13">nlp_mitie</a></li>
+<li><a class="reference internal" href="#nlp-spacy" id="id14">nlp_spacy</a></li>
+<li><a class="reference internal" href="#intent-featurizer-mitie" id="id15">intent_featurizer_mitie</a></li>
+<li><a class="reference internal" href="#intent-featurizer-spacy" id="id16">intent_featurizer_spacy</a></li>
+<li><a class="reference internal" href="#intent-featurizer-ngrams" id="id17">intent_featurizer_ngrams</a></li>
+<li><a class="reference internal" href="#intent-featurizer-count-vectors" id="id18">intent_featurizer_count_vectors</a></li>
+<li><a class="reference internal" href="#intent-classifier-keyword" id="id19">intent_classifier_keyword</a></li>
+<li><a class="reference internal" href="#intent-classifier-mitie" id="id20">intent_classifier_mitie</a></li>
+<li><a class="reference internal" href="#intent-classifier-sklearn" id="id21">intent_classifier_sklearn</a></li>
+<li><a class="reference internal" href="#intent-classifier-tensorflow-embedding" id="id22">intent_classifier_tensorflow_embedding</a></li>
+<li><a class="reference internal" href="#intent-entity-featurizer-regex" id="id23">intent_entity_featurizer_regex</a></li>
+<li><a class="reference internal" href="#tokenizer-whitespace" id="id24">tokenizer_whitespace</a></li>
+<li><a class="reference internal" href="#tokenizer-jieba" id="id25">tokenizer_jieba</a></li>
+<li><a class="reference internal" href="#tokenizer-mitie" id="id26">tokenizer_mitie</a></li>
+<li><a class="reference internal" href="#tokenizer-spacy" id="id27">tokenizer_spacy</a></li>
+<li><a class="reference internal" href="#ner-mitie" id="id28">ner_mitie</a></li>
+<li><a class="reference internal" href="#ner-spacy" id="id29">ner_spacy</a></li>
+<li><a class="reference internal" href="#ner-synonyms" id="id30">ner_synonyms</a></li>
+<li><a class="reference internal" href="#ner-crf" id="id31">ner_crf</a></li>
+<li><a class="reference internal" href="#ner-duckling-http" id="id32">ner_duckling_http</a></li>
 </ul>
 </li>
-<li><a class="reference internal" href="#component-lifecycle" id="id32">Component Lifecycle</a></li>
-<li><a class="reference internal" href="#returned-entities-object" id="id33">Returned Entities Object</a></li>
+<li><a class="reference internal" href="#component-lifecycle" id="id33">Component Lifecycle</a></li>
+<li><a class="reference internal" href="#returned-entities-object" id="id34">Returned Entities Object</a></li>
 </ul>
 </li>
 </ul>
@@ -232,12 +232,12 @@ the processing has finished. For example, for the sentence <code class="docutils
 <p>is created as a combination of the results of the different components in the pre-configured pipeline <code class="docutils literal notranslate"><span class="pre">spacy_sklearn</span></code>.
 For example, the <code class="docutils literal notranslate"><span class="pre">entities</span></code> attribute is created by the <code class="docutils literal notranslate"><span class="pre">ner_crf</span></code> component.</p>
 <div class="section" id="pre-configured-pipelines">
-<h2><a class="toc-backref" href="#id3">Pre-configured Pipelines</a><a class="headerlink" href="#pre-configured-pipelines" title="Permalink to this headline">¶</a></h2>
+<h2><a class="toc-backref" href="#id4">Pre-configured Pipelines</a><a class="headerlink" href="#pre-configured-pipelines" title="Permalink to this headline">¶</a></h2>
 <p>To ease the burden of coming up with your own processing pipelines, we provide a couple of ready to use templates
 which can be used by setting the <code class="docutils literal notranslate"><span class="pre">pipeline</span></code> configuration value to the name of the template you want to use.
 Here is a list of the <strong>existing templates</strong>:</p>
 <div class="section" id="spacy-sklearn">
-<h3><a class="toc-backref" href="#id4">spacy_sklearn</a><a class="headerlink" href="#spacy-sklearn" title="Permalink to this headline">¶</a></h3>
+<h3><a class="toc-backref" href="#id5">spacy_sklearn</a><a class="headerlink" href="#spacy-sklearn" title="Permalink to this headline">¶</a></h3>
 <p>To use spacy as a template:</p>
 <div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="l l-Scalar l-Scalar-Plain">language</span><span class="p p-Indicator">:</span> <span class="s">&quot;en&quot;</span>
 
@@ -260,7 +260,7 @@ the components and configure them separately:</p>
 </div>
 </div>
 <div class="section" id="tensorflow-embedding">
-<h3><a class="toc-backref" href="#id5">tensorflow_embedding</a><a class="headerlink" href="#tensorflow-embedding" title="Permalink to this headline">¶</a></h3>
+<h3><a class="toc-backref" href="#id6">tensorflow_embedding</a><a class="headerlink" href="#tensorflow-embedding" title="Permalink to this headline">¶</a></h3>
 <p>to use it as a template:</p>
 <div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="l l-Scalar l-Scalar-Plain">language</span><span class="p p-Indicator">:</span> <span class="s">&quot;en&quot;</span>
 
@@ -272,7 +272,7 @@ current tokenizer implementation relies on words being separated by spaces,
 so any languages that adheres to that can be trained with this pipeline.</p>
 </div>
 <div class="section" id="mitie">
-<h3><a class="toc-backref" href="#id6">mitie</a><a class="headerlink" href="#mitie" title="Permalink to this headline">¶</a></h3>
+<h3><a class="toc-backref" href="#id7">mitie</a><a class="headerlink" href="#mitie" title="Permalink to this headline">¶</a></h3>
 <p>There is no pipeline template, as you need to configure the location
 of mities featurizer. To use the components and configure them separately:</p>
 <div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="l l-Scalar l-Scalar-Plain">language</span><span class="p p-Indicator">:</span> <span class="s">&quot;en&quot;</span>
@@ -289,7 +289,7 @@ of mities featurizer. To use the components and configure them separately:</p>
 </div>
 </div>
 <div class="section" id="mitie-sklearn">
-<h3><a class="toc-backref" href="#id7">mitie_sklearn</a><a class="headerlink" href="#mitie-sklearn" title="Permalink to this headline">¶</a></h3>
+<h3><a class="toc-backref" href="#id8">mitie_sklearn</a><a class="headerlink" href="#mitie-sklearn" title="Permalink to this headline">¶</a></h3>
 <p>There is no pipeline template, as you need to configure the location
 of mities featurizer. To use the components and configure them separately:</p>
 <div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="l l-Scalar l-Scalar-Plain">language</span><span class="p p-Indicator">:</span> <span class="s">&quot;en&quot;</span>
@@ -307,7 +307,7 @@ of mities featurizer. To use the components and configure them separately:</p>
 </div>
 </div>
 <div class="section" id="keyword">
-<h3><a class="toc-backref" href="#id8">keyword</a><a class="headerlink" href="#keyword" title="Permalink to this headline">¶</a></h3>
+<h3><a class="toc-backref" href="#id9">keyword</a><a class="headerlink" href="#keyword" title="Permalink to this headline">¶</a></h3>
 <p>to use it as a template:</p>
 <div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="l l-Scalar l-Scalar-Plain">language</span><span class="p p-Indicator">:</span> <span class="s">&quot;en&quot;</span>
 
@@ -323,7 +323,7 @@ of mities featurizer. To use the components and configure them separately:</p>
 </div>
 </div>
 <div class="section" id="multiple-intents">
-<span id="section-multiple-intents"></span><h3><a class="toc-backref" href="#id9">Multiple Intents</a><a class="headerlink" href="#multiple-intents" title="Permalink to this headline">¶</a></h3>
+<span id="section-multiple-intents"></span><h3><a class="toc-backref" href="#id10">Multiple Intents</a><a class="headerlink" href="#multiple-intents" title="Permalink to this headline">¶</a></h3>
 <p>If you want to split intents into multiple labels, e.g. for predicting multiple intents or for modeling hierarchical intent structure, use these flags:</p>
 <blockquote>
 <div><ul class="simple">
@@ -345,7 +345,7 @@ of mities featurizer. To use the components and configure them separately:</p>
 </div>
 </div>
 <div class="section" id="custom-pipelines">
-<h3><a class="toc-backref" href="#id10">Custom pipelines</a><a class="headerlink" href="#custom-pipelines" title="Permalink to this headline">¶</a></h3>
+<h3><a class="toc-backref" href="#id11">Custom pipelines</a><a class="headerlink" href="#custom-pipelines" title="Permalink to this headline">¶</a></h3>
 <p>Creating your own pipelines is possible by directly passing the names of the ~
 components to Rasa NLU in the <code class="docutils literal notranslate"><span class="pre">pipeline</span></code> configuration variable, e.g.</p>
 <div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="l l-Scalar l-Scalar-Plain">pipeline</span><span class="p p-Indicator">:</span>
@@ -360,13 +360,13 @@ useful intents.</p>
 </div>
 </div>
 <div class="section" id="built-in-components">
-<h2><a class="toc-backref" href="#id11">Built-in Components</a><a class="headerlink" href="#built-in-components" title="Permalink to this headline">¶</a></h2>
+<h2><a class="toc-backref" href="#id12">Built-in Components</a><a class="headerlink" href="#built-in-components" title="Permalink to this headline">¶</a></h2>
 <p>Short explanation of every components and it’s attributes. If you are looking for more details, you should have
 a look at the corresponding source code for the component. <code class="docutils literal notranslate"><span class="pre">Output</span></code> describes, what each component adds to the final
 output result of processing a message. If no output is present, the component is most likely a preprocessor for another
 component.</p>
 <div class="section" id="nlp-mitie">
-<span id="id1"></span><h3><a class="toc-backref" href="#id12">nlp_mitie</a><a class="headerlink" href="#nlp-mitie" title="Permalink to this headline">¶</a></h3>
+<span id="id1"></span><h3><a class="toc-backref" href="#id13">nlp_mitie</a><a class="headerlink" href="#nlp-mitie" title="Permalink to this headline">¶</a></h3>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
@@ -397,7 +397,7 @@ the configuration:</p>
 </table>
 </div>
 <div class="section" id="nlp-spacy">
-<h3><a class="toc-backref" href="#id13">nlp_spacy</a><a class="headerlink" href="#nlp-spacy" title="Permalink to this headline">¶</a></h3>
+<h3><a class="toc-backref" href="#id14">nlp_spacy</a><a class="headerlink" href="#nlp-spacy" title="Permalink to this headline">¶</a></h3>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
@@ -434,7 +434,7 @@ the model name can be specified using this configuration variable. The name will
 </table>
 </div>
 <div class="section" id="intent-featurizer-mitie">
-<h3><a class="toc-backref" href="#id14">intent_featurizer_mitie</a><a class="headerlink" href="#intent-featurizer-mitie" title="Permalink to this headline">¶</a></h3>
+<h3><a class="toc-backref" href="#id15">intent_featurizer_mitie</a><a class="headerlink" href="#intent-featurizer-mitie" title="Permalink to this headline">¶</a></h3>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
@@ -463,7 +463,7 @@ to use precomputed features.</p>
 </table>
 </div>
 <div class="section" id="intent-featurizer-spacy">
-<h3><a class="toc-backref" href="#id15">intent_featurizer_spacy</a><a class="headerlink" href="#intent-featurizer-spacy" title="Permalink to this headline">¶</a></h3>
+<h3><a class="toc-backref" href="#id16">intent_featurizer_spacy</a><a class="headerlink" href="#intent-featurizer-spacy" title="Permalink to this headline">¶</a></h3>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
@@ -478,7 +478,7 @@ to use precomputed features.</p>
 </table>
 </div>
 <div class="section" id="intent-featurizer-ngrams">
-<h3><a class="toc-backref" href="#id16">intent_featurizer_ngrams</a><a class="headerlink" href="#intent-featurizer-ngrams" title="Permalink to this headline">¶</a></h3>
+<h3><a class="toc-backref" href="#id17">intent_featurizer_ngrams</a><a class="headerlink" href="#intent-featurizer-ngrams" title="Permalink to this headline">¶</a></h3>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
@@ -511,7 +511,7 @@ character sequence is present in the word sequence or not.</p>
 </table>
 </div>
 <div class="section" id="intent-featurizer-count-vectors">
-<h3><a class="toc-backref" href="#id17">intent_featurizer_count_vectors</a><a class="headerlink" href="#intent-featurizer-count-vectors" title="Permalink to this headline">¶</a></h3>
+<h3><a class="toc-backref" href="#id18">intent_featurizer_count_vectors</a><a class="headerlink" href="#intent-featurizer-count-vectors" title="Permalink to this headline">¶</a></h3>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
@@ -600,7 +600,7 @@ Unseen words will be substituted with <code class="docutils literal notranslate"
 </table>
 </div>
 <div class="section" id="intent-classifier-keyword">
-<h3><a class="toc-backref" href="#id18">intent_classifier_keyword</a><a class="headerlink" href="#intent-classifier-keyword" title="Permalink to this headline">¶</a></h3>
+<h3><a class="toc-backref" href="#id19">intent_classifier_keyword</a><a class="headerlink" href="#intent-classifier-keyword" title="Permalink to this headline">¶</a></h3>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
@@ -626,7 +626,7 @@ Unseen words will be substituted with <code class="docutils literal notranslate"
 </table>
 </div>
 <div class="section" id="intent-classifier-mitie">
-<h3><a class="toc-backref" href="#id19">intent_classifier_mitie</a><a class="headerlink" href="#intent-classifier-mitie" title="Permalink to this headline">¶</a></h3>
+<h3><a class="toc-backref" href="#id20">intent_classifier_mitie</a><a class="headerlink" href="#intent-classifier-mitie" title="Permalink to this headline">¶</a></h3>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
@@ -658,7 +658,7 @@ is using a multi class linear SVM with a sparse linear kernel (see <a class="ref
 </table>
 </div>
 <div class="section" id="intent-classifier-sklearn">
-<h3><a class="toc-backref" href="#id20">intent_classifier_sklearn</a><a class="headerlink" href="#intent-classifier-sklearn" title="Permalink to this headline">¶</a></h3>
+<h3><a class="toc-backref" href="#id21">intent_classifier_sklearn</a><a class="headerlink" href="#intent-classifier-sklearn" title="Permalink to this headline">¶</a></h3>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
@@ -711,7 +711,7 @@ that will get tried</p>
 </table>
 </div>
 <div class="section" id="intent-classifier-tensorflow-embedding">
-<h3><a class="toc-backref" href="#id21">intent_classifier_tensorflow_embedding</a><a class="headerlink" href="#intent-classifier-tensorflow-embedding" title="Permalink to this headline">¶</a></h3>
+<h3><a class="toc-backref" href="#id22">intent_classifier_tensorflow_embedding</a><a class="headerlink" href="#intent-classifier-tensorflow-embedding" title="Permalink to this headline">¶</a></h3>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
@@ -867,7 +867,7 @@ See <a class="reference external" href="https://arxiv.org/abs/1709.03856">starsp
 </table>
 </div>
 <div class="section" id="intent-entity-featurizer-regex">
-<h3><a class="toc-backref" href="#id22">intent_entity_featurizer_regex</a><a class="headerlink" href="#intent-entity-featurizer-regex" title="Permalink to this headline">¶</a></h3>
+<h3><a class="toc-backref" href="#id23">intent_entity_featurizer_regex</a><a class="headerlink" href="#intent-entity-featurizer-regex" title="Permalink to this headline">¶</a></h3>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
@@ -887,7 +887,7 @@ feature indicates a certain intent). Regex features for entity extraction are cu
 </table>
 </div>
 <div class="section" id="tokenizer-whitespace">
-<h3><a class="toc-backref" href="#id23">tokenizer_whitespace</a><a class="headerlink" href="#tokenizer-whitespace" title="Permalink to this headline">¶</a></h3>
+<h3><a class="toc-backref" href="#id24">tokenizer_whitespace</a><a class="headerlink" href="#tokenizer-whitespace" title="Permalink to this headline">¶</a></h3>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
@@ -903,7 +903,7 @@ extractor.</td>
 </table>
 </div>
 <div class="section" id="tokenizer-jieba">
-<h3><a class="toc-backref" href="#id24">tokenizer_jieba</a><a class="headerlink" href="#tokenizer-jieba" title="Permalink to this headline">¶</a></h3>
+<h3><a class="toc-backref" href="#id25">tokenizer_jieba</a><a class="headerlink" href="#tokenizer-jieba" title="Permalink to this headline">¶</a></h3>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
@@ -932,7 +932,7 @@ MITIE entity extractor. Make sure to install Jieba, <code class="docutils litera
 </table>
 </div>
 <div class="section" id="tokenizer-mitie">
-<h3><a class="toc-backref" href="#id25">tokenizer_mitie</a><a class="headerlink" href="#tokenizer-mitie" title="Permalink to this headline">¶</a></h3>
+<h3><a class="toc-backref" href="#id26">tokenizer_mitie</a><a class="headerlink" href="#tokenizer-mitie" title="Permalink to this headline">¶</a></h3>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
@@ -957,7 +957,7 @@ tokens for the MITIE entity extractor.</p>
 </table>
 </div>
 <div class="section" id="tokenizer-spacy">
-<h3><a class="toc-backref" href="#id26">tokenizer_spacy</a><a class="headerlink" href="#tokenizer-spacy" title="Permalink to this headline">¶</a></h3>
+<h3><a class="toc-backref" href="#id27">tokenizer_spacy</a><a class="headerlink" href="#tokenizer-spacy" title="Permalink to this headline">¶</a></h3>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
@@ -973,7 +973,7 @@ tokens for the MITIE entity extractor.</td>
 </table>
 </div>
 <div class="section" id="ner-mitie">
-<h3><a class="toc-backref" href="#id27">ner_mitie</a><a class="headerlink" href="#ner-mitie" title="Permalink to this headline">¶</a></h3>
+<h3><a class="toc-backref" href="#id28">ner_mitie</a><a class="headerlink" href="#ner-mitie" title="Permalink to this headline">¶</a></h3>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
@@ -1011,7 +1011,7 @@ The MITIE component does not provide entity confidence values.</p>
 </table>
 </div>
 <div class="section" id="ner-spacy">
-<h3><a class="toc-backref" href="#id28">ner_spacy</a><a class="headerlink" href="#ner-spacy" title="Permalink to this headline">¶</a></h3>
+<h3><a class="toc-backref" href="#id29">ner_spacy</a><a class="headerlink" href="#ner-spacy" title="Permalink to this headline">¶</a></h3>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
@@ -1043,7 +1043,7 @@ This extractor does not provide any confidence scores.</p>
 </table>
 </div>
 <div class="section" id="ner-synonyms">
-<h3><a class="toc-backref" href="#id29">ner_synonyms</a><a class="headerlink" href="#ner-synonyms" title="Permalink to this headline">¶</a></h3>
+<h3><a class="toc-backref" href="#id30">ner_synonyms</a><a class="headerlink" href="#ner-synonyms" title="Permalink to this headline">¶</a></h3>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
@@ -1086,7 +1086,7 @@ exisiting entity, it appends itself to the processor list of this entity.</p>
 </table>
 </div>
 <div class="section" id="ner-crf">
-<h3><a class="toc-backref" href="#id30">ner_crf</a><a class="headerlink" href="#ner-crf" title="Permalink to this headline">¶</a></h3>
+<h3><a class="toc-backref" href="#id31">ner_crf</a><a class="headerlink" href="#ner-crf" title="Permalink to this headline">¶</a></h3>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
@@ -1153,13 +1153,14 @@ If POS features are used (pos or pos2), spaCy has to be installed.</p>
 </tbody>
 </table>
 </div>
-<div class="section" id="ner-duckling">
-<span id="section-pipeline-duckling"></span><h3><a class="toc-backref" href="#id31">ner_duckling</a><a class="headerlink" href="#ner-duckling" title="Permalink to this headline">¶</a></h3>
+<div class="section" id="ner-duckling-http">
+<span id="id2"></span><h3><a class="toc-backref" href="#id32">ner_duckling_http</a><a class="headerlink" href="#ner-duckling-http" title="Permalink to this headline">¶</a></h3>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Short:</th><td class="field-body"><p class="first">Adds duckling support to the pipeline to unify entity types (e.g. to retrieve common date / number formats)</p>
+<tr class="field-odd field"><th class="field-name">Short:</th><td class="field-body"><p class="first">Duckling lets you extract common entities like dates,
+amounts of money, distances, and others in a number of languages.</p>
 </td>
 </tr>
 <tr class="field-even field"><th class="field-name">Outputs:</th><td class="field-body"><p class="first">appends <code class="docutils literal notranslate"><span class="pre">entities</span></code></p>
@@ -1171,13 +1172,18 @@ If POS features are used (pos or pos2), spaCy has to be installed.</p>
                   <span class="nt">&quot;start&quot;</span><span class="p">:</span> <span class="mi">48</span><span class="p">,</span>
                   <span class="nt">&quot;value&quot;</span><span class="p">:</span> <span class="s2">&quot;2017-04-10T00:00:00.000+02:00&quot;</span><span class="p">,</span>
                   <span class="nt">&quot;confidence&quot;</span><span class="p">:</span> <span class="mf">1.0</span><span class="p">,</span>
-                  <span class="nt">&quot;extractor&quot;</span><span class="p">:</span> <span class="s2">&quot;ner_duckling&quot;</span><span class="p">}]</span>
+                  <span class="nt">&quot;extractor&quot;</span><span class="p">:</span> <span class="s2">&quot;ner_duckling_http&quot;</span><span class="p">}]</span>
 <span class="p">}</span>
 </pre></div>
 </div>
 </td>
 </tr>
-<tr class="field-even field"><th class="field-name">Description:</th><td class="field-body"><p class="first">Duckling allows to recognize dates, numbers, distances and other structured entities
+<tr class="field-even field"><th class="field-name">Description:</th><td class="field-body"><p class="first">To use this component you need to run a duckling server. The easiest
+option is to spin up a docker container using
+<code class="docutils literal notranslate"><span class="pre">docker</span> <span class="pre">run</span> <span class="pre">-p</span> <span class="pre">8000:8000</span> <span class="pre">rasa/duckling</span></code>.</p>
+<p>Alternatively, you can install duckling directly on your
+<a class="reference external" href="https://github.com/facebook/duckling#quickstart">machine and start the server</a>.</p>
+<p>Duckling allows to recognize dates, numbers, distances and other structured entities
 and normalizes them (for a reference of all available entities
 see <a class="reference external" href="https://duckling.wit.ai/#getting-started">the duckling documentation</a>).
 Please be aware that duckling tries to extract as many entity types as possible without
@@ -1189,12 +1195,21 @@ The extractor will always return <cite>1.0</cite> as a confidence, as it is a ru
 based system.</p>
 </td>
 </tr>
-<tr class="field-odd field"><th class="field-name">Configuration:</th><td class="field-body"><p class="first">Configure which dimensions, i.e. entity types, the <a class="reference internal" href="#section-pipeline-duckling"><span class="std std-ref">duckling component</span></a> to extract.
-A full list of available dimensions can be found in the <a class="reference external" href="https://duckling.wit.ai/">duckling documentation</a>.</p>
+<tr class="field-odd field"><th class="field-name">Configuration:</th><td class="field-body"><p class="first">Configure which dimensions, i.e. entity types, the duckling component
+to extract. A full list of available dimensions can be found in
+the <a class="reference external" href="https://duckling.wit.ai/">duckling documentation</a>.</p>
 <div class="last highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="l l-Scalar l-Scalar-Plain">pipeline</span><span class="p p-Indicator">:</span>
-<span class="p p-Indicator">-</span> <span class="l l-Scalar l-Scalar-Plain">name</span><span class="p p-Indicator">:</span> <span class="s">&quot;ner_duckling&quot;</span>
+<span class="p p-Indicator">-</span> <span class="l l-Scalar l-Scalar-Plain">name</span><span class="p p-Indicator">:</span> <span class="s">&quot;ner_duckling_http&quot;</span>
+  <span class="c1"># url of the running duckling server</span>
+  <span class="l l-Scalar l-Scalar-Plain">url</span><span class="p p-Indicator">:</span> <span class="s">&quot;http://localhost:8000&quot;</span>
   <span class="c1"># dimensions to extract</span>
   <span class="l l-Scalar l-Scalar-Plain">dimensions</span><span class="p p-Indicator">:</span> <span class="p p-Indicator">[</span><span class="s">&quot;time&quot;</span><span class="p p-Indicator">,</span> <span class="s">&quot;number&quot;</span><span class="p p-Indicator">,</span> <span class="s">&quot;amount-of-money&quot;</span><span class="p p-Indicator">,</span> <span class="s">&quot;distance&quot;</span><span class="p p-Indicator">]</span>
+  <span class="c1"># allows you to configure the locale, by default the language is</span>
+  <span class="c1"># used</span>
+  <span class="l l-Scalar l-Scalar-Plain">locale</span><span class="p p-Indicator">:</span> <span class="s">&quot;de_DE&quot;</span>
+  <span class="c1"># if not set the default timezone of Duckling is going to be used</span>
+  <span class="c1"># needed to calculate dates from relative expressions like &quot;tomorrow&quot;</span>
+  <span class="l l-Scalar l-Scalar-Plain">timezone</span><span class="p p-Indicator">:</span> <span class="s">&quot;Europe/Berlin&quot;</span>
 </pre></div>
 </div>
 </td>
@@ -1204,7 +1219,7 @@ A full list of available dimensions can be found in the <a class="reference exte
 </div>
 </div>
 <div class="section" id="component-lifecycle">
-<span id="section-component-lifecycle"></span><h2><a class="toc-backref" href="#id32">Component Lifecycle</a><a class="headerlink" href="#component-lifecycle" title="Permalink to this headline">¶</a></h2>
+<span id="section-component-lifecycle"></span><h2><a class="toc-backref" href="#id33">Component Lifecycle</a><a class="headerlink" href="#component-lifecycle" title="Permalink to this headline">¶</a></h2>
 <p>Every component can implement several methods from the <code class="xref py py-class docutils literal notranslate"><span class="pre">Component</span></code> base class; in a pipeline these different methods
 will be called in a specific order. Lets assume, we added the following pipeline to our config:
 <code class="docutils literal notranslate"><span class="pre">&quot;pipeline&quot;:</span> <span class="pre">[&quot;Component</span> <span class="pre">A&quot;,</span> <span class="pre">&quot;Component</span> <span class="pre">B&quot;,</span> <span class="pre">&quot;Last</span> <span class="pre">Component&quot;]</span></code>.
@@ -1219,7 +1234,7 @@ and visualize the path of the passed context. After all components are trained a
 final context dictionary is used to persist the model’s metadata.</p>
 </div>
 <div class="section" id="returned-entities-object">
-<h2><a class="toc-backref" href="#id33">Returned Entities Object</a><a class="headerlink" href="#returned-entities-object" title="Permalink to this headline">¶</a></h2>
+<h2><a class="toc-backref" href="#id34">Returned Entities Object</a><a class="headerlink" href="#returned-entities-object" title="Permalink to this headline">¶</a></h2>
 <p>In the object returned after parsing there are two fields that show information
 about how the pipeline impacted the entities returned. The <code class="docutils literal notranslate"><span class="pre">extractor</span></code> field
 of an entity tells you which entity extractor found this particular entity.

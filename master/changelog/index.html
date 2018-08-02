@@ -238,6 +238,7 @@ the parameters for the tensorflow and CRF models changed.</p>
 <li>the <code class="docutils literal notranslate"><span class="pre">/version</span></code> endpoint returns a new field <code class="docutils literal notranslate"><span class="pre">minimum_compatible_version</span></code></li>
 <li>added logging of intent prediction errors to evaluation script</li>
 <li>added histogram of confidence scores to evaluation script</li>
+<li>documentation for the <code class="docutils literal notranslate"><span class="pre">ner_duckling_http</span></code> component</li>
 </ul>
 </div>
 <div class="section" id="changed">
@@ -255,6 +256,9 @@ the parameters for the tensorflow and CRF models changed.</p>
 <h3>Removed<a class="headerlink" href="#removed" title="Permalink to this headline">¶</a></h3>
 <ul class="simple">
 <li>dependence on spaCy when training <code class="docutils literal notranslate"><span class="pre">ner_crf</span></code> without POS features</li>
+<li>documentation for the <code class="docutils literal notranslate"><span class="pre">ner_duckling</span></code> component - facebook doesn’t maintain
+the underlying clojure version of duckling anymore. component will be
+removed in the next release.</li>
 </ul>
 </div>
 <div class="section" id="fixed">

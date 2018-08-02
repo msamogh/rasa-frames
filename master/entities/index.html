@@ -167,10 +167,10 @@
 <span id="section-entities"></span><h1>Entity Extraction<a class="headerlink" href="#entity-extraction" title="Permalink to this headline">¶</a></h1>
 <table border="1" class="docutils">
 <colgroup>
-<col width="18%" />
-<col width="18%" />
-<col width="26%" />
-<col width="38%" />
+<col width="23%" />
+<col width="16%" />
+<col width="24%" />
+<col width="36%" />
 </colgroup>
 <thead valign="bottom">
 <tr class="row-odd"><th class="head">Component</th>
@@ -190,8 +190,8 @@
 <td>averaged perceptron</td>
 <td>provides pre-trained entities</td>
 </tr>
-<tr class="row-even"><td><code class="docutils literal notranslate"><span class="pre">ner_duckling</span></code></td>
-<td>duckling</td>
+<tr class="row-even"><td><code class="docutils literal notranslate"><span class="pre">ner_duckling_http</span></code></td>
+<td>running duckling</td>
 <td>context-free grammar</td>
 <td>provides pre-trained entities</td>
 </tr>
@@ -229,12 +229,9 @@ objects that you can use, e.g.</p>
 <p>The list of supported langauges is <a class="reference external" href="https://github.com/facebook/duckling/tree/master/Duckling/Dimensions">here</a>.
 Duckling can also handle durations like “two hours”,
 amounts of money, distances, and ordinals.
-Fortunately, there is also a
-<a class="reference external" href="https://github.com/FraBle/python-duckling">python wrapper</a> for
-duckling! You can use this component by installing the duckling
-package from PyPI and adding <code class="docutils literal notranslate"><span class="pre">ner_duckling</span></code> to your pipeline.
-Alternatively, you can run duckling separately (natively or in a docker container)
-and use the <code class="docutils literal notranslate"><span class="pre">ner_duckling_http</span></code> component.</p>
+Fortunately, there is a duckling docker container ready to use,
+that you just need to spin up and connect to Rasa NLU.
+(see <a class="reference internal" href="../pipeline/#ner-duckling-http"><span class="std std-ref">ner_duckling_http</span></a>)</p>
 </div>
 <div class="section" id="regular-expressions-regex">
 <h2>Regular Expressions (regex)<a class="headerlink" href="#regular-expressions-regex" title="Permalink to this headline">¶</a></h2>
