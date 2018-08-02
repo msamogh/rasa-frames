@@ -6,7 +6,7 @@
   <head>
     <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-    <title>Quickstart &#8212; Rasa NLU 0.13.0a2 documentation</title>
+    <title>Getting Started with Rasa NLU</title>
     <link rel="stylesheet" href="../_static/alabaster.css" type="text/css" />
     <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
     <link rel="stylesheet" href="../_static/banner.css" type="text/css" />
@@ -17,25 +17,25 @@
     <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
     <link rel="index" title="Index" href="../genindex/" />
     <link rel="search" title="Search" href="../search/" />
-    <link rel="next" title="Choosing a Pipeline" href="../choosing_pipeline/" />
-    <link rel="prev" title="Installation" href="../installation/" />
+    <link rel="next" title="Installation" href="../installation/" />
+    <link rel="prev" title="Rasa NLU: Language Understanding for chatbots and AI assistants" href="../" />
    
     
   <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
   <meta itemprop="image" content="https://rasa.com/assets/img/facebook-og.png">
-  <meta property="og:title" content="Quickstart" />
+  <meta property="og:title" content="Getting Started with Rasa NLU" />
   <meta property="og:type" content="website" />
   <meta property="og:image" content="https://rasa.com/assets/img/facebook-og.png" />
   <meta property="og:url" content="https://rasa.com/docs/nlu/master/quickstart" />
   
-    <meat name="description" content="None" />
-    <meta itemprop="description" content="None">
-    <meta name="twitter:description" content="None" />
-    <meta property="og:description" content="None" />
+    <meat name="description" content="Try out Rasa NLU in the browser." />
+    <meta itemprop="description" content="Try out Rasa NLU in the browser.">
+    <meta name="twitter:description" content="Try out Rasa NLU in the browser." />
+    <meta property="og:description" content="Try out Rasa NLU in the browser." />
   
   <meta name="twitter:card" content="summary_large_image">
   <meta name="twitter:site" content="@Rasa_HQ">
-  <meta name="twitter:title" content="Quickstart">
+  <meta name="twitter:title" content="Getting Started with Rasa NLU">
   <meta name="twitter:creator" content="@Rasa_HQ">
   <meta name="twitter:image" content="https://rasa.com/assets/img/facebook-og.png">
     
@@ -93,8 +93,8 @@
       <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
         <div class="sphinxsidebarwrapper"><p class="caption"><span class="caption-text">Getting Started</span></p>
 <ul class="current">
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Try It Out</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../installation/">Installation</a></li>
-<li class="toctree-l1 current"><a class="current reference internal" href="#">Quickstart</a></li>
 </ul>
 <p class="caption"><span class="caption-text">User Guide</span></p>
 <ul>
@@ -133,6 +133,7 @@
         <div class="dropdown">
           <button class="dropdown-btn">tags</button>
           <div class="dropdown-content">
+              <a href="../0.13.0/quickstart.html">0.13.0</a>
               <a href="../0.12.3/index.html">0.12.3</a>
               <a href="../0.12.2/index.html">0.12.2</a>
               <a href="../0.12.1/index.html">0.12.1</a>
@@ -170,12 +171,14 @@
 
 
 
-    <p class="scv-banner"><b>Warning:</b> This document is for the development version of Rasa NLU.</p>
-<div class="section" id="quickstart">
-<span id="tutorial"></span><span id="section-quickstart"></span><h1>Quickstart<a class="headerlink" href="#quickstart" title="Permalink to this headline">¶</a></h1>
-<p>As an example we’ll start a new project covering the domain
-of searching for restaurants. We’ll start with an extremely simple
-model of those conversations. You can build up from there.</p>
+    <p class="scv-banner"><a href="../0.13.0/quickstart.html"><b>Warning:</b> This document is for the development version of Rasa NLU. The latest version is 0.13.0.</a></p>
+<div class="section" id="getting-started-with-rasa-nlu">
+<span id="tutorial"></span><span id="section-quickstart"></span><h1>Getting Started with Rasa NLU<a class="headerlink" href="#getting-started-with-rasa-nlu" title="Permalink to this headline">¶</a></h1>
+<p>In this tutorial you will create your first Rasa NLU bot. You can run all of the
+code snippets in here directly, or you can install Rasa NLU and run the examples on your
+own machine.</p>
+<p>As an example we’ll start a new project to help people search for restaurants.
+We’ll start with an extremely simple model of those conversations. You can build up from there.</p>
 <p>Let’s assume that <cite>anything</cite> our users say can be
 categorized into one of the following <strong>intents</strong>:</p>
 <ul class="simple">
@@ -199,179 +202,292 @@ categorized into one of the following <strong>intents</strong>:</p>
 <p>The second job is to label words like “chinese” and “North” as
 <code class="docutils literal notranslate"><span class="pre">cuisine</span></code> and <code class="docutils literal notranslate"><span class="pre">location</span></code> <strong>entities</strong>, respectively.
 In this tutorial we’ll build a model which does exactly that.</p>
-<div class="section" id="preparing-the-training-data">
-<h2>Preparing the Training Data<a class="headerlink" href="#preparing-the-training-data" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="prepare-your-nlu-training-data">
+<h2>1. Prepare your NLU Training Data<a class="headerlink" href="#prepare-your-nlu-training-data" title="Permalink to this headline">¶</a></h2>
 <p>Training data is essential for developing chatbots and voice apps.
 The data is just a list of messages that you expect to receive, annotated with
 the intent and entities Rasa NLU should learn to extract.</p>
-<p>The best way to get training data is
-from <em>real users</em>, and a good way to get it is to
+<p>The best way to get training data is from <em>real users</em>, and a good way to get it is to
 <a class="reference external" href="https://medium.com/rasa-blog/put-on-your-robot-costume-and-be-the-minimum-viable-bot-yourself-3e48a5a59308">pretend to be the bot yourself</a>.
-But to help get you started, we have some
-<a class="reference external" href="https://github.com/RasaHQ/rasa_nlu/blob/master/data/examples/rasa/demo-rasa.md">data saved</a>.</p>
-<p>You can provide training data as json or markdown.
-We’ll use markdown here because it’s easier to read, but see <a class="reference internal" href="../dataformat/#section-dataformat"><span class="std std-ref">Training Data Format</span></a> for details.</p>
-<p>Download the file (markdown format) and open it, and you’ll see a list of
-training examples, each composed of <code class="docutils literal notranslate"><span class="pre">&quot;text&quot;</span></code>, <code class="docutils literal notranslate"><span class="pre">&quot;intent&quot;</span></code> and
-<code class="docutils literal notranslate"><span class="pre">&quot;entities&quot;</span></code>, as shown below. In your working directory, create a
-<code class="docutils literal notranslate"><span class="pre">data</span></code> folder, and copy this <code class="docutils literal notranslate"><span class="pre">demo-rasa.md</span></code> file there.</p>
-<div class="highlight-md notranslate"><div class="highlight"><pre><span></span><span class="gu">##</span> intent:greet
-<span class="k">-</span> hey
-<span class="k">-</span> howdy
-<span class="k">-</span> hey there
-...
-</pre></div>
-</div>
-<div class="highlight-md notranslate"><div class="highlight"><pre><span></span><span class="gu">##</span> intent:restaurant_search
-<span class="k">-</span> i&#39;m looking for a place to eat
-<span class="k">-</span> I want to grab lunch
-<span class="k">-</span> I am searching for a dinner spot
-<span class="k">-</span> i&#39;m looking for a place in the [<span class="nt">north</span>](<span class="na">location</span>) of town
-</pre></div>
-</div>
-<p>Examples are grouped by intent, and entities are annotated as markdown links.
-For details on the format see <a class="reference internal" href="../dataformat/#section-dataformat"><span class="std std-ref">Training Data Format</span></a>.</p>
-</div>
-<div class="section" id="training-a-new-model-for-your-project">
-<span id="training-your-model"></span><h2>Training a New Model for your Project<a class="headerlink" href="#training-a-new-model-for-your-project" title="Permalink to this headline">¶</a></h2>
-<p>Now we’re going to create a configuration file. Make sure first that
-you’ve set up a backend, see <a class="reference internal" href="../installation/#section-backends"><span class="std std-ref">Installation</span></a>. Create a file
-called <code class="docutils literal notranslate"><span class="pre">config.yml</span></code> in your working directory which looks like this</p>
-<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="l l-Scalar l-Scalar-Plain">language</span><span class="p p-Indicator">:</span> <span class="s">&quot;en&quot;</span>
+But to help get you started, we have some demo data here.
+See <a class="reference internal" href="../dataformat/#section-dataformat"><span class="std std-ref">Training Data Format</span></a> for details of the data format.</p>
+<p>If you are running this in the docs, it may take a few seconds to start up.
+If you are running locally, copy the text between the triple quotes (<code class="docutils literal notranslate"><span class="pre">&quot;&quot;&quot;</span></code>)
+and save it in a file called <code class="docutils literal notranslate"><span class="pre">nlu.md</span></code>.</p>
 
-<span class="l l-Scalar l-Scalar-Plain">pipeline</span><span class="p p-Indicator">:</span> <span class="s">&quot;spacy_sklearn&quot;</span>
-</pre></div>
-</div>
-<p>If you set up the tensorflow backend, you can use</p>
-<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="l l-Scalar l-Scalar-Plain">language</span><span class="p p-Indicator">:</span> <span class="s">&quot;en&quot;</span>
 
-<span class="l l-Scalar l-Scalar-Plain">pipeline</span><span class="p p-Indicator">:</span> <span class="s">&quot;tensorflow_embedding&quot;</span>
-</pre></div>
+  <pre data-executable>nlu_md = """
+## intent:greet
+- hey
+- hello
+- hi
+- good morning
+- good evening
+- hey there
+
+## intent:restaurant_search
+- i'm looking for a place to eat
+- I want to grab lunch
+- I am searching for a dinner spot
+- i'm looking for a place in the [north](location) of town
+- show me [chinese](cuisine) restaurants
+- show me a [mexican](cuisine) place in the [centre](location)
+- i am looking for an [indian](cuisine) spot
+- search for restaurants
+- anywhere in the [west](location)
+- anywhere near [18328](location)
+- I am looking for [asian fusion](cuisine) food
+- I am looking a restaurant in [29432](location)
+
+## intent:thankyou
+- thanks!
+- thank you
+- thx
+- thanks very much
+"""
+%store nlu_md > nlu.md</pre>
+  <script src="https://storage.googleapis.com/docs-theme/juniper.min.js"></script>
+  <script>
+    new Juniper({ repo: 'RasaHQ/rasa_core', branch: 'master', isolateCells: false , theme: 'xq-light', eventName: 'nlu-write-nlu-data' })
+    document.addEventListener('nlu-write-nlu-data', event => {
+      if (event.detail.status == 'executing') {
+        console.error("nlu-write-nlu-data");
+	console.error(JSON.stringify(event));
+        console.error(event.currentTarget)
+        gtag('event', 'execute-code-snippet', {
+          'event_category': 'code',
+          'event_label': "nlu-write-nlu-data"
+        });
+      }
+      if (event.detail.status == 'failed') {
+        gtag('event', e.action, {
+          'event_category': 'code',
+          'event_label': e.text
+        });
+      }
+    })
+  </script></div>
+<div class="section" id="define-your-machine-learning-model">
+<h2>2. Define your Machine Learning Model<a class="headerlink" href="#define-your-machine-learning-model" title="Permalink to this headline">¶</a></h2>
+<p>Rasa NLU has a number of different components, which together make a pipeline. Create a markdown file with the pipeline you want to use. In this case, we’re using the pre-defined <code class="docutils literal notranslate"><span class="pre">tensorflow_embedding</span></code> pipeline. If you are running this locally instead of here in the docs, copy the text between the (<code class="docutils literal notranslate"><span class="pre">&quot;&quot;&quot;</span></code>)
+and save it in a file called <code class="docutils literal notranslate"><span class="pre">nlu_config.yml</span></code>.</p>
+
+
+  <pre data-executable>nlu_config = """
+language: en
+pipeline: tensorflow_embedding
+"""
+%store nlu_config > nlu_config.yml</pre>
+  <script src="https://storage.googleapis.com/docs-theme/juniper.min.js"></script>
+  <script>
+    new Juniper({ repo: 'RasaHQ/rasa_core', branch: 'master', isolateCells: false , theme: 'xq-light', eventName: 'nlu-write-nlu-config' })
+    document.addEventListener('nlu-write-nlu-config', event => {
+      if (event.detail.status == 'executing') {
+        console.error("nlu-write-nlu-config");
+	console.error(JSON.stringify(event));
+        console.error(event.currentTarget)
+        gtag('event', 'execute-code-snippet', {
+          'event_category': 'code',
+          'event_label': "nlu-write-nlu-config"
+        });
+      }
+      if (event.detail.status == 'failed') {
+        gtag('event', e.action, {
+          'event_category': 'code',
+          'event_label': e.text
+        });
+      }
+    })
+  </script><p>Full details of the pipeline components are in <a class="reference internal" href="../pipeline/#section-pipeline"><span class="std std-ref">Pipeline and Component Configuration</span></a></p>
 </div>
-<p>Now we can train your model by running:</p>
-<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">$</span> python -m rasa_nlu.train <span class="se">\</span>
-    --config config.yml <span class="se">\</span>
-    --data data/examples/rasa/demo-rasa.json <span class="se">\</span>
-    --path projects
-</pre></div>
+<div class="section" id="train-your-machine-learning-nlu-model">
+<h2>3. Train your Machine Learning NLU model.<a class="headerlink" href="#train-your-machine-learning-nlu-model" title="Permalink to this headline">¶</a></h2>
+<p>To train a model, start the <code class="docutils literal notranslate"><span class="pre">rasa_nlu.train</span></code> command, and tell it where to find your configuration and your training data:</p>
+<p>If you are running this in your computer, leave out the <code class="docutils literal notranslate"><span class="pre">!</span></code> at the start.</p>
+
+
+  <pre data-executable>!python -m rasa_nlu.train -c nlu_config.yml --data nlu.md -o models --fixed_model_name nlu --project current --verbose</pre>
+  <script src="https://storage.googleapis.com/docs-theme/juniper.min.js"></script>
+  <script>
+    new Juniper({ repo: 'RasaHQ/rasa_core', branch: 'master', isolateCells: false , theme: 'xq-light', eventName: 'nlu-train-nlu' })
+    document.addEventListener('nlu-train-nlu', event => {
+      if (event.detail.status == 'executing') {
+        console.error("nlu-train-nlu");
+	console.error(JSON.stringify(event));
+        console.error(event.currentTarget)
+        gtag('event', 'execute-code-snippet', {
+          'event_category': 'code',
+          'event_label': "nlu-train-nlu"
+        });
+      }
+      if (event.detail.status == 'failed') {
+        gtag('event', e.action, {
+          'event_category': 'code',
+          'event_label': e.text
+        });
+      }
+    })
+  </script><p>We are also passing the <code class="docutils literal notranslate"><span class="pre">--project</span> <span class="pre">current</span></code> and <code class="docutils literal notranslate"><span class="pre">--fixed_model_name</span> <span class="pre">nlu</span></code> parameters, this means the model will be saved at <code class="docutils literal notranslate"><span class="pre">.models/current/nlu</span></code> relative to your working directory.</p>
 </div>
-<p>What do these parameters mean?</p>
-<ul class="simple">
-<li><strong>config</strong>: configuration of the machine learning model</li>
-<li><strong>data</strong>: file or folder that contains the training data. You can also
-pull training data from a URL using <code class="docutils literal notranslate"><span class="pre">--url</span></code> instead.</li>
-<li><strong>path</strong>: path where the model will be saved</li>
-</ul>
-<p>Full details of the parameters are in <a class="reference internal" href="../pipeline/#section-pipeline"><span class="std std-ref">Pipeline and Component Configuration</span></a></p>
-<p>After a few minutes, Rasa NLU will finish
-training, and you’ll see a new folder named
-<code class="docutils literal notranslate"><span class="pre">projects/default/model_YYYYMMDD-HHMMSS</span></code> with the timestamp
-when training finished.</p>
+<div class="section" id="try-it-out">
+<span id="tutorial-using-your-model"></span><h2>4. Try it out!<a class="headerlink" href="#try-it-out" title="Permalink to this headline">¶</a></h2>
+<p>There are two ways you can use your model, directly from python, or by starting a http server.</p>
+<p>To use your new model in python, create an <code class="docutils literal notranslate"><span class="pre">Interpreter</span></code> object and pass a message to its <code class="docutils literal notranslate"><span class="pre">parse()</span></code> method.</p>
+
+
+  <pre data-executable>from rasa_nlu.model import Interpreter
+import json
+interpreter = Interpreter.load("./models/current/nlu")
+message = "let's see some italian restaurants"
+result = interpreter.parse(message)
+print(json.dumps(result, indent=2))</pre>
+  <script src="https://storage.googleapis.com/docs-theme/juniper.min.js"></script>
+  <script>
+    new Juniper({ repo: 'RasaHQ/rasa_core', branch: 'master', isolateCells: false , theme: 'xq-light', eventName: 'nlu-parse-nlu-python' })
+    document.addEventListener('nlu-parse-nlu-python', event => {
+      if (event.detail.status == 'executing') {
+        console.error("nlu-parse-nlu-python");
+	console.error(JSON.stringify(event));
+        console.error(event.currentTarget)
+        gtag('event', 'execute-code-snippet', {
+          'event_category': 'code',
+          'event_label': "nlu-parse-nlu-python"
+        });
+      }
+      if (event.detail.status == 'failed') {
+        gtag('event', e.action, {
+          'event_category': 'code',
+          'event_label': e.text
+        });
+      }
+    })
+  </script></div>
+<div class="section" id="start-your-rasa-nlu-http-server">
+<h2>5. Start your Rasa NLU HTTP Server<a class="headerlink" href="#start-your-rasa-nlu-http-server" title="Permalink to this headline">¶</a></h2>
+<p>Run this command to start your server:</p>
+
+
+  <pre data-executable>!python -m rasa_nlu.server --path projects</pre>
+  <script src="https://storage.googleapis.com/docs-theme/juniper.min.js"></script>
+  <script>
+    new Juniper({ repo: 'RasaHQ/rasa_core', branch: 'master', isolateCells: false , theme: 'xq-light', eventName: 'nlu-start-server' })
+    document.addEventListener('nlu-start-server', event => {
+      if (event.detail.status == 'executing') {
+        console.error("nlu-start-server");
+	console.error(JSON.stringify(event));
+        console.error(event.currentTarget)
+        gtag('event', 'execute-code-snippet', {
+          'event_category': 'code',
+          'event_label': "nlu-start-server"
+        });
+      }
+      if (event.detail.status == 'failed') {
+        gtag('event', e.action, {
+          'event_category': 'code',
+          'event_label': e.text
+        });
+      }
+    })
+  </script><p>By default, the server will look for all projects folders under the <code class="docutils literal notranslate"><span class="pre">path</span></code></p>
+<p>Let’s try it out with a HTTP request:</p>
+
+
+  <pre data-executable>!curl 'localhost:5000/parse?q=hello&project=current&model=nlu' | python -m json.tool</pre>
+  <script src="https://storage.googleapis.com/docs-theme/juniper.min.js"></script>
+  <script>
+    new Juniper({ repo: 'RasaHQ/rasa_core', branch: 'master', isolateCells: false , theme: 'xq-light', eventName: 'nlu-curl-server' })
+    document.addEventListener('nlu-curl-server', event => {
+      if (event.detail.status == 'executing') {
+        console.error("nlu-curl-server");
+	console.error(JSON.stringify(event));
+        console.error(event.currentTarget)
+        gtag('event', 'execute-code-snippet', {
+          'event_category': 'code',
+          'event_label': "nlu-curl-server"
+        });
+      }
+      if (event.detail.status == 'failed') {
+        gtag('event', e.action, {
+          'event_category': 'code',
+          'event_label': e.text
+        });
+      }
+    })
+  </script><p>More information about starting the server can be found in <a class="reference internal" href="../config/#section-configuration"><span class="std std-ref">Server Configuration</span></a>.</p>
 </div>
-<div class="section" id="using-your-model">
-<span id="tutorial-using-your-model"></span><h2>Using Your Model<a class="headerlink" href="#using-your-model" title="Permalink to this headline">¶</a></h2>
-<p>By default, the server will look for all projects folders under the <code class="docutils literal notranslate"><span class="pre">path</span></code>
-directory specified. When no project is specified, as in this example,
-a “default” one will be used, itself using the latest trained model.</p>
-<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">$</span> python -m rasa_nlu.server --path projects
-</pre></div>
+<div class="section" id="start-building">
+<h2>6. Start Building<a class="headerlink" href="#start-building" title="Permalink to this headline">¶</a></h2>
+<p>Clone the starter pack</p>
+
+  <pre class="snippet">
+    <div class="code copyable" data-clipboard-text="git clone https://github.com/RasaHQ/starter-pack.git">
+      git clone https://github.com/RasaHQ/starter-pack.git
+    </div>
+    <button class="button copyable" data-clipboard-text="git clone https://github.com/RasaHQ/starter-pack.git">copy</button>
+  </pre>
+<p>The starter pack gets you set up with the right file structure, sample configurations, plus
+links to more training data!</p>
 </div>
-<p>More information about starting the server can be found in <a class="reference internal" href="../http/#section-http"><span class="std std-ref">HTTP API</span></a>.</p>
-<p>You can then test your new model by sending a request. Open a new window
-on your terminal and run</p>
+<div class="section" id="bonus-material">
+<h2>Bonus Material<a class="headerlink" href="#bonus-material" title="Permalink to this headline">¶</a></h2>
+<p>With very little data, Rasa NLU can in certain cases
+already generalise concepts, for example:</p>
+
+
+  <pre data-executable>from rasa_nlu.model import Interpreter
+import json
+
+interpreter = Interpreter.load("./models/current/nlu")
+message = "I want some italian food"
+result = interpreter.parse(message)
+print(json.dumps(message), indent=2)</pre>
+  <script src="https://storage.googleapis.com/docs-theme/juniper.min.js"></script>
+  <script>
+    new Juniper({ repo: 'RasaHQ/rasa_core', branch: 'master', isolateCells: false , theme: 'xq-light', eventName: 'nlu-parse-2' })
+    document.addEventListener('nlu-parse-2', event => {
+      if (event.detail.status == 'executing') {
+        console.error("nlu-parse-2");
+	console.error(JSON.stringify(event));
+        console.error(event.currentTarget)
+        gtag('event', 'execute-code-snippet', {
+          'event_category': 'code',
+          'event_label': "nlu-parse-2"
+        });
+      }
+      if (event.detail.status == 'failed') {
+        gtag('event', e.action, {
+          'event_category': 'code',
+          'event_label': e.text
+        });
+      }
+    })
+  </script><p>even though there’s nothing quite like this sentence in
+the examples used to train the model. To build a more robust app
+you will obviously want to use a lot more training data, so go and collect it!</p>
 <div class="admonition note">
 <p class="first admonition-title">Note</p>
 <p class="last"><strong>For windows users</strong> the windows command line interface doesn’t
 like single quotes. Use doublequotes and escape where necessary.
 <code class="docutils literal notranslate"><span class="pre">curl</span> <span class="pre">-X</span> <span class="pre">POST</span> <span class="pre">&quot;localhost:5000/parse&quot;</span> <span class="pre">-d</span> <span class="pre">&quot;{/&quot;q/&quot;:/&quot;I</span> <span class="pre">am</span> <span class="pre">looking</span> <span class="pre">for</span> <span class="pre">Mexican</span> <span class="pre">food/&quot;}&quot;</span> <span class="pre">|</span> <span class="pre">python</span> <span class="pre">-m</span> <span class="pre">json.tool</span></code></p>
 </div>
-<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">$</span> curl -X POST localhost:5000/parse -d <span class="s1">&#39;{&quot;q&quot;:&quot;I am looking for Mexican food&quot;}&#39;</span> <span class="p">|</span> python -m json.tool
-</pre></div>
-</div>
-<p>which should return</p>
-<div class="highlight-json notranslate"><div class="highlight"><pre><span></span><span class="p">{</span>
-    <span class="nt">&quot;intent&quot;</span><span class="p">:</span> <span class="p">{</span>
-    <span class="nt">&quot;name&quot;</span><span class="p">:</span> <span class="s2">&quot;restaurant_search&quot;</span><span class="p">,</span>
-    <span class="nt">&quot;confidence&quot;</span><span class="p">:</span> <span class="mf">0.8231117999072759</span>
-    <span class="p">},</span>
-    <span class="nt">&quot;entities&quot;</span><span class="p">:</span> <span class="p">[</span>
-        <span class="p">{</span>
-            <span class="nt">&quot;start&quot;</span><span class="p">:</span> <span class="mi">17</span><span class="p">,</span>
-            <span class="nt">&quot;end&quot;</span><span class="p">:</span> <span class="mi">24</span><span class="p">,</span>
-            <span class="nt">&quot;value&quot;</span><span class="p">:</span> <span class="s2">&quot;mexican&quot;</span><span class="p">,</span>
-            <span class="nt">&quot;entity&quot;</span><span class="p">:</span> <span class="s2">&quot;cuisine&quot;</span><span class="p">,</span>
-            <span class="nt">&quot;extractor&quot;</span><span class="p">:</span> <span class="s2">&quot;ner_crf&quot;</span><span class="p">,</span>
-            <span class="nt">&quot;confidence&quot;</span><span class="p">:</span> <span class="mf">0.875</span>
-        <span class="p">}</span>
-    <span class="p">],</span>
-    <span class="nt">&quot;intent_ranking&quot;</span><span class="p">:</span> <span class="p">[</span>
-        <span class="p">{</span>
-            <span class="nt">&quot;name&quot;</span><span class="p">:</span> <span class="s2">&quot;restaurant_search&quot;</span><span class="p">,</span>
-            <span class="nt">&quot;confidence&quot;</span><span class="p">:</span> <span class="mf">0.8231117999072759</span>
-        <span class="p">},</span>
-        <span class="p">{</span>
-            <span class="nt">&quot;name&quot;</span><span class="p">:</span> <span class="s2">&quot;affirm&quot;</span><span class="p">,</span>
-            <span class="nt">&quot;confidence&quot;</span><span class="p">:</span> <span class="mf">0.07618757211779097</span>
-        <span class="p">},</span>
-        <span class="p">{</span>
-            <span class="nt">&quot;name&quot;</span><span class="p">:</span> <span class="s2">&quot;goodbye&quot;</span><span class="p">,</span>
-            <span class="nt">&quot;confidence&quot;</span><span class="p">:</span> <span class="mf">0.06298664363805719</span>
-        <span class="p">},</span>
-        <span class="p">{</span>
-            <span class="nt">&quot;name&quot;</span><span class="p">:</span> <span class="s2">&quot;greet&quot;</span><span class="p">,</span>
-            <span class="nt">&quot;confidence&quot;</span><span class="p">:</span> <span class="mf">0.03771398433687609</span>
-        <span class="p">}</span>
-    <span class="p">],</span>
-    <span class="nt">&quot;text&quot;</span><span class="p">:</span> <span class="s2">&quot;I am looking for Mexican food&quot;</span>
-<span class="p">}</span>
-</pre></div>
-</div>
-<p>If not all of the entities aren’t
-found, don’t panic! This tutorial is just a toy example, with far too
-little training data to expect good performance.</p>
+<p>Spend some time playing around with the commands above, sending some different test messages to Rasa NLU.
+Remember that this is just a toy example, with just a little bit of training data.
+To build a really great NLU system you’ll want to collect a lot more real user messages.</p>
 <div class="admonition note">
 <p class="first admonition-title">Note</p>
-<p class="last">Intent classification is independent of entity extraction, e.g.
-in “I am looking for Chinese food” the entities might not be extracted,
-though intent classification is correct.</p>
+<p class="last">Intent classification is independent of entity extraction. So sometimes
+NLU will get the intent right but entities wrong, or the other way around.
+You need to provide enough data for both intents and entities.</p>
 </div>
 <p>Rasa NLU will also print a <code class="docutils literal notranslate"><span class="pre">confidence</span></code> value for the intent
 classification. Note that the <code class="docutils literal notranslate"><span class="pre">spacy_sklearn</span></code> backend tends to report very low confidence scores.
-These are just a heuristic, not a true probability, and you shouldn’t read too much into them.</p>
-<p>You can use this to do some error handling in your chatbot (ex:
-asking the user again if the confidence is low) and it’s also
-helpful for prioritising which intents need more training data.</p>
+These are just a heuristic, not a true probability, and you shouldn’t read too much into them. Read <a class="reference internal" href="../fallback/#section-fallback"><span class="std std-ref">Confidence and Fallback Intents</span></a> for more details.</p>
 <div class="admonition note">
 <p class="first admonition-title">Note</p>
 <p class="last">The output may contain additional information, depending on the
 pipeline you are using. For example, not all pipelines include the
 <code class="docutils literal notranslate"><span class="pre">&quot;intent_ranking&quot;</span></code> information</p>
 </div>
-<p>With very little data, Rasa NLU can in certain cases
-already generalise concepts, for example:</p>
-<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">$</span> curl -X POST localhost:5000/parse -d <span class="s1">&#39;{&quot;q&quot;:&quot;I want some italian food&quot;}&#39;</span> <span class="p">|</span> python -m json.tool
-<span class="go">{</span>
-<span class="go">    &quot;intent&quot;: {</span>
-<span class="go">        &quot;name&quot;: &quot;restaurant_search&quot;,</span>
-<span class="go">        &quot;confidence&quot;: 0.5792111723774511</span>
-<span class="go">    },</span>
-<span class="go">    &quot;entities&quot;: [</span>
-<span class="go">        {</span>
-<span class="go">            &quot;entity&quot;: &quot;cuisine&quot;,</span>
-<span class="go">            &quot;value&quot;: &quot;italian&quot;,</span>
-<span class="go">            &quot;start&quot;: 12,</span>
-<span class="go">            &quot;end&quot;: 19,</span>
-<span class="go">            &quot;extractor&quot;: &quot;ner_crf&quot;,</span>
-<span class="go">            &quot;confidence&quot;: 0.875</span>
-<span class="go">        }</span>
-<span class="go">    ],</span>
-<span class="go">    &quot;text&quot;: &quot;I want some italian food&quot;</span>
-<span class="go">}</span>
-</pre></div>
-</div>
-<p>even though there’s nothing quite like this sentence in
-the examples used to train the model. To build a more robust app
-you will obviously want to use a lot more training data, so go and collect it!</p>
 <div class="rating-container">
     <div class="rating-text">
       <p> How was the tutorial? Click to Vote </p>

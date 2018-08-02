@@ -6,7 +6,7 @@
   <head>
     <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-    <title>Installation &#8212; Rasa NLU 0.13.0a2 documentation</title>
+    <title>Installation</title>
     <link rel="stylesheet" href="../_static/alabaster.css" type="text/css" />
     <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
     <link rel="stylesheet" href="../_static/banner.css" type="text/css" />
@@ -17,8 +17,8 @@
     <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
     <link rel="index" title="Index" href="../genindex/" />
     <link rel="search" title="Search" href="../search/" />
-    <link rel="next" title="Quickstart" href="../quickstart/" />
-    <link rel="prev" title="Language Understanding with Rasa NLU" href="../" />
+    <link rel="next" title="Choosing a Pipeline" href="../choosing_pipeline/" />
+    <link rel="prev" title="Getting Started with Rasa NLU" href="../quickstart/" />
    
     
   <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
@@ -28,10 +28,10 @@
   <meta property="og:image" content="https://rasa.com/assets/img/facebook-og.png" />
   <meta property="og:url" content="https://rasa.com/docs/nlu/master/installation" />
   
-    <meat name="description" content="None" />
-    <meta itemprop="description" content="None">
-    <meta name="twitter:description" content="None" />
-    <meta property="og:description" content="None" />
+    <meat name="description" content="Installing Rasa NLU on Mac, Windows, and Linux" />
+    <meta itemprop="description" content="Installing Rasa NLU on Mac, Windows, and Linux">
+    <meta name="twitter:description" content="Installing Rasa NLU on Mac, Windows, and Linux" />
+    <meta property="og:description" content="Installing Rasa NLU on Mac, Windows, and Linux" />
   
   <meta name="twitter:card" content="summary_large_image">
   <meta name="twitter:site" content="@Rasa_HQ">
@@ -93,8 +93,8 @@
       <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
         <div class="sphinxsidebarwrapper"><p class="caption"><span class="caption-text">Getting Started</span></p>
 <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../quickstart/">Try It Out</a></li>
 <li class="toctree-l1 current"><a class="current reference internal" href="#">Installation</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../quickstart/">Quickstart</a></li>
 </ul>
 <p class="caption"><span class="caption-text">User Guide</span></p>
 <ul>
@@ -133,6 +133,7 @@
         <div class="dropdown">
           <button class="dropdown-btn">tags</button>
           <div class="dropdown-content">
+              <a href="../0.13.0/installation.html">0.13.0</a>
               <a href="../0.12.3/installation.html">0.12.3</a>
               <a href="../0.12.2/installation.html">0.12.2</a>
               <a href="../0.12.1/installation.html">0.12.1</a>
@@ -170,7 +171,7 @@
 
 
 
-    <p class="scv-banner"><a href="../0.12.3/installation.html"><b>Warning:</b> This document is for the development version of Rasa NLU. The latest version is 0.12.3.</a></p>
+    <p class="scv-banner"><a href="../0.13.0/installation.html"><b>Warning:</b> This document is for the development version of Rasa NLU. The latest version is 0.13.0.</a></p>
 <div class="section" id="installation">
 <span id="section-backends"></span><h1>Installation<a class="headerlink" href="#installation" title="Permalink to this headline">¶</a></h1>
 <div class="section" id="prerequisites">
@@ -185,9 +186,13 @@ Download the installer and select VC++ Build tools in the list.</p>
 <div class="section" id="setting-up-rasa-nlu">
 <h2>Setting up Rasa NLU<a class="headerlink" href="#setting-up-rasa-nlu" title="Permalink to this headline">¶</a></h2>
 <p>The recommended way to install Rasa NLU is using pip:</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>pip install rasa_nlu
-</pre></div>
-</div>
+
+  <pre class="snippet">
+    <div class="code copyable" data-clipboard-text="pip install rasa_nlu">
+      pip install rasa_nlu
+    </div>
+    <button class="button copyable" data-clipboard-text="pip install rasa_nlu">copy</button>
+  </pre>
 <p>If you want to use the bleeding edge version you can get it from github:</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>git clone https://github.com/RasaHQ/rasa_nlu.git
 <span class="nb">cd</span> rasa_nlu
