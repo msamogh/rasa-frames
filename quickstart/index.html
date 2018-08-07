@@ -26,7 +26,7 @@
   <meta property="og:title" content="Getting Started with Rasa NLU" />
   <meta property="og:type" content="website" />
   <meta property="og:image" content="https://rasa.com/assets/img/facebook-og.png" />
-  <meta property="og:url" content="https://rasa.com/docs/nlu/master/quickstart" />
+  <meta property="og:url" content="https://rasa.com/docs/nlu/quickstart" />
   
     <meta name="description" content="Try out Rasa NLU in the browser." />
     <meta itemprop="description" content="Try out Rasa NLU in the browser.">
@@ -126,13 +126,14 @@
 <div class="versions">
     <div>
       <span class="current-version">
-        v: 0.13.0
+        v: 0.13.1
       </span>
     </div>
     <div class="other-versions">
         <div class="dropdown">
           <button class="dropdown-btn">tags</button>
           <div class="dropdown-content">
+              <a href="0.13.1/quickstart.html">0.13.1</a>
               <a href="0.13.0/quickstart.html">0.13.0</a>
               <a href="0.12.3/index.html">0.12.3</a>
               <a href="0.12.2/index.html">0.12.2</a>
@@ -364,7 +365,7 @@ print(json.dumps(result, indent=2))</pre>
 <p>Run this command to start your server:</p>
 
 
-  <pre data-executable>!python -m rasa_nlu.server --path projects</pre>
+  <pre data-executable>!python -m rasa_nlu.server --path models</pre>
   <script src="https://storage.googleapis.com/docs-theme/juniper.min.js"></script>
   <script>
     new Juniper({ repo: 'RasaHQ/rasa_core', branch: 'master', isolateCells: false , theme: 'xq-light', eventName: 'nlu-start-server' })
