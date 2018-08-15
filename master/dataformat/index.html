@@ -17,7 +17,7 @@
     <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
     <link rel="index" title="Index" href="../genindex/" />
     <link rel="search" title="Search" href="../search/" />
-    <link rel="next" title="Pipeline and Component Configuration" href="../pipeline/" />
+    <link rel="next" title="Component Configuration" href="../components/" />
     <link rel="prev" title="Frequently Asked Questions" href="../faq/" />
    
     
@@ -98,7 +98,7 @@
 </ul>
 <p class="caption"><span class="caption-text">User Guide</span></p>
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="../choosing_pipeline/">Choosing a Pipeline</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../choosing_pipeline/">Choosing a Rasa NLU Pipeline</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../entities/">Entity Extraction</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../languages/">Language Support</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../evaluation/">Evaluating and Improving Models</a></li>
@@ -108,7 +108,7 @@
 <p class="caption"><span class="caption-text">API Reference</span></p>
 <ul class="current">
 <li class="toctree-l1 current"><a class="current reference internal" href="#">Training Data Format</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../pipeline/">Pipeline and Component Configuration</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../components/">Component Configuration</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../config/">Server Configuration</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../http/">HTTP API</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../python/">Python API</a></li>
@@ -231,7 +231,9 @@ and after training a model. Luckily, there’s a
 <a class="reference external" href="https://github.com/RasaHQ/rasa-nlu-trainer">great tool</a>
 for creating training data in rasa’s format.
 - created by <a class="reference external" href="https://github.com/azazdeaz">&#64;azazdeaz</a> -
-and it’s also extremely helpful for inspecting and modifying existing data.</p>
+and it’s also extremely helpful for inspecting and modifying existing data.
+<a class="reference external" href="https://rasa.com/products/rasa-platform">Rasa Platform</a> (Rasa’s commercial product) also has
+a full-featured UI for annotating data.</p>
 <p>For the demo data the output should look like this:</p>
 <img alt="../_images/rasa_nlu_intent_gui.png" src="../_images/rasa_nlu_intent_gui.png" />
 <p>If you use the json format it is <strong>strongly</strong> recommended that you view your training
@@ -310,7 +312,7 @@ example states <code class="docutils literal notranslate"><span class="pre">NYC<
 and end index of the entity, you can define a synonym. Whenever the same text will be found, the value will use the
 synonym instead of the actual text in the message.</p>
 <p>To use the synonyms defined in your training data, you need to make sure the pipeline contains the <code class="docutils literal notranslate"><span class="pre">ner_synonyms</span></code>
-component (see <a class="reference internal" href="../pipeline/#section-pipeline"><span class="std std-ref">Pipeline and Component Configuration</span></a>).</p>
+component (see <a class="reference internal" href="../components/#section-pipeline"><span class="std std-ref">Component Configuration</span></a>).</p>
 <p>Alternatively, you can add an “entity_synonyms” array to define several synonyms to one entity value. Here is an example of that:</p>
 <div class="highlight-json notranslate"><div class="highlight"><pre><span></span><span class="p">{</span>
   <span class="nt">&quot;rasa_nlu_data&quot;</span><span class="p">:</span> <span class="p">{</span>
