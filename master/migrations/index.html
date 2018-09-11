@@ -144,6 +144,7 @@
 <ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="../customcomponents/">Custom Components</a></li>
 <li class="toctree-l1 current"><a class="current reference internal" href="#">Migration Guide</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#x-to-0-13-3">0.13.x to 0.13.3</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#x-to-0-13-0">0.12.x to 0.13.0</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#x-to-0-12-0">0.11.x to 0.12.0</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#x-to-0-10-0">0.9.x to 0.10.0</a></li>
@@ -213,6 +214,58 @@
 <h1>Migration Guide<a class="headerlink" href="#migration-guide" title="Permalink to this headline">¶</a></h1>
 <p>This page contains information about changes between major versions and
 how you can migrate from one version to another.</p>
+<div class="section" id="x-to-0-13-3">
+<h2>0.13.x to 0.13.3<a class="headerlink" href="#x-to-0-13-3" title="Permalink to this headline">¶</a></h2>
+<ul>
+<li><p class="first"><code class="docutils literal notranslate"><span class="pre">rasa_nlu.server</span></code> has to  be supplied with a <code class="docutils literal notranslate"><span class="pre">yml</span></code> file defining the
+model endpoint from which to retrieve training data. The file location has
+be passed with the <code class="docutils literal notranslate"><span class="pre">--endpoints</span></code> argument, e.g.
+<code class="docutils literal notranslate"><span class="pre">python</span> <span class="pre">rasa_nlu.server</span> <span class="pre">--path</span> <span class="pre">projects</span> <span class="pre">--endpoints</span> <span class="pre">endpoints.yml</span></code>
+<code class="docutils literal notranslate"><span class="pre">endpoints.yml</span></code> needs to contain the <code class="docutils literal notranslate"><span class="pre">model</span></code> key
+with a <code class="docutils literal notranslate"><span class="pre">url</span></code> and an optional <code class="docutils literal notranslate"><span class="pre">token</span></code>. Here’s an example:</p>
+<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="l l-Scalar l-Scalar-Plain">model</span><span class="p p-Indicator">:</span>
+  <span class="l l-Scalar l-Scalar-Plain">url</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">http://my_model_server.com/models/default/nlu/tags/latest</span>
+  <span class="l l-Scalar l-Scalar-Plain">token</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">my_model_server_token</span>
+</pre></div>
+</div>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">If you configure <code class="docutils literal notranslate"><span class="pre">rasa_nlu.server</span></code> to pull models from a remote server,
+the default project name will be used. It is defined
+<code class="docutils literal notranslate"><span class="pre">RasaNLUModelConfig.DEFAULT_PROJECT_NAME</span></code>.</p>
+</div>
+</li>
+<li><p class="first"><code class="docutils literal notranslate"><span class="pre">rasa_nlu.train</span></code> can also be run with the <code class="docutils literal notranslate"><span class="pre">--endpoints</span></code> argument
+if you want to pull training data from a URL. Alternatively, the
+current <code class="docutils literal notranslate"><span class="pre">--url</span></code> syntax is still supported.</p>
+<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="l l-Scalar l-Scalar-Plain">data</span><span class="p p-Indicator">:</span>
+  <span class="l l-Scalar l-Scalar-Plain">url</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">http://my_data_server.com/projects/default/data</span>
+  <span class="l l-Scalar l-Scalar-Plain">token</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">my_data_server_token</span>
+</pre></div>
+</div>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">Your endpoint file may contain entries for both <code class="docutils literal notranslate"><span class="pre">model</span></code> and <code class="docutils literal notranslate"><span class="pre">data</span></code>.
+<code class="docutils literal notranslate"><span class="pre">rasa_nlu.server</span></code> and <code class="docutils literal notranslate"><span class="pre">rasa_nlu.train</span></code> will pick the relevant entry.</p>
+</div>
+</li>
+<li><p class="first">If you directly access the <code class="docutils literal notranslate"><span class="pre">DataRouter</span></code> class or <code class="docutils literal notranslate"><span class="pre">rasa_nlu.train</span></code>’s
+<code class="docutils literal notranslate"><span class="pre">do_train()</span></code> method, you can directly create instances of
+<code class="docutils literal notranslate"><span class="pre">EndpointConfig</span></code> without creating a <code class="docutils literal notranslate"><span class="pre">yml</span></code> file. Example:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">rasa_nlu.utils</span> <span class="kn">import</span> <span class="n">EndpointConfig</span>
+<span class="kn">from</span> <span class="nn">rasa_nlu.data_router</span> <span class="kn">import</span> <span class="n">DataRouter</span>
+
+<span class="n">model_endpoint</span> <span class="o">=</span> <span class="n">EndpointConfig</span><span class="p">(</span>
+    <span class="n">url</span><span class="o">=</span><span class="s2">&quot;http://my_model_server.com/models/default/nlu/tags/latest&quot;</span><span class="p">,</span>
+    <span class="n">token</span><span class="o">=</span><span class="s2">&quot;my_model_server_token&quot;</span>
+<span class="p">)</span>
+
+<span class="n">interpreter</span> <span class="o">=</span> <span class="n">DataRouter</span><span class="p">(</span><span class="s2">&quot;projects&quot;</span><span class="p">,</span> <span class="n">model_server</span><span class="o">=</span><span class="n">model_endpoint</span><span class="p">)</span>
+</pre></div>
+</div>
+</li>
+</ul>
+</div>
 <div class="section" id="x-to-0-13-0">
 <h2>0.12.x to 0.13.0<a class="headerlink" href="#x-to-0-13-0" title="Permalink to this headline">¶</a></h2>
 <div class="admonition warning">
