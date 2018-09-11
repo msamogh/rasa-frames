@@ -245,8 +245,9 @@ We do not recommend that you use these; they are likely to be deprecated in a fu
 NLU will get the intent right but entities wrong, or the other way around.
 You need to provide enough data for both intents and entities.</p>
 </div>
+</div>
 <div class="section" id="multiple-intents">
-<h3>Multiple Intents<a class="headerlink" href="#multiple-intents" title="Permalink to this headline">¶</a></h3>
+<h2>Multiple Intents<a class="headerlink" href="#multiple-intents" title="Permalink to this headline">¶</a></h2>
 <p>If you want to split intents into multiple labels,
 e.g. for predicting multiple intents or for modeling hierarchical intent structure,
 you can only do this with the tensorflow pipeline.
@@ -267,7 +268,6 @@ To do this, use these flags:</p>
   <span class="l l-Scalar l-Scalar-Plain">intent_tokenization_flag</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">true</span>
   <span class="l l-Scalar l-Scalar-Plain">intent_split_symbol</span><span class="p p-Indicator">:</span> <span class="s">&quot;+&quot;</span>
 </pre></div>
-</div>
 </div>
 </div>
 <div class="section" id="understanding-the-rasa-nlu-pipeline">
@@ -296,6 +296,9 @@ the processing has finished. For example, for the sentence <code class="docutils
 </div>
 <p>This is created as a combination of the results of the different components in the pre-configured pipeline <code class="docutils literal notranslate"><span class="pre">spacy_sklearn</span></code>.
 For example, the <code class="docutils literal notranslate"><span class="pre">entities</span></code> attribute is created by the <code class="docutils literal notranslate"><span class="pre">ner_crf</span></code> component.</p>
+</div>
+<div class="section" id="component-lifecycle">
+<span id="section-component-lifecycle"></span><h2>Component Lifecycle<a class="headerlink" href="#component-lifecycle" title="Permalink to this headline">¶</a></h2>
 <p>Every component can implement several methods from the <code class="xref py py-class docutils literal notranslate"><span class="pre">Component</span></code> base class; in a pipeline these different methods
 will be called in a specific order. Lets assume, we added the following pipeline to our config:
 <code class="docutils literal notranslate"><span class="pre">&quot;pipeline&quot;:</span> <span class="pre">[&quot;Component</span> <span class="pre">A&quot;,</span> <span class="pre">&quot;Component</span> <span class="pre">B&quot;,</span> <span class="pre">&quot;Last</span> <span class="pre">Component&quot;]</span></code>.
@@ -308,6 +311,9 @@ component can retrieve these feature vectors from the context and do intent clas
 <p>Initially the context is filled with all configuration values, the arrows in the image show the call order
 and visualize the path of the passed context. After all components are trained and persisted, the
 final context dictionary is used to persist the model’s metadata.</p>
+</div>
+<div class="section" id="returned-entities-object">
+<h2>Returned Entities Object<a class="headerlink" href="#returned-entities-object" title="Permalink to this headline">¶</a></h2>
 <p>In the object returned after parsing there are two fields that show information
 about how the pipeline impacted the entities returned. The <code class="docutils literal notranslate"><span class="pre">extractor</span></code> field
 of an entity tells you which entity extractor found this particular entity.
@@ -474,6 +480,27 @@ intent classification. So Rasa NLU will not predict any intents.
 You can find the details of each component in <a class="reference internal" href="../components/#section-pipeline"><span class="std std-ref">Component Configuration</span></a>.</p>
 <p>If you want to use custom components in your pipeline, see <a class="reference internal" href="../customcomponents/#section-customcomponents"><span class="std std-ref">Custom Components</span></a>.</p>
 </div>
+<div class="section" id="have-questions-or-feedback">
+<h2>Have questions or feedback?<a class="headerlink" href="#have-questions-or-feedback" title="Permalink to this headline">¶</a></h2>
+<p>We have a very active support community on <a class="reference external" href="https://forum.rasa.com">Rasa Community Forum</a>
+that is happy to help you with your questions. If you have any feedback for us or a specific
+suggestion for improving the docs, feel free to share it by creating an issue on Rasa NLU
+<a class="reference external" href="https://github.com/RasaHQ/rasa_nlu">GitHub repository</a>.</p>
+<div id="livechat">
+   <!--Start of Tawk.to Script-->
+   <script type="text/javascript">
+      var Tawk_API=Tawk_API||{}, Tawk_LoadStart=new Date();
+      (function(){
+      var s1=document.createElement("script"),s0=document.getElementsByTagName("script")[0];
+      s1.async=true;
+      s1.src='https://embed.tawk.to/5b85a455afc2c34e96e7fedd/default';
+      s1.charset='UTF-8';
+      s1.setAttribute('crossorigin','*');
+      s0.parentNode.insertBefore(s1,s0);
+      })();
+   </script>
+   <!--End of Tawk.to Script-->
+</div></div>
 </div>
 
 
