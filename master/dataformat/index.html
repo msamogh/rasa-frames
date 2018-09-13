@@ -429,29 +429,18 @@ lettuce wrap</p>
 </pre></div>
 </div>
 <p>Alternatively, lookup elements may be directly included as a list</p>
-<blockquote>
-<div><dl class="docutils">
-<dt>{</dt>
-<dd><dl class="first docutils">
-<dt>“rasa_nlu_data”: {</dt>
-<dd><dl class="first docutils">
-<dt>“lookup_tables”: [</dt>
-<dd><dl class="first docutils">
-<dt>{</dt>
-<dd>“name”: “plates”,
-“elements”: [“beans”, “rice”, “tacos”, “cheese”]</dd>
-</dl>
-<p class="last">}</p>
-</dd>
-</dl>
-<p class="last">]</p>
-</dd>
-</dl>
-<p class="last">}</p>
-</dd>
-</dl>
-<p>}</p>
-</div></blockquote>
+<div class="highlight-json notranslate"><div class="highlight"><pre><span></span><span class="p">{</span>
+    <span class="nt">&quot;rasa_nlu_data&quot;</span><span class="p">:</span> <span class="p">{</span>
+        <span class="nt">&quot;lookup_tables&quot;</span><span class="p">:</span> <span class="p">[</span>
+            <span class="p">{</span>
+                <span class="nt">&quot;name&quot;</span><span class="p">:</span> <span class="s2">&quot;plates&quot;</span><span class="p">,</span>
+                <span class="nt">&quot;elements&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;beans&quot;</span><span class="p">,</span> <span class="s2">&quot;rice&quot;</span><span class="p">,</span> <span class="s2">&quot;tacos&quot;</span><span class="p">,</span> <span class="s2">&quot;cheese&quot;</span><span class="p">]</span>
+            <span class="p">}</span>
+        <span class="p">]</span>
+    <span class="p">}</span>
+<span class="p">}</span>
+</pre></div>
+</div>
 <p>When lookup tables are supplied in training data, the contents are combined into a large, case-insensitive regex pattern that looks for exact matches in the training examples.  These regexes match over multiple tokens, so <code class="docutils literal notranslate"><span class="pre">lettuce</span> <span class="pre">wrap</span></code> would match <code class="docutils literal notranslate"><span class="pre">get</span> <span class="pre">me</span> <span class="pre">a</span> <span class="pre">lettuce</span> <span class="pre">wrap</span> <span class="pre">ASAP</span></code> as <code class="docutils literal notranslate"><span class="pre">[0</span> <span class="pre">0</span> <span class="pre">0</span> <span class="pre">1</span> <span class="pre">1</span> <span class="pre">0]</span></code>.  These regexes are processed identically to the regular regex patterns directly specified in the training data.</p>
 <div class="admonition note">
 <p class="first admonition-title">Note</p>
