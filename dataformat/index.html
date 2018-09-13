@@ -152,13 +152,14 @@
 <div class="versions">
     <div>
       <span class="current-version">
-        v: 0.13.2
+        v: 0.13.3
       </span>
     </div>
     <div class="other-versions">
         <div class="dropdown">
           <button class="dropdown-btn">tags</button>
           <div class="dropdown-content">
+              <a href=".././0.13.3/dataformat/">0.13.3</a>
               <a href=".././0.13.2/dataformat/">0.13.2</a>
               <a href=".././0.13.1/dataformat/">0.13.1</a>
               <a href=".././0.13.0/dataformat/">0.13.0</a>
@@ -213,6 +214,7 @@ Examples are grouped by intent, and entities are annotated as markdown links.</p
 <span class="k">-</span> what is my balance &lt;!-- no entity --&gt;
 <span class="k">-</span> how much do I have on my [<span class="nt">savings</span>](<span class="na">source_account</span>) &lt;!-- entity &quot;source_account&quot; has value &quot;savings&quot; --&gt;
 <span class="k">-</span> how much do I have on my [<span class="nt">savings account</span>](<span class="na">source_account:savings</span>) &lt;!-- synonyms, method 1--&gt;
+<span class="k">-</span> Could I pay in [<span class="nt">yen</span>](<span class="na">currency</span>)?  &lt;!-- entity matched by lookup table --&gt;
 
 <span class="gu">##</span> intent:greet
 <span class="k">-</span> hey
@@ -223,12 +225,21 @@ Examples are grouped by intent, and entities are annotated as markdown links.</p
 
 <span class="gu">##</span> regex:zipcode
 <span class="k">-</span> [0-9]{5}
+
+<span class="gu">##</span> lookup:currencies   &lt;!-- lookup table list --&gt;
+<span class="k">-</span> Yen
+<span class="k">-</span> USD
+<span class="k">-</span> Euro
+
+<span class="gu">##</span> lookup:additional_currencies  &lt;!-- no list to specify lookup table file --&gt;
+path/to/currencies.txt
 </pre></div>
 </div>
 <p>The training data for Rasa NLU is structured into different parts:
-examples, synonyms, and regex features.</p>
+examples, synonyms, regex features, and lookup tables.</p>
 <p>Synonyms will map extracted entities to the same name, for example mapping “my savings account” to simply “savings”.
 However, this only happens <em>after</em> the entities have been extracted, so you need to provide examples with the synonyms present so that Rasa can learn to pick them up.</p>
+<p>Lookup tables may be specified either directly as lists or as txt files containing newline-separated words or phrases.  Upon loading the training data, these files are used to generate case-insensitive regex patterns that are added to the regex features.  For example, in this case a list of currency names is supplied so that it is easier to pick out this entity.</p>
 </div>
 <div class="section" id="json-format">
 <h3>JSON Format<a class="headerlink" href="#json-format" title="Permalink to this headline">¶</a></h3>
@@ -239,6 +250,7 @@ The most important one is <code class="docutils literal notranslate"><span class
     <span class="nt">&quot;rasa_nlu_data&quot;</span><span class="p">:</span> <span class="p">{</span>
         <span class="nt">&quot;common_examples&quot;</span><span class="p">:</span> <span class="p">[],</span>
         <span class="nt">&quot;regex_features&quot;</span> <span class="p">:</span> <span class="p">[],</span>
+        <span class="nt">&quot;lookup_tables&quot;</span>  <span class="p">:</span> <span class="p">[],</span>
         <span class="nt">&quot;entity_synonyms&quot;</span><span class="p">:</span> <span class="p">[]</span>
     <span class="p">}</span>
 <span class="p">}</span>
@@ -392,6 +404,61 @@ recognize entities and related intents. Hence, you still need to provide intent 
 training data!</p>
 </div>
 </div>
+<div class="section" id="lookup-tables">
+<h3>Lookup Tables<a class="headerlink" href="#lookup-tables" title="Permalink to this headline">¶</a></h3>
+<p>Lookup tables in the form of external files or lists of elements may also be specified in the training data.  The externally supplied lookup tables must be in a newline-separated format.  For example, <code class="docutils literal notranslate"><span class="pre">data/test/lookup_tables/plates.txt</span></code> may contain</p>
+<p>tacos
+beef
+mapo tofu
+burrito
+lettuce wrap</p>
+<p>And can be loaded as:</p>
+<div class="highlight-json notranslate"><div class="highlight"><pre><span></span><span class="p">{</span>
+    <span class="nt">&quot;rasa_nlu_data&quot;</span><span class="p">:</span> <span class="p">{</span>
+        <span class="nt">&quot;lookup_tables&quot;</span><span class="p">:</span> <span class="p">[</span>
+            <span class="p">{</span>
+                <span class="nt">&quot;name&quot;</span><span class="p">:</span> <span class="s2">&quot;plates&quot;</span><span class="p">,</span>
+                <span class="nt">&quot;elements&quot;</span><span class="p">:</span> <span class="s2">&quot;data/test/lookup_tables/plates.txt&quot;</span>
+            <span class="p">}</span>
+        <span class="p">]</span>
+    <span class="p">}</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p>Alternatively, lookup elements may be directly included as a list</p>
+<blockquote>
+<div><dl class="docutils">
+<dt>{</dt>
+<dd><dl class="first docutils">
+<dt>“rasa_nlu_data”: {</dt>
+<dd><dl class="first docutils">
+<dt>“lookup_tables”: [</dt>
+<dd><dl class="first docutils">
+<dt>{</dt>
+<dd>“name”: “plates”,
+“elements”: [“beans”, “rice”, “tacos”, “cheese”]</dd>
+</dl>
+<p class="last">}</p>
+</dd>
+</dl>
+<p class="last">]</p>
+</dd>
+</dl>
+<p class="last">}</p>
+</dd>
+</dl>
+<p>}</p>
+</div></blockquote>
+<p>When lookup tables are supplied in training data, the contents are combined into a large, case-insensitive regex pattern that looks for exact matches in the training examples.  These regexes match over multiple tokens, so <code class="docutils literal notranslate"><span class="pre">lettuce</span> <span class="pre">wrap</span></code> would match <code class="docutils literal notranslate"><span class="pre">get</span> <span class="pre">me</span> <span class="pre">a</span> <span class="pre">lettuce</span> <span class="pre">wrap</span> <span class="pre">ASAP</span></code> as <code class="docutils literal notranslate"><span class="pre">[0</span> <span class="pre">0</span> <span class="pre">0</span> <span class="pre">1</span> <span class="pre">1</span> <span class="pre">0]</span></code>.  These regexes are processed identically to the regular regex patterns directly specified in the training data.</p>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">For lookup tables to be effective, there must be a few examples of matches in your training data.  Otherwise the model will not learn to use the lookup table match features.</p>
+</div>
+<div class="admonition warning">
+<p class="first admonition-title">Warning</p>
+<p class="last">One must be careful with what kind of data is present in the lookup table.  For example if some of the elements are matched with commonly occuring words that are not the entity you wish to extract, this will limit the effectiveness of this method.  In fact, it might hurt the performance of entity recognition.  Therefore, try to use lookup tables only when you have a list of unambiguous phrases or tokens that you wish to match and make sure you filter out potentially problematic elements.</p>
+</div>
+</div>
 <div class="section" id="organization">
 <h3>Organization<a class="headerlink" href="#organization" title="Permalink to this headline">¶</a></h3>
 <p>The training data can either be stored in a single file or split into multiple files.
@@ -417,6 +484,27 @@ For other file formats you have to use the single-file approach. You also cannot
 and json</p>
 </div>
 </div>
+<div class="section" id="have-questions-or-feedback">
+<h3>Have questions or feedback?<a class="headerlink" href="#have-questions-or-feedback" title="Permalink to this headline">¶</a></h3>
+<p>We have a very active support community on <a class="reference external" href="https://forum.rasa.com">Rasa Community Forum</a>
+that is happy to help you with your questions. If you have any feedback for us or a specific
+suggestion for improving the docs, feel free to share it by creating an issue on Rasa NLU
+<a class="reference external" href="https://github.com/RasaHQ/rasa_nlu">GitHub repository</a>.</p>
+<div id="livechat">
+   <!--Start of Tawk.to Script-->
+   <script type="text/javascript">
+      var Tawk_API=Tawk_API||{}, Tawk_LoadStart=new Date();
+      (function(){
+      var s1=document.createElement("script"),s0=document.getElementsByTagName("script")[0];
+      s1.async=true;
+      s1.src='https://embed.tawk.to/5b85a455afc2c34e96e7fedd/default';
+      s1.charset='UTF-8';
+      s1.setAttribute('crossorigin','*');
+      s0.parentNode.insertBefore(s1,s0);
+      })();
+   </script>
+   <!--End of Tawk.to Script-->
+</div></div>
 </div>
 </div>
 
