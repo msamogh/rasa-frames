@@ -113,8 +113,8 @@
 <p class="caption"><span class="caption-text">User Guide</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../choosing_pipeline/">Choosing a Rasa NLU Pipeline</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../entities/">Entity Extraction</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../languages/">Language Support</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../entities/">Entity Extraction</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../evaluation/">Evaluating and Improving Models</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../fallback/">Confidence and Fallback Intents</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../faq/">Frequently Asked Questions</a></li>
@@ -143,12 +143,13 @@
     <div class="versions-content">
       <div>
         <span class="current-version">
-          viewing: 0.13.5
+          viewing: 0.13.6
         </span>
       </div>
       <div class="other-versions">
           <p>tags</p>
           <div class="dropdown-content">
+              <a href=".././0.13.6/docker/">0.13.6</a>
               <a href=".././0.13.5/docker/">0.13.5</a>
               <a href=".././0.13.4/docker/">0.13.4</a>
               <a href=".././0.13.3/docker/">0.13.3</a>
@@ -191,7 +192,8 @@
 <div class="section" id="running-in-docker">
 <span id="section-docker"></span><h1>Running in Docker<a class="headerlink" href="#running-in-docker" title="Permalink to this headline">¶</a></h1>
 <p>Rasa NLU docker images are provided for different backends:</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>docker run rasa/rasa_nlu:latest-full -p5000:5000
+<p>The host must have a x86_64 CPU with AVX support.</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>docker run -p <span class="m">5000</span>:5000 rasa/rasa_nlu:latest-full
 </pre></div>
 </div>
 <div class="section" id="have-questions-or-feedback">

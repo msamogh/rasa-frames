@@ -113,8 +113,8 @@
 <p class="caption"><span class="caption-text">User Guide</span></p>
 <ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="../choosing_pipeline/">Choosing a Rasa NLU Pipeline</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../entities/">Entity Extraction</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../languages/">Language Support</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../entities/">Entity Extraction</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../evaluation/">Evaluating and Improving Models</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../fallback/">Confidence and Fallback Intents</a></li>
 <li class="toctree-l1 current"><a class="current reference internal" href="#">Frequently Asked Questions</a></li>
@@ -143,12 +143,13 @@
     <div class="versions-content">
       <div>
         <span class="current-version">
-          viewing: 0.13.5
+          viewing: 0.13.6
         </span>
       </div>
       <div class="other-versions">
           <p>tags</p>
           <div class="dropdown-content">
+              <a href=".././0.13.6/faq/">0.13.6</a>
               <a href=".././0.13.5/faq/">0.13.5</a>
               <a href=".././0.13.4/faq/">0.13.4</a>
               <a href=".././0.13.3/faq/">0.13.3</a>
@@ -190,6 +191,15 @@
 
 <div class="section" id="frequently-asked-questions">
 <span id="section-faq"></span><h1>Frequently Asked Questions<a class="headerlink" href="#frequently-asked-questions" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="which-languages-does-the-rasa-nlu-support">
+<h2>Which languages does the Rasa NLU support?<a class="headerlink" href="#which-languages-does-the-rasa-nlu-support" title="Permalink to this headline">¶</a></h2>
+<p>Rasa NLU can be used to understand any language that can be tokenized (on whitespace or using a custom tokenizer),
+but some backends are restricted to specific languages.</p>
+<p>The <code class="docutils literal notranslate"><span class="pre">tensorflow_embedding</span></code> pipeline can be used for any language because it trains custom word embeddings for your domain using the data you provide in the NLU training examples.</p>
+<p>Other backends use pre-trained word vectors and therefore are restricted to languages which have pre-trained
+vectors available.</p>
+<p>You can read more about the Rasa NLU supported languages in <a class="reference internal" href="../languages/#section-languages"><span class="std std-ref">Language Support</span></a>.</p>
+</div>
 <div class="section" id="how-many-training-examples-do-i-need">
 <h2>How many training examples do I need?<a class="headerlink" href="#how-many-training-examples-do-i-need" title="Permalink to this headline">¶</a></h2>
 <p>Unfortunately, the answer is <em>it depends</em>.</p>
