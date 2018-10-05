@@ -260,6 +260,12 @@ This project adheres to <a class="reference external" href="http://semver.org/">
 </div>
 <div class="section" id="fixed">
 <h3>Fixed<a class="headerlink" href="#fixed" title="Permalink to this headline">¶</a></h3>
+<ul class="simple">
+<li><code class="docutils literal notranslate"><span class="pre">rasa_nlu.server</span></code> allowed more than <code class="docutils literal notranslate"><span class="pre">max_training_processes</span></code>
+to be trained if they belong to different projects.
+<code class="docutils literal notranslate"><span class="pre">max_training_processes</span></code> is now a global parameter, regardless of what
+project the training process belongs to.</li>
+</ul>
 </div>
 </div>
 <div class="section" id="id1">
