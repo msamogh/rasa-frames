@@ -638,8 +638,8 @@ modeling hierarchical intent structure, use these flags:</p>
 <li><dl class="first docutils">
 <dt>neural network’s architecture:</dt>
 <dd><ul class="first last">
-<li><code class="docutils literal notranslate"><span class="pre">num_hidden_layers_a</span></code> and <code class="docutils literal notranslate"><span class="pre">hidden_layer_size_a</span></code> set the number of hidden layers and their sizes before embedding layer for user inputs;</li>
-<li><code class="docutils literal notranslate"><span class="pre">num_hidden_layers_b</span></code> and <code class="docutils literal notranslate"><span class="pre">hidden_layer_size_b</span></code> set the number of hidden layers and their sizes before embedding layer for intent labels;</li>
+<li><code class="docutils literal notranslate"><span class="pre">hidden_layers_sizes_a</span></code> sets a list of hidden layer sizes before the embedding layer for user inputs, the number of hidden layers is equal to the length of the list</li>
+<li><code class="docutils literal notranslate"><span class="pre">hidden_layers_sizes_b</span></code> sets a list of hidden layer sizes before the embedding layer for intent labels, the number of hidden layers is equal to the length of the list</li>
 </ul>
 </dd>
 </dl>
@@ -693,10 +693,8 @@ If constant <code class="docutils literal notranslate"><span class="pre">batch_s
 <div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="l l-Scalar l-Scalar-Plain">pipeline</span><span class="p p-Indicator">:</span>
 <span class="p p-Indicator">-</span> <span class="l l-Scalar l-Scalar-Plain">name</span><span class="p p-Indicator">:</span> <span class="s">&quot;intent_classifier_tensorflow_embedding&quot;</span>
   <span class="c1"># nn architecture</span>
-  <span class="s">&quot;num_hidden_layers_a&quot;</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">2</span>
-  <span class="s">&quot;hidden_layer_size_a&quot;</span><span class="p p-Indicator">:</span> <span class="p p-Indicator">[</span><span class="nv">256</span><span class="p p-Indicator">,</span> <span class="nv">128</span><span class="p p-Indicator">]</span>
-  <span class="s">&quot;num_hidden_layers_b&quot;</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">0</span>
-  <span class="s">&quot;hidden_layer_size_b&quot;</span><span class="p p-Indicator">:</span> <span class="p p-Indicator">[]</span>
+  <span class="s">&quot;hidden_layers_sizes_a&quot;</span><span class="p p-Indicator">:</span> <span class="p p-Indicator">[</span><span class="nv">256</span><span class="p p-Indicator">,</span> <span class="nv">128</span><span class="p p-Indicator">]</span>
+  <span class="s">&quot;hidden_layers_sizes_b&quot;</span><span class="p p-Indicator">:</span> <span class="p p-Indicator">[]</span>
   <span class="s">&quot;batch_size&quot;</span><span class="p p-Indicator">:</span> <span class="p p-Indicator">[</span><span class="nv">64</span><span class="p p-Indicator">,</span> <span class="nv">256</span><span class="p p-Indicator">]</span>
   <span class="s">&quot;epochs&quot;</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">300</span>
   <span class="c1"># embedding parameters</span>
@@ -710,7 +708,7 @@ If constant <code class="docutils literal notranslate"><span class="pre">batch_s
   <span class="s">&quot;C2&quot;</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">0.002</span>
   <span class="s">&quot;C_emb&quot;</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">0.8</span>
   <span class="s">&quot;droprate&quot;</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">0.2</span>
-  <span class="c1"># flag if to tokenize intents</span>
+  <span class="c1"># flag for tokenizing intents</span>
   <span class="s">&quot;intent_tokenization_flag&quot;</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">false</span>
   <span class="s">&quot;intent_split_symbol&quot;</span><span class="p p-Indicator">:</span> <span class="s">&quot;_&quot;</span>
   <span class="c1"># visualization of accuracy</span>
