@@ -49,8 +49,8 @@
     
   <link rel="stylesheet" href="../_static/xq-light.css" type="text/css" />
   <link rel="stylesheet" href="../_static/fontawesome/css/fontawesome-all.css" type="text/css" />
-  <script defer type="text/javascript" src="../_static/config.js"></script>
-  <script defer type="text/javascript" src="../_static/klaro.js"></script>
+  <!--<script defer type="text/javascript" src="../_static/config.js"></script>
+  <script defer type="text/javascript" src="../_static/klaro.js"></script>-->
   <script type="text/javascript" src="https://storage.googleapis.com/docs-theme/clipboard.min.js"></script>
   
   
@@ -411,19 +411,25 @@ suggestion for improving the docs, feel free to share it by creating an issue on
 
     
 
-  <!-- Global site tag (gtag.js) - Google Analytics -->
-  <script async type="opt-in" data-name="googleanalytics" data-type="text/javascript" data-src="https://www.googletagmanager.com/gtag/js?id=UA-87333416-1"></script>
   <script>
     window.dataLayer = window.dataLayer || [];
 
-    function gtag() {
-      dataLayer.push(arguments);
+    function gtag(...arguments) {
+      dataLayer.push(...arguments);
     }
     gtag('js', new Date());
     gtag('config', 'UA-87333416-1', {
       'anonymize_ip': true,
     });
   </script>
+  <script src="https://rasa.com/assets/js/js.cookies.js"></script>
+  <!-- Global site tag (gtag.js) - Google Analytics -->
+  <!-- TODO: Re-Enable once Klaro is re-activated again. Remove the next two lines, then.
+  <script type="opt-in" data-name="googleanalytics" data-type="text/javascript" data-src="https://www.googletagmanager.com/gtag/js?id=UA-87333416-1"></script>
+  <script type="opt-in" data-name="googleanalytics" data-type="text/javascript" data-src="https://rasa.com/assets/js/userId.js"></script>
+  -->
+  <script src="https://www.googletagmanager.com/gtag/js?id=UA-87333416-1"></script>
+  <script src="https://rasa.com/assets/js/userId.js"></script>
   <script type="text/javascript">
     var clipboard = new ClipboardJS('.copyable');
     clipboard.on('success', function(e) {
