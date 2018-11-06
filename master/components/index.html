@@ -662,6 +662,7 @@ modeling hierarchical intent structure, use these flags:</p>
 <li><code class="docutils literal notranslate"><span class="pre">similarity_type</span></code> sets the type of the similarity, it should be either <code class="docutils literal notranslate"><span class="pre">cosine</span></code> or <code class="docutils literal notranslate"><span class="pre">inner</span></code>;</li>
 <li><code class="docutils literal notranslate"><span class="pre">num_neg</span></code> sets the number of incorrect intent labels, the algorithm will minimize their similarity to the user input during training;</li>
 <li><code class="docutils literal notranslate"><span class="pre">use_max_sim_neg</span></code> if <code class="docutils literal notranslate"><span class="pre">true</span></code> the algorithm only minimizes maximum similarity over incorrect intent labels;</li>
+<li><code class="docutils literal notranslate"><span class="pre">random_seed</span></code> (None or int) An integer sets the random seed for numpy and tensorflow, so that the random initialisation is always the same and produces the same training result</li>
 </ul>
 </dd>
 </dl>
@@ -704,6 +705,7 @@ If constant <code class="docutils literal notranslate"><span class="pre">batch_s
   <span class="s">&quot;similarity_type&quot;</span><span class="p p-Indicator">:</span> <span class="s">&quot;cosine&quot;</span>  <span class="c1"># string &#39;cosine&#39; or &#39;inner&#39;</span>
   <span class="s">&quot;num_neg&quot;</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">20</span>
   <span class="s">&quot;use_max_sim_neg&quot;</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">true</span>  <span class="c1"># flag which loss function to use</span>
+  <span class="s">&quot;random_seed&quot;</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">None</span> <span class="c1"># set to any int to generate a reproducible training result</span>
   <span class="c1"># regularization</span>
   <span class="s">&quot;C2&quot;</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">0.002</span>
   <span class="s">&quot;C_emb&quot;</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">0.8</span>
