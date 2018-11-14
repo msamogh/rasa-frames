@@ -203,7 +203,9 @@ Download the installer and select VC++ Build tools in the list.</p>
 </div>
 <div class="section" id="setting-up-rasa-nlu">
 <h2>Setting up Rasa NLU<a class="headerlink" href="#setting-up-rasa-nlu" title="Permalink to this headline">¶</a></h2>
-<p>The recommended way to install Rasa NLU is using pip:</p>
+<div class="section" id="stable-recommended">
+<h3>Stable (Recommended)<a class="headerlink" href="#stable-recommended" title="Permalink to this headline">¶</a></h3>
+<p>The recommended way to install Rasa NLU is using pip which will install the latest stable version of Rasa NLU:</p>
 
   <pre class="snippet">
     <div class="code copyable" data-clipboard-text="pip install rasa_nlu">
@@ -212,6 +214,9 @@ Download the installer and select VC++ Build tools in the list.</p>
     <button class="button copyable" data-clipboard-text="pip install rasa_nlu">copy</button>
     <div class="copyable confirm" id="pip">copied!</div>
   </pre>
+</div>
+<div class="section" id="latest-most-recent-github">
+<h3>Latest (Most recent github)<a class="headerlink" href="#latest-most-recent-github" title="Permalink to this headline">¶</a></h3>
 <p>If you want to use the bleeding edge version you can get it from github:</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>git clone https://github.com/RasaHQ/rasa_nlu.git
 <span class="nb">cd</span> rasa_nlu
@@ -232,6 +237,7 @@ don’t mind the additional dependencies lying around, you can use</p>
 </pre></div>
 </div>
 <p class="last">to install everything.</p>
+</div>
 </div>
 </div>
 <div class="section" id="installing-pipeline-dependencies">
