@@ -293,7 +293,7 @@ You can see an independent benchmark comparing Rasa NLU to closed source alterna
         'event_category': 'code',
         'event_label': e.text
       });
-      const id = e.text.slice(0,3);
+      const id = e.text.replace(' ','-');
       document.getElementById(id).classList.add('visible');
       setTimeout(function(){
         document.getElementById(id).classList.remove('visible');},
@@ -385,21 +385,5 @@ You can see an independent benchmark comparing Rasa NLU to closed source alterna
     })(window.document, window.history, window.location);
 
   </script>
-  <div id="webchat">
-  <script src="https://storage.googleapis.com/mrbot-cdn/webchat-0.4.2.js"></script>
-  <script>
-   WebChat.default.init({
-       selector: "#webchat",
-       initPayload: "/greet",
-       interval: 500,
-       socketUrl: "https://website-demo.rasa.com/",
-       socketPath: "/socket.io",
-       title: "Sara",
-       subtitle: "I'm still in development",
-       profileAvatar: "https://rasa.com/assets/img/demo/sara_avatar.png",
-       showCloseButton: true,
-       fullScreenMode: false,})
-  </script>
-  </div>
   </body>
 </html>

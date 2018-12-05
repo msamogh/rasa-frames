@@ -445,7 +445,7 @@ print(json.dumps(result, indent=2))</pre>
       git clone https://github.com/RasaHQ/starter-pack.git
     </div>
     <button class="button copyable" data-clipboard-text="git clone https://github.com/RasaHQ/starter-pack.git">copy</button>
-    <div class="copyable confirm" id="git">copied!</div>
+    <div class="copyable confirm" id="git-clone-https://github.com/RasaHQ/starter-pack.git">copied!</div>
   </pre>
 <p>The starter pack gets you set up with the right file structure, sample configurations, plus
 links to more training data!</p>
@@ -598,7 +598,7 @@ pipeline you are using. For example, not all pipelines include the
         'event_category': 'code',
         'event_label': e.text
       });
-      const id = e.text.slice(0,3);
+      const id = e.text.replace(' ','-');
       document.getElementById(id).classList.add('visible');
       setTimeout(function(){
         document.getElementById(id).classList.remove('visible');},
@@ -690,21 +690,5 @@ pipeline you are using. For example, not all pipelines include the
     })(window.document, window.history, window.location);
 
   </script>
-  <div id="webchat">
-  <script src="https://storage.googleapis.com/mrbot-cdn/webchat-0.4.2.js"></script>
-  <script>
-   WebChat.default.init({
-       selector: "#webchat",
-       initPayload: "/greet",
-       interval: 500,
-       socketUrl: "https://website-demo.rasa.com/",
-       socketPath: "/socket.io",
-       title: "Sara",
-       subtitle: "I'm still in development",
-       profileAvatar: "https://rasa.com/assets/img/demo/sara_avatar.png",
-       showCloseButton: true,
-       fullScreenMode: false,})
-  </script>
-  </div>
   </body>
 </html>
