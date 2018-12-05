@@ -196,14 +196,91 @@
 
     <p class="scv-banner"><a href="../../0.13.8/docker/"><b>Warning:</b> This document is for the development version of Rasa NLU. The latest version is 0.13.8.</a></p>
 <div class="section" id="running-in-docker">
-<span id="section-docker"></span><h1>Running in Docker<a class="headerlink" href="#running-in-docker" title="Permalink to this headline">¶</a></h1>
-<p>Rasa NLU docker images are provided for different backends:</p>
-<p>The host must have a x86_64 CPU with AVX support.</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>docker run -p <span class="m">5000</span>:5000 rasa/rasa_nlu:latest-full
+<span id="section-docker"></span><h1><a class="toc-backref" href="#id1">Running in Docker</a><a class="headerlink" href="#running-in-docker" title="Permalink to this headline">¶</a></h1>
+<div class="contents topic" id="contents">
+<p class="topic-title first">Contents</p>
+<ul class="simple">
+<li><a class="reference internal" href="#running-in-docker" id="id1">Running in Docker</a><ul>
+<li><a class="reference internal" href="#images" id="id2">Images</a></li>
+<li><a class="reference internal" href="#training-nlu" id="id3">Training NLU</a></li>
+<li><a class="reference internal" href="#running-nlu-with-rasa-core" id="id4">Running NLU with Rasa Core</a></li>
+<li><a class="reference internal" href="#running-nlu-as-standalone-server" id="id5">Running NLU as Standalone Server</a></li>
+<li><a class="reference internal" href="#have-questions-or-feedback" id="id6">Have questions or feedback?</a></li>
+</ul>
+</li>
+</ul>
+</div>
+<div class="section" id="images">
+<h2><a class="toc-backref" href="#id2">Images</a><a class="headerlink" href="#images" title="Permalink to this headline">¶</a></h2>
+<p><a class="reference external" href="https://hub.docker.com/r/rasa/rasa_nlu/tags/">Rasa NLU docker images</a> are provided for different backends:</p>
+<ul class="simple">
+<li><code class="docutils literal notranslate"><span class="pre">spacy</span></code>: If you use the <a class="reference internal" href="../choosing_pipeline/#section-spacy-pipeline"><span class="std std-ref">spacy_sklearn</span></a> pipeline</li>
+<li><code class="docutils literal notranslate"><span class="pre">tensorflow</span></code>: If you use the <a class="reference internal" href="../choosing_pipeline/#section-tensorflow-embedding-pipeline"><span class="std std-ref">tensorflow_embedding</span></a>
+pipeline</li>
+<li><code class="docutils literal notranslate"><span class="pre">mitie</span></code>: If you use the <a class="reference internal" href="../choosing_pipeline/#section-mitie-pipeline"><span class="std std-ref">mitie</span></a> pipeline</li>
+<li><code class="docutils literal notranslate"><span class="pre">bare</span></code>: If you want to take a base image and enhance it with your custom
+dependencies</li>
+<li><code class="docutils literal notranslate"><span class="pre">full</span></code> (default): If you use components from different pre-defined pipelines
+and want to have everything included in the image.</li>
+</ul>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">For the <code class="docutils literal notranslate"><span class="pre">tensorflow</span></code> and the <code class="docutils literal notranslate"><span class="pre">full</span></code> image a x86_64 CPU with AVX support
+is required.</p>
+</div>
+</div>
+<div class="section" id="training-nlu">
+<h2><a class="toc-backref" href="#id3">Training NLU</a><a class="headerlink" href="#training-nlu" title="Permalink to this headline">¶</a></h2>
+<p>To train a NLU model you need to mount two directories into the Docker container:</p>
+<ul class="simple">
+<li>a directory containing your project which in turn includes your NLU
+configuration and your NLU training data</li>
+<li>a directory which will contain the trained NLU model</li>
+</ul>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>docker run <span class="se">\</span>
+    -v &lt;project_directory&gt;:/app/project <span class="se">\</span>
+    -v &lt;model_output_directory&gt;:/app/model <span class="se">\</span>
+    rasa/rasa_nlu:latest <span class="se">\</span>
+    run <span class="se">\</span>
+        python -m rasa_nlu.train <span class="se">\</span>
+            -c /app/project/&lt;nlu configuration&gt;.yml <span class="se">\</span>
+            -d /app/project/&lt;nlu data&gt; <span class="se">\</span>
+            -o /app/model <span class="se">\</span>
+            --project &lt;nlu project name&gt;
 </pre></div>
 </div>
+</div>
+<div class="section" id="running-nlu-with-rasa-core">
+<h2><a class="toc-backref" href="#id4">Running NLU with Rasa Core</a><a class="headerlink" href="#running-nlu-with-rasa-core" title="Permalink to this headline">¶</a></h2>
+<p>See this <a class="reference external" href="https://rasa.com/docs/core/docker_walkthrough/">guide</a> which
+describes how to set up all Rasa components as Docker containers and how to
+connect them.</p>
+</div>
+<div class="section" id="running-nlu-as-standalone-server">
+<h2><a class="toc-backref" href="#id5">Running NLU as Standalone Server</a><a class="headerlink" href="#running-nlu-as-standalone-server" title="Permalink to this headline">¶</a></h2>
+<p>To run NLU as server you have to</p>
+<ul class="simple">
+<li>mount a directory with the trained NLU models</li>
+<li>expose a port</li>
+</ul>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>docker run <span class="se">\</span>
+    -p <span class="m">5000</span>:5000 <span class="se">\</span>
+    -v &lt;directory with nlu models&gt;:/app/projects <span class="se">\</span>
+    rasa/rasa_nlu:latest <span class="se">\</span>
+    start <span class="se">\</span>
+        --path /app/projects
+        --port <span class="m">5000</span>
+</pre></div>
+</div>
+<p>You can then send requests to your NLU server as it is described in the
+<a class="reference internal" href="../http/#section-http"><span class="std std-ref">HTTP API</span></a>, e.g. if it is running on the localhost:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>curl --request GET <span class="se">\</span>
+     --url <span class="s1">&#39;http://localhost:5000/parse?q=Hello%20world!&#39;</span>
+</pre></div>
+</div>
+</div>
 <div class="section" id="have-questions-or-feedback">
-<h2>Have questions or feedback?<a class="headerlink" href="#have-questions-or-feedback" title="Permalink to this headline">¶</a></h2>
+<h2><a class="toc-backref" href="#id6">Have questions or feedback?</a><a class="headerlink" href="#have-questions-or-feedback" title="Permalink to this headline">¶</a></h2>
 <p>We have a very active support community on <a class="reference external" href="https://forum.rasa.com">Rasa Community Forum</a>
 that is happy to help you with your questions. If you have any feedback for us or a specific
 suggestion for improving the docs, feel free to share it by creating an issue on Rasa NLU
