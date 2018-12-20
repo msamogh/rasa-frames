@@ -214,9 +214,9 @@ be passed with the <code class="docutils literal notranslate"><span class="pre">
 <code class="docutils literal notranslate"><span class="pre">python</span> <span class="pre">rasa_nlu.server</span> <span class="pre">--path</span> <span class="pre">projects</span> <span class="pre">--endpoints</span> <span class="pre">endpoints.yml</span></code>
 <code class="docutils literal notranslate"><span class="pre">endpoints.yml</span></code> needs to contain the <code class="docutils literal notranslate"><span class="pre">model</span></code> key
 with a <code class="docutils literal notranslate"><span class="pre">url</span></code> and an optional <code class="docutils literal notranslate"><span class="pre">token</span></code>. Here’s an example:</p>
-<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="l l-Scalar l-Scalar-Plain">model</span><span class="p p-Indicator">:</span>
-  <span class="l l-Scalar l-Scalar-Plain">url</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">http://my_model_server.com/models/default/nlu/tags/latest</span>
-  <span class="l l-Scalar l-Scalar-Plain">token</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">my_model_server_token</span>
+<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">model</span><span class="p">:</span>
+  <span class="nt">url</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">http://my_model_server.com/models/default/nlu/tags/latest</span>
+  <span class="nt">token</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">my_model_server_token</span>
 </pre></div>
 </div>
 <div class="admonition note">
@@ -229,9 +229,9 @@ the default project name will be used. It is defined
 <li><p class="first"><code class="docutils literal notranslate"><span class="pre">rasa_nlu.train</span></code> can also be run with the <code class="docutils literal notranslate"><span class="pre">--endpoints</span></code> argument
 if you want to pull training data from a URL. Alternatively, the
 current <code class="docutils literal notranslate"><span class="pre">--url</span></code> syntax is still supported.</p>
-<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="l l-Scalar l-Scalar-Plain">data</span><span class="p p-Indicator">:</span>
-  <span class="l l-Scalar l-Scalar-Plain">url</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">http://my_data_server.com/projects/default/data</span>
-  <span class="l l-Scalar l-Scalar-Plain">token</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">my_data_server_token</span>
+<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">data</span><span class="p">:</span>
+  <span class="nt">url</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">http://my_data_server.com/projects/default/data</span>
+  <span class="nt">token</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">my_data_server_token</span>
 </pre></div>
 </div>
 <div class="admonition note">
@@ -317,12 +317,12 @@ to configure the server, train, and evaluate scripts. The configuration
 file now only contains the <code class="docutils literal notranslate"><span class="pre">pipeline</span></code> as well as the <code class="docutils literal notranslate"><span class="pre">language</span></code>
 parameters. Example:</p>
 <blockquote>
-<div><div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="l l-Scalar l-Scalar-Plain">langauge</span><span class="p p-Indicator">:</span> <span class="s">&quot;en&quot;</span>
+<div><div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">langauge</span><span class="p">:</span> <span class="s">&quot;en&quot;</span>
 
-<span class="l l-Scalar l-Scalar-Plain">pipeline</span><span class="p p-Indicator">:</span>
-<span class="p p-Indicator">-</span> <span class="l l-Scalar l-Scalar-Plain">name</span><span class="p p-Indicator">:</span> <span class="s">&quot;nlp_spacy&quot;</span>
-  <span class="l l-Scalar l-Scalar-Plain">model</span><span class="p p-Indicator">:</span> <span class="s">&quot;en&quot;</span>               <span class="c1"># parameter of the spacy component</span>
-<span class="p p-Indicator">-</span> <span class="l l-Scalar l-Scalar-Plain">name</span><span class="p p-Indicator">:</span> <span class="s">&quot;ner_synonyms&quot;</span>
+<span class="nt">pipeline</span><span class="p">:</span>
+<span class="p p-Indicator">-</span> <span class="nt">name</span><span class="p">:</span> <span class="s">&quot;nlp_spacy&quot;</span>
+  <span class="nt">model</span><span class="p">:</span> <span class="s">&quot;en&quot;</span>               <span class="c1"># parameter of the spacy component</span>
+<span class="p p-Indicator">-</span> <span class="nt">name</span><span class="p">:</span> <span class="s">&quot;ner_synonyms&quot;</span>
 </pre></div>
 </div>
 </div></blockquote>

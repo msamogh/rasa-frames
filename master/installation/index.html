@@ -284,16 +284,16 @@ The file you need is <code class="docutils literal notranslate"><span class="pre
 somewhere, if you want to use mitie, you need to tell it where to
 find this file.</p>
 <p>The complete pipeline for mitie can be found here</p>
-<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="l l-Scalar l-Scalar-Plain">language</span><span class="p p-Indicator">:</span> <span class="s">&quot;en&quot;</span>
+<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">language</span><span class="p">:</span> <span class="s">&quot;en&quot;</span>
 
-<span class="l l-Scalar l-Scalar-Plain">pipeline</span><span class="p p-Indicator">:</span>
-<span class="p p-Indicator">-</span> <span class="l l-Scalar l-Scalar-Plain">name</span><span class="p p-Indicator">:</span> <span class="s">&quot;nlp_mitie&quot;</span>
-  <span class="l l-Scalar l-Scalar-Plain">model</span><span class="p p-Indicator">:</span> <span class="s">&quot;data/total_word_feature_extractor.dat&quot;</span>
-<span class="p p-Indicator">-</span> <span class="l l-Scalar l-Scalar-Plain">name</span><span class="p p-Indicator">:</span> <span class="s">&quot;tokenizer_mitie&quot;</span>
-<span class="p p-Indicator">-</span> <span class="l l-Scalar l-Scalar-Plain">name</span><span class="p p-Indicator">:</span> <span class="s">&quot;ner_mitie&quot;</span>
-<span class="p p-Indicator">-</span> <span class="l l-Scalar l-Scalar-Plain">name</span><span class="p p-Indicator">:</span> <span class="s">&quot;ner_synonyms&quot;</span>
-<span class="p p-Indicator">-</span> <span class="l l-Scalar l-Scalar-Plain">name</span><span class="p p-Indicator">:</span> <span class="s">&quot;intent_entity_featurizer_regex&quot;</span>
-<span class="p p-Indicator">-</span> <span class="l l-Scalar l-Scalar-Plain">name</span><span class="p p-Indicator">:</span> <span class="s">&quot;intent_classifier_mitie&quot;</span>
+<span class="nt">pipeline</span><span class="p">:</span>
+<span class="p p-Indicator">-</span> <span class="nt">name</span><span class="p">:</span> <span class="s">&quot;nlp_mitie&quot;</span>
+  <span class="nt">model</span><span class="p">:</span> <span class="s">&quot;data/total_word_feature_extractor.dat&quot;</span>
+<span class="p p-Indicator">-</span> <span class="nt">name</span><span class="p">:</span> <span class="s">&quot;tokenizer_mitie&quot;</span>
+<span class="p p-Indicator">-</span> <span class="nt">name</span><span class="p">:</span> <span class="s">&quot;ner_mitie&quot;</span>
+<span class="p p-Indicator">-</span> <span class="nt">name</span><span class="p">:</span> <span class="s">&quot;ner_synonyms&quot;</span>
+<span class="p p-Indicator">-</span> <span class="nt">name</span><span class="p">:</span> <span class="s">&quot;intent_entity_featurizer_regex&quot;</span>
+<span class="p p-Indicator">-</span> <span class="nt">name</span><span class="p">:</span> <span class="s">&quot;intent_classifier_mitie&quot;</span>
 </pre></div>
 </div>
 <div class="admonition warning">
@@ -323,17 +323,17 @@ training intent classifiers with MITIE can take very long.</p>
 installing both, sklearn and MITIE.</p>
 <p>Example pipeline configuration for the use of MITIE together with
 sklearn:</p>
-<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="l l-Scalar l-Scalar-Plain">language</span><span class="p p-Indicator">:</span> <span class="s">&quot;en&quot;</span>
+<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">language</span><span class="p">:</span> <span class="s">&quot;en&quot;</span>
 
-<span class="l l-Scalar l-Scalar-Plain">pipeline</span><span class="p p-Indicator">:</span>
-<span class="p p-Indicator">-</span> <span class="l l-Scalar l-Scalar-Plain">name</span><span class="p p-Indicator">:</span> <span class="s">&quot;nlp_mitie&quot;</span>
-  <span class="l l-Scalar l-Scalar-Plain">model</span><span class="p p-Indicator">:</span> <span class="s">&quot;data/total_word_feature_extractor.dat&quot;</span>
-<span class="p p-Indicator">-</span> <span class="l l-Scalar l-Scalar-Plain">name</span><span class="p p-Indicator">:</span> <span class="s">&quot;tokenizer_mitie&quot;</span>
-<span class="p p-Indicator">-</span> <span class="l l-Scalar l-Scalar-Plain">name</span><span class="p p-Indicator">:</span> <span class="s">&quot;ner_mitie&quot;</span>
-<span class="p p-Indicator">-</span> <span class="l l-Scalar l-Scalar-Plain">name</span><span class="p p-Indicator">:</span> <span class="s">&quot;ner_synonyms&quot;</span>
-<span class="p p-Indicator">-</span> <span class="l l-Scalar l-Scalar-Plain">name</span><span class="p p-Indicator">:</span> <span class="s">&quot;intent_entity_featurizer_regex&quot;</span>
-<span class="p p-Indicator">-</span> <span class="l l-Scalar l-Scalar-Plain">name</span><span class="p p-Indicator">:</span> <span class="s">&quot;intent_featurizer_mitie&quot;</span>
-<span class="p p-Indicator">-</span> <span class="l l-Scalar l-Scalar-Plain">name</span><span class="p p-Indicator">:</span> <span class="s">&quot;intent_classifier_sklearn&quot;</span>
+<span class="nt">pipeline</span><span class="p">:</span>
+<span class="p p-Indicator">-</span> <span class="nt">name</span><span class="p">:</span> <span class="s">&quot;nlp_mitie&quot;</span>
+  <span class="nt">model</span><span class="p">:</span> <span class="s">&quot;data/total_word_feature_extractor.dat&quot;</span>
+<span class="p p-Indicator">-</span> <span class="nt">name</span><span class="p">:</span> <span class="s">&quot;tokenizer_mitie&quot;</span>
+<span class="p p-Indicator">-</span> <span class="nt">name</span><span class="p">:</span> <span class="s">&quot;ner_mitie&quot;</span>
+<span class="p p-Indicator">-</span> <span class="nt">name</span><span class="p">:</span> <span class="s">&quot;ner_synonyms&quot;</span>
+<span class="p p-Indicator">-</span> <span class="nt">name</span><span class="p">:</span> <span class="s">&quot;intent_entity_featurizer_regex&quot;</span>
+<span class="p p-Indicator">-</span> <span class="nt">name</span><span class="p">:</span> <span class="s">&quot;intent_featurizer_mitie&quot;</span>
+<span class="p p-Indicator">-</span> <span class="nt">name</span><span class="p">:</span> <span class="s">&quot;intent_classifier_sklearn&quot;</span>
 </pre></div>
 </div>
 </div>

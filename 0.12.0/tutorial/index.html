@@ -296,23 +296,23 @@ data in the GUI before training.</p>
 <p>Now we’re going to create a configuration file. Make sure first that
 you’ve set up a backend, see <a class="reference internal" href="../installation/#section-backends"><span class="std std-ref">Installation</span></a>. Create a file
 called <code class="docutils literal notranslate"><span class="pre">config_spacy.yml</span></code> in your working directory which looks like this</p>
-<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="l l-Scalar l-Scalar-Plain">language</span><span class="p p-Indicator">:</span> <span class="s">&quot;en&quot;</span>
+<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">language</span><span class="p">:</span> <span class="s">&quot;en&quot;</span>
 
-<span class="l l-Scalar l-Scalar-Plain">pipeline</span><span class="p p-Indicator">:</span> <span class="s">&quot;spacy_sklearn&quot;</span>
+<span class="nt">pipeline</span><span class="p">:</span> <span class="s">&quot;spacy_sklearn&quot;</span>
 </pre></div>
 </div>
 <p>or if you’ve installed the MITIE backend, you can use the following as your
 base configuration:</p>
-<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="l l-Scalar l-Scalar-Plain">language</span><span class="p p-Indicator">:</span> <span class="s">&quot;en&quot;</span>
+<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">language</span><span class="p">:</span> <span class="s">&quot;en&quot;</span>
 
-<span class="l l-Scalar l-Scalar-Plain">pipeline</span><span class="p p-Indicator">:</span>
-<span class="p p-Indicator">-</span> <span class="l l-Scalar l-Scalar-Plain">name</span><span class="p p-Indicator">:</span> <span class="s">&quot;nlp_mitie&quot;</span>
-  <span class="l l-Scalar l-Scalar-Plain">model</span><span class="p p-Indicator">:</span> <span class="s">&quot;data/total_word_feature_extractor.dat&quot;</span>
-<span class="p p-Indicator">-</span> <span class="l l-Scalar l-Scalar-Plain">name</span><span class="p p-Indicator">:</span> <span class="s">&quot;tokenizer_mitie&quot;</span>
-<span class="p p-Indicator">-</span> <span class="l l-Scalar l-Scalar-Plain">name</span><span class="p p-Indicator">:</span> <span class="s">&quot;ner_mitie&quot;</span>
-<span class="p p-Indicator">-</span> <span class="l l-Scalar l-Scalar-Plain">name</span><span class="p p-Indicator">:</span> <span class="s">&quot;ner_synonyms&quot;</span>
-<span class="p p-Indicator">-</span> <span class="l l-Scalar l-Scalar-Plain">name</span><span class="p p-Indicator">:</span> <span class="s">&quot;intent_entity_featurizer_regex&quot;</span>
-<span class="p p-Indicator">-</span> <span class="l l-Scalar l-Scalar-Plain">name</span><span class="p p-Indicator">:</span> <span class="s">&quot;intent_classifier_mitie&quot;</span>
+<span class="nt">pipeline</span><span class="p">:</span>
+<span class="p p-Indicator">-</span> <span class="nt">name</span><span class="p">:</span> <span class="s">&quot;nlp_mitie&quot;</span>
+  <span class="nt">model</span><span class="p">:</span> <span class="s">&quot;data/total_word_feature_extractor.dat&quot;</span>
+<span class="p p-Indicator">-</span> <span class="nt">name</span><span class="p">:</span> <span class="s">&quot;tokenizer_mitie&quot;</span>
+<span class="p p-Indicator">-</span> <span class="nt">name</span><span class="p">:</span> <span class="s">&quot;ner_mitie&quot;</span>
+<span class="p p-Indicator">-</span> <span class="nt">name</span><span class="p">:</span> <span class="s">&quot;ner_synonyms&quot;</span>
+<span class="p p-Indicator">-</span> <span class="nt">name</span><span class="p">:</span> <span class="s">&quot;intent_entity_featurizer_regex&quot;</span>
+<span class="p p-Indicator">-</span> <span class="nt">name</span><span class="p">:</span> <span class="s">&quot;intent_classifier_mitie&quot;</span>
 </pre></div>
 </div>
 <p>Now we can train a spacy model by running:</p>

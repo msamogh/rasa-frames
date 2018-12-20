@@ -247,10 +247,10 @@ of every pipeline that uses any mitie components.</p>
 </tr>
 <tr class="field-even field"><th class="field-name">Configuration:</th><td class="field-body"><p class="first">The MITIE library needs a language model file, that <strong>must</strong> be specified in
 the configuration:</p>
-<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="l l-Scalar l-Scalar-Plain">pipeline</span><span class="p p-Indicator">:</span>
-<span class="p p-Indicator">-</span> <span class="l l-Scalar l-Scalar-Plain">name</span><span class="p p-Indicator">:</span> <span class="s">&quot;nlp_mitie&quot;</span>
+<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">pipeline</span><span class="p">:</span>
+<span class="p p-Indicator">-</span> <span class="nt">name</span><span class="p">:</span> <span class="s">&quot;nlp_mitie&quot;</span>
   <span class="c1"># language model to load</span>
-  <span class="l l-Scalar l-Scalar-Plain">model</span><span class="p p-Indicator">:</span> <span class="s">&quot;data/total_word_feature_extractor.dat&quot;</span>
+  <span class="nt">model</span><span class="p">:</span> <span class="s">&quot;data/total_word_feature_extractor.dat&quot;</span>
 </pre></div>
 </div>
 <p class="last">For more information where to get that file from, head over to
@@ -279,17 +279,17 @@ of every pipeline that uses any spacy components.</p>
 <tr class="field-even field"><th class="field-name">Configuration:</th><td class="field-body"><p class="first">Language model, default will use the configured language.
 If the spacy model to be used has a name that is different from the language tag (<code class="docutils literal notranslate"><span class="pre">&quot;en&quot;</span></code>, <code class="docutils literal notranslate"><span class="pre">&quot;de&quot;</span></code>, etc.),
 the model name can be specified using this configuration variable. The name will be passed to <code class="docutils literal notranslate"><span class="pre">spacy.load(name)</span></code>.</p>
-<div class="last highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="l l-Scalar l-Scalar-Plain">pipeline</span><span class="p p-Indicator">:</span>
-<span class="p p-Indicator">-</span> <span class="l l-Scalar l-Scalar-Plain">name</span><span class="p p-Indicator">:</span> <span class="s">&quot;nlp_spacy&quot;</span>
+<div class="last highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">pipeline</span><span class="p">:</span>
+<span class="p p-Indicator">-</span> <span class="nt">name</span><span class="p">:</span> <span class="s">&quot;nlp_spacy&quot;</span>
   <span class="c1"># language model to load</span>
-  <span class="l l-Scalar l-Scalar-Plain">model</span><span class="p p-Indicator">:</span> <span class="s">&quot;en_core_web_md&quot;</span>
+  <span class="nt">model</span><span class="p">:</span> <span class="s">&quot;en_core_web_md&quot;</span>
 
   <span class="c1"># when retrieving word vectors, this will decide if the casing</span>
   <span class="c1"># of the word is relevant. E.g. `hello` and `Hello` will</span>
   <span class="c1"># retrieve the same vector, if set to `false`. For some</span>
   <span class="c1"># applications and models it makes sense to differentiate</span>
   <span class="c1"># between these two words, therefore setting this to `true`.</span>
-  <span class="l l-Scalar l-Scalar-Plain">case_sensitive</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">false</span>
+  <span class="nt">case_sensitive</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">false</span>
 </pre></div>
 </div>
 </td>
@@ -317,8 +317,8 @@ to use precomputed features.</p>
 </div>
 </td>
 </tr>
-<tr class="field-even field"><th class="field-name">Configuration:</th><td class="field-body"><div class="first last highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="l l-Scalar l-Scalar-Plain">pipeline</span><span class="p p-Indicator">:</span>
-<span class="p p-Indicator">-</span> <span class="l l-Scalar l-Scalar-Plain">name</span><span class="p p-Indicator">:</span> <span class="s">&quot;intent_featurizer_mitie&quot;</span>
+<tr class="field-even field"><th class="field-name">Configuration:</th><td class="field-body"><div class="first last highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">pipeline</span><span class="p">:</span>
+<span class="p p-Indicator">-</span> <span class="nt">name</span><span class="p">:</span> <span class="s">&quot;intent_featurizer_mitie&quot;</span>
 </pre></div>
 </div>
 </td>
@@ -362,11 +362,11 @@ character sequence is present in the word sequence or not.</p>
 </div>
 </td>
 </tr>
-<tr class="field-even field"><th class="field-name">Configuration:</th><td class="field-body"><div class="first last highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="l l-Scalar l-Scalar-Plain">pipeline</span><span class="p p-Indicator">:</span>
-<span class="p p-Indicator">-</span> <span class="l l-Scalar l-Scalar-Plain">name</span><span class="p p-Indicator">:</span> <span class="s">&quot;intent_featurizer_ngrams&quot;</span>
+<tr class="field-even field"><th class="field-name">Configuration:</th><td class="field-body"><div class="first last highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">pipeline</span><span class="p">:</span>
+<span class="p p-Indicator">-</span> <span class="nt">name</span><span class="p">:</span> <span class="s">&quot;intent_featurizer_ngrams&quot;</span>
   <span class="c1"># Maximum number of ngrams to use when augmenting</span>
   <span class="c1"># feature vectors with character ngrams</span>
-  <span class="l l-Scalar l-Scalar-Plain">max_number_of_ngrams</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">10</span>
+  <span class="nt">max_number_of_ngrams</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">10</span>
 </pre></div>
 </div>
 </td>
@@ -427,35 +427,35 @@ as Out-Of-Vacabulary is known, it can be set to <code class="docutils literal no
 Unseen words will be substituted with <code class="docutils literal notranslate"><span class="pre">OOV_token</span></code> <strong>only</strong> if this token is present in the training data or <code class="docutils literal notranslate"><span class="pre">OOV_words</span></code> list is provided.</p>
 </div>
 </div></blockquote>
-<div class="last highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="l l-Scalar l-Scalar-Plain">pipeline</span><span class="p p-Indicator">:</span>
-<span class="p p-Indicator">-</span> <span class="l l-Scalar l-Scalar-Plain">name</span><span class="p p-Indicator">:</span> <span class="s">&quot;intent_featurizer_count_vectors&quot;</span>
+<div class="last highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">pipeline</span><span class="p">:</span>
+<span class="p p-Indicator">-</span> <span class="nt">name</span><span class="p">:</span> <span class="s">&quot;intent_featurizer_count_vectors&quot;</span>
   <span class="c1"># the parameters are taken from</span>
   <span class="c1"># sklearn&#39;s CountVectorizer</span>
   <span class="c1"># regular expression for tokens</span>
-  <span class="s">&quot;token_pattern&quot;</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">r&#39;(?u)\b\w\w+\b&#39;</span>
+  <span class="nt">&quot;token_pattern&quot;</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">r&#39;(?u)\b\w\w+\b&#39;</span>
   <span class="c1"># remove accents during the preprocessing step</span>
-  <span class="s">&quot;strip_accents&quot;</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">None</span>  <span class="c1"># {&#39;ascii&#39;, &#39;unicode&#39;, None}</span>
+  <span class="nt">&quot;strip_accents&quot;</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">None</span>  <span class="c1"># {&#39;ascii&#39;, &#39;unicode&#39;, None}</span>
   <span class="c1"># list of stop words</span>
-  <span class="s">&quot;stop_words&quot;</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">None</span>  <span class="c1"># string {&#39;english&#39;}, list, or None (default)</span>
+  <span class="nt">&quot;stop_words&quot;</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">None</span>  <span class="c1"># string {&#39;english&#39;}, list, or None (default)</span>
   <span class="c1"># min document frequency of a word to add to vocabulary</span>
   <span class="c1"># float - the parameter represents a proportion of documents</span>
   <span class="c1"># integer - absolute counts</span>
-  <span class="s">&quot;min_df&quot;</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">1</span>  <span class="c1"># float in range [0.0, 1.0] or int</span>
+  <span class="nt">&quot;min_df&quot;</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">1</span>  <span class="c1"># float in range [0.0, 1.0] or int</span>
   <span class="c1"># max document frequency of a word to add to vocabulary</span>
   <span class="c1"># float - the parameter represents a proportion of documents</span>
   <span class="c1"># integer - absolute counts</span>
-  <span class="s">&quot;max_df&quot;</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">1.0</span>  <span class="c1"># float in range [0.0, 1.0] or int</span>
+  <span class="nt">&quot;max_df&quot;</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">1.0</span>  <span class="c1"># float in range [0.0, 1.0] or int</span>
   <span class="c1"># set ngram range</span>
-  <span class="s">&quot;min_ngram&quot;</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">1</span>  <span class="c1"># int</span>
-  <span class="s">&quot;max_ngram&quot;</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">1</span>  <span class="c1"># int</span>
+  <span class="nt">&quot;min_ngram&quot;</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">1</span>  <span class="c1"># int</span>
+  <span class="nt">&quot;max_ngram&quot;</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">1</span>  <span class="c1"># int</span>
   <span class="c1"># limit vocabulary size</span>
-  <span class="s">&quot;max_features&quot;</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">None</span>  <span class="c1"># int or None</span>
+  <span class="nt">&quot;max_features&quot;</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">None</span>  <span class="c1"># int or None</span>
   <span class="c1"># if convert all characters to lowercase</span>
-  <span class="s">&quot;lowercase&quot;</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">true</span>  <span class="c1"># bool</span>
+  <span class="nt">&quot;lowercase&quot;</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">true</span>  <span class="c1"># bool</span>
   <span class="c1"># handling Out-Of-Vacabulary (OOV) words</span>
   <span class="c1"># will be converted to lowercase if lowercase is true</span>
-  <span class="s">&quot;OOV_token&quot;</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">None</span>  <span class="c1"># string or None</span>
-  <span class="s">&quot;OOV_words&quot;</span><span class="p p-Indicator">:</span> <span class="p p-Indicator">[]</span>  <span class="c1"># list of strings</span>
+  <span class="nt">&quot;OOV_token&quot;</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">None</span>  <span class="c1"># string or None</span>
+  <span class="nt">&quot;OOV_words&quot;</span><span class="p">:</span> <span class="p p-Indicator">[]</span>  <span class="c1"># list of strings</span>
 </pre></div>
 </div>
 </td>
@@ -512,8 +512,8 @@ Unseen words will be substituted with <code class="docutils literal notranslate"
 is using a multi class linear SVM with a sparse linear kernel (see <a class="reference external" href="https://github.com/mit-nlp/MITIE/blob/master/mitielib/src/text_categorizer_trainer.cpp#L222">mitie trainer code</a>).</p>
 </td>
 </tr>
-<tr class="field-odd field"><th class="field-name">Configuration:</th><td class="field-body"><div class="first last highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="l l-Scalar l-Scalar-Plain">pipeline</span><span class="p p-Indicator">:</span>
-<span class="p p-Indicator">-</span> <span class="l l-Scalar l-Scalar-Plain">name</span><span class="p p-Indicator">:</span> <span class="s">&quot;intent_classifier_mitie&quot;</span>
+<tr class="field-odd field"><th class="field-name">Configuration:</th><td class="field-body"><div class="first last highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">pipeline</span><span class="p">:</span>
+<span class="p p-Indicator">-</span> <span class="nt">name</span><span class="p">:</span> <span class="s">&quot;intent_classifier_mitie&quot;</span>
 </pre></div>
 </div>
 </td>
@@ -558,15 +558,15 @@ needs to be preceded by a featurizer in the pipeline. This featurizer creates th
 <tr class="field-odd field"><th class="field-name">Configuration:</th><td class="field-body"><p class="first">During the training of the SVM a hyperparameter search is run to
 find the best parameter set. In the config, you can specify the parameters
 that will get tried</p>
-<div class="last highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="l l-Scalar l-Scalar-Plain">pipeline</span><span class="p p-Indicator">:</span>
-<span class="p p-Indicator">-</span> <span class="l l-Scalar l-Scalar-Plain">name</span><span class="p p-Indicator">:</span> <span class="s">&quot;intent_classifier_sklearn&quot;</span>
+<div class="last highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">pipeline</span><span class="p">:</span>
+<span class="p p-Indicator">-</span> <span class="nt">name</span><span class="p">:</span> <span class="s">&quot;intent_classifier_sklearn&quot;</span>
   <span class="c1"># Specifies the list of regularization values to</span>
   <span class="c1"># cross-validate over for C-SVM.</span>
   <span class="c1"># This is used with the ``kernel`` hyperparameter in GridSearchCV.</span>
-  <span class="l l-Scalar l-Scalar-Plain">C</span><span class="p p-Indicator">:</span> <span class="p p-Indicator">[</span><span class="nv">1</span><span class="p p-Indicator">,</span> <span class="nv">2</span><span class="p p-Indicator">,</span> <span class="nv">5</span><span class="p p-Indicator">,</span> <span class="nv">10</span><span class="p p-Indicator">,</span> <span class="nv">20</span><span class="p p-Indicator">,</span> <span class="nv">100</span><span class="p p-Indicator">]</span>
+  <span class="nt">C</span><span class="p">:</span> <span class="p p-Indicator">[</span><span class="nv">1</span><span class="p p-Indicator">,</span> <span class="nv">2</span><span class="p p-Indicator">,</span> <span class="nv">5</span><span class="p p-Indicator">,</span> <span class="nv">10</span><span class="p p-Indicator">,</span> <span class="nv">20</span><span class="p p-Indicator">,</span> <span class="nv">100</span><span class="p p-Indicator">]</span>
   <span class="c1"># Specifies the kernel to use with C-SVM.</span>
   <span class="c1"># This is used with the ``C`` hyperparameter in GridSearchCV.</span>
-  <span class="l l-Scalar l-Scalar-Plain">kernels</span><span class="p p-Indicator">:</span> <span class="p p-Indicator">[</span><span class="s">&quot;linear&quot;</span><span class="p p-Indicator">]</span>
+  <span class="nt">kernels</span><span class="p">:</span> <span class="p p-Indicator">[</span><span class="s">&quot;linear&quot;</span><span class="p p-Indicator">]</span>
 </pre></div>
 </div>
 </td>
@@ -691,32 +691,32 @@ In order to do it pass a list to <code class="docutils literal notranslate"><spa
 If constant <code class="docutils literal notranslate"><span class="pre">batch_size</span></code> is required, pass an <code class="docutils literal notranslate"><span class="pre">int</span></code>, e.g. <code class="docutils literal notranslate"><span class="pre">&quot;batch_size&quot;:</span> <span class="pre">64</span></code>.</p>
 </div>
 <p>In the config, you can specify these parameters:</p>
-<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="l l-Scalar l-Scalar-Plain">pipeline</span><span class="p p-Indicator">:</span>
-<span class="p p-Indicator">-</span> <span class="l l-Scalar l-Scalar-Plain">name</span><span class="p p-Indicator">:</span> <span class="s">&quot;intent_classifier_tensorflow_embedding&quot;</span>
+<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">pipeline</span><span class="p">:</span>
+<span class="p p-Indicator">-</span> <span class="nt">name</span><span class="p">:</span> <span class="s">&quot;intent_classifier_tensorflow_embedding&quot;</span>
   <span class="c1"># nn architecture</span>
-  <span class="s">&quot;num_hidden_layers_a&quot;</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">2</span>
-  <span class="s">&quot;hidden_layer_size_a&quot;</span><span class="p p-Indicator">:</span> <span class="p p-Indicator">[</span><span class="nv">256</span><span class="p p-Indicator">,</span> <span class="nv">128</span><span class="p p-Indicator">]</span>
-  <span class="s">&quot;num_hidden_layers_b&quot;</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">0</span>
-  <span class="s">&quot;hidden_layer_size_b&quot;</span><span class="p p-Indicator">:</span> <span class="p p-Indicator">[]</span>
-  <span class="s">&quot;batch_size&quot;</span><span class="p p-Indicator">:</span> <span class="p p-Indicator">[</span><span class="nv">64</span><span class="p p-Indicator">,</span> <span class="nv">256</span><span class="p p-Indicator">]</span>
-  <span class="s">&quot;epochs&quot;</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">300</span>
+  <span class="nt">&quot;num_hidden_layers_a&quot;</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">2</span>
+  <span class="nt">&quot;hidden_layer_size_a&quot;</span><span class="p">:</span> <span class="p p-Indicator">[</span><span class="nv">256</span><span class="p p-Indicator">,</span> <span class="nv">128</span><span class="p p-Indicator">]</span>
+  <span class="nt">&quot;num_hidden_layers_b&quot;</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">0</span>
+  <span class="nt">&quot;hidden_layer_size_b&quot;</span><span class="p">:</span> <span class="p p-Indicator">[]</span>
+  <span class="nt">&quot;batch_size&quot;</span><span class="p">:</span> <span class="p p-Indicator">[</span><span class="nv">64</span><span class="p p-Indicator">,</span> <span class="nv">256</span><span class="p p-Indicator">]</span>
+  <span class="nt">&quot;epochs&quot;</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">300</span>
   <span class="c1"># embedding parameters</span>
-  <span class="s">&quot;embed_dim&quot;</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">20</span>
-  <span class="s">&quot;mu_pos&quot;</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">0.8</span>  <span class="c1"># should be 0.0 &lt; ... &lt; 1.0 for &#39;cosine&#39;</span>
-  <span class="s">&quot;mu_neg&quot;</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">-0.4</span>  <span class="c1"># should be -1.0 &lt; ... &lt; 1.0 for &#39;cosine&#39;</span>
-  <span class="s">&quot;similarity_type&quot;</span><span class="p p-Indicator">:</span> <span class="s">&quot;cosine&quot;</span>  <span class="c1"># string &#39;cosine&#39; or &#39;inner&#39;</span>
-  <span class="s">&quot;num_neg&quot;</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">20</span>
-  <span class="s">&quot;use_max_sim_neg&quot;</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">true</span>  <span class="c1"># flag which loss function to use</span>
+  <span class="nt">&quot;embed_dim&quot;</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">20</span>
+  <span class="nt">&quot;mu_pos&quot;</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">0.8</span>  <span class="c1"># should be 0.0 &lt; ... &lt; 1.0 for &#39;cosine&#39;</span>
+  <span class="nt">&quot;mu_neg&quot;</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">-0.4</span>  <span class="c1"># should be -1.0 &lt; ... &lt; 1.0 for &#39;cosine&#39;</span>
+  <span class="nt">&quot;similarity_type&quot;</span><span class="p">:</span> <span class="s">&quot;cosine&quot;</span>  <span class="c1"># string &#39;cosine&#39; or &#39;inner&#39;</span>
+  <span class="nt">&quot;num_neg&quot;</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">20</span>
+  <span class="nt">&quot;use_max_sim_neg&quot;</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">true</span>  <span class="c1"># flag which loss function to use</span>
   <span class="c1"># regularization</span>
-  <span class="s">&quot;C2&quot;</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">0.002</span>
-  <span class="s">&quot;C_emb&quot;</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">0.8</span>
-  <span class="s">&quot;droprate&quot;</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">0.2</span>
+  <span class="nt">&quot;C2&quot;</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">0.002</span>
+  <span class="nt">&quot;C_emb&quot;</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">0.8</span>
+  <span class="nt">&quot;droprate&quot;</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">0.2</span>
   <span class="c1"># flag if to tokenize intents</span>
-  <span class="s">&quot;intent_tokenization_flag&quot;</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">false</span>
-  <span class="s">&quot;intent_split_symbol&quot;</span><span class="p p-Indicator">:</span> <span class="s">&quot;_&quot;</span>
+  <span class="nt">&quot;intent_tokenization_flag&quot;</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">false</span>
+  <span class="nt">&quot;intent_split_symbol&quot;</span><span class="p">:</span> <span class="s">&quot;_&quot;</span>
   <span class="c1"># visualization of accuracy</span>
-  <span class="s">&quot;evaluate_every_num_epochs&quot;</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">10</span>  <span class="c1"># small values may hurt performance</span>
-  <span class="s">&quot;evaluate_on_num_examples&quot;</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">1000</span>  <span class="c1"># large values may hurt performance</span>
+  <span class="nt">&quot;evaluate_every_num_epochs&quot;</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">10</span>  <span class="c1"># small values may hurt performance</span>
+  <span class="nt">&quot;evaluate_on_num_examples&quot;</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">1000</span>  <span class="c1"># large values may hurt performance</span>
 </pre></div>
 </div>
 <div class="last admonition note">
@@ -785,9 +785,9 @@ MITIE entity extractor. Make sure to install Jieba, <code class="docutils litera
 </td>
 </tr>
 <tr class="field-even field"><th class="field-name">Configuration:</th><td class="field-body"><p class="first">User’s custom dictionary files can be auto loaded by specific the files’ directory path via <code class="docutils literal notranslate"><span class="pre">dictionary_path</span></code></p>
-<div class="last highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="l l-Scalar l-Scalar-Plain">pipeline</span><span class="p p-Indicator">:</span>
-<span class="p p-Indicator">-</span> <span class="l l-Scalar l-Scalar-Plain">name</span><span class="p p-Indicator">:</span> <span class="s">&quot;tokenizer_jieba&quot;</span>
-  <span class="l l-Scalar l-Scalar-Plain">dictionary_path</span><span class="p p-Indicator">:</span> <span class="s">&quot;path/to/custom/dictionary/dir&quot;</span>
+<div class="last highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">pipeline</span><span class="p">:</span>
+<span class="p p-Indicator">-</span> <span class="nt">name</span><span class="p">:</span> <span class="s">&quot;tokenizer_jieba&quot;</span>
+  <span class="nt">dictionary_path</span><span class="p">:</span> <span class="s">&quot;path/to/custom/dictionary/dir&quot;</span>
 </pre></div>
 </div>
 </td>
@@ -812,8 +812,8 @@ MITIE entity extractor. Make sure to install Jieba, <code class="docutils litera
 tokens for the MITIE entity extractor.</p>
 </td>
 </tr>
-<tr class="field-even field"><th class="field-name">Configuration:</th><td class="field-body"><div class="first last highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="l l-Scalar l-Scalar-Plain">pipeline</span><span class="p p-Indicator">:</span>
-<span class="p p-Indicator">-</span> <span class="l l-Scalar l-Scalar-Plain">name</span><span class="p p-Indicator">:</span> <span class="s">&quot;tokenizer_mitie&quot;</span>
+<tr class="field-even field"><th class="field-name">Configuration:</th><td class="field-body"><div class="first last highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">pipeline</span><span class="p">:</span>
+<span class="p p-Indicator">-</span> <span class="nt">name</span><span class="p">:</span> <span class="s">&quot;tokenizer_mitie&quot;</span>
 </pre></div>
 </div>
 </td>
@@ -866,8 +866,8 @@ is using a multi class linear SVM with a sparse linear kernel and custom feature
 The MITIE component does not provide entity confidence values.</p>
 </td>
 </tr>
-<tr class="field-odd field"><th class="field-name">Configuration:</th><td class="field-body"><div class="first last highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="l l-Scalar l-Scalar-Plain">pipeline</span><span class="p p-Indicator">:</span>
-<span class="p p-Indicator">-</span> <span class="l l-Scalar l-Scalar-Plain">name</span><span class="p p-Indicator">:</span> <span class="s">&quot;ner_mitie&quot;</span>
+<tr class="field-odd field"><th class="field-name">Configuration:</th><td class="field-body"><div class="first last highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">pipeline</span><span class="p">:</span>
+<span class="p p-Indicator">-</span> <span class="nt">name</span><span class="p">:</span> <span class="s">&quot;ner_mitie&quot;</span>
 </pre></div>
 </div>
 </td>
@@ -982,8 +982,8 @@ neighbouring entity tags: the most likely set of tags is then calculated and ret
 If POS features are used (pos or pos2), spaCy has to be installed.</p>
 </td>
 </tr>
-<tr class="field-odd field"><th class="field-name">Configuration:</th><td class="field-body"><div class="first last highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="l l-Scalar l-Scalar-Plain">pipeline</span><span class="p p-Indicator">:</span>
-<span class="p p-Indicator">-</span> <span class="l l-Scalar l-Scalar-Plain">name</span><span class="p p-Indicator">:</span> <span class="s">&quot;ner_crf&quot;</span>
+<tr class="field-odd field"><th class="field-name">Configuration:</th><td class="field-body"><div class="first last highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">pipeline</span><span class="p">:</span>
+<span class="p p-Indicator">-</span> <span class="nt">name</span><span class="p">:</span> <span class="s">&quot;ner_crf&quot;</span>
   <span class="c1"># The features are a ``[before, word, after]`` array with</span>
   <span class="c1"># before, word, after holding keys about which</span>
   <span class="c1"># features to use for each word, for example, ``&quot;title&quot;``</span>
@@ -993,24 +993,24 @@ If POS features are used (pos or pos2), spaCy has to be installed.</p>
   <span class="c1"># ``low``, ``title``, ``suffix5``, ``suffix3``, ``suffix2``,</span>
   <span class="c1"># ``suffix1``, ``pos``, ``pos2``, ``prefix5``, ``prefix2``,</span>
   <span class="c1"># ``bias``, ``upper`` and ``digit``</span>
-  <span class="l l-Scalar l-Scalar-Plain">features</span><span class="p p-Indicator">:</span> <span class="p p-Indicator">[[</span><span class="s">&quot;low&quot;</span><span class="p p-Indicator">,</span> <span class="s">&quot;title&quot;</span><span class="p p-Indicator">],</span> <span class="p p-Indicator">[</span><span class="s">&quot;bias&quot;</span><span class="p p-Indicator">,</span> <span class="s">&quot;suffix3&quot;</span><span class="p p-Indicator">],</span> <span class="p p-Indicator">[</span><span class="s">&quot;upper&quot;</span><span class="p p-Indicator">,</span> <span class="s">&quot;pos&quot;</span><span class="p p-Indicator">,</span> <span class="s">&quot;pos2&quot;</span><span class="p p-Indicator">]]</span>
+  <span class="nt">features</span><span class="p">:</span> <span class="p p-Indicator">[[</span><span class="s">&quot;low&quot;</span><span class="p p-Indicator">,</span> <span class="s">&quot;title&quot;</span><span class="p p-Indicator">],</span> <span class="p p-Indicator">[</span><span class="s">&quot;bias&quot;</span><span class="p p-Indicator">,</span> <span class="s">&quot;suffix3&quot;</span><span class="p p-Indicator">],</span> <span class="p p-Indicator">[</span><span class="s">&quot;upper&quot;</span><span class="p p-Indicator">,</span> <span class="s">&quot;pos&quot;</span><span class="p p-Indicator">,</span> <span class="s">&quot;pos2&quot;</span><span class="p p-Indicator">]]</span>
 
   <span class="c1"># The flag determines whether to use BILOU tagging or not. BILOU</span>
   <span class="c1"># tagging is more rigorous however</span>
   <span class="c1"># requires more examples per entity. Rule of thumb: use only</span>
   <span class="c1"># if more than 100 examples per entity.</span>
-  <span class="l l-Scalar l-Scalar-Plain">BILOU_flag</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">true</span>
+  <span class="nt">BILOU_flag</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">true</span>
 
   <span class="c1"># This is the value given to sklearn_crfcuite.CRF tagger before training.</span>
-  <span class="l l-Scalar l-Scalar-Plain">max_iterations</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">50</span>
+  <span class="nt">max_iterations</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">50</span>
 
   <span class="c1"># This is the value given to sklearn_crfcuite.CRF tagger before training.</span>
   <span class="c1"># Specifies the L1 regularization coefficient.</span>
-  <span class="l l-Scalar l-Scalar-Plain">L1_c</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">0.1</span>
+  <span class="nt">L1_c</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">0.1</span>
 
   <span class="c1"># This is the value given to sklearn_crfcuite.CRF tagger before training.</span>
   <span class="c1"># Specifies the L2 regularization coefficient.</span>
-  <span class="l l-Scalar l-Scalar-Plain">L2_c</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">0.1</span>
+  <span class="nt">L2_c</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">0.1</span>
 </pre></div>
 </div>
 </td>
@@ -1063,18 +1063,18 @@ based system.</p>
 <tr class="field-odd field"><th class="field-name">Configuration:</th><td class="field-body"><p class="first">Configure which dimensions, i.e. entity types, the duckling component
 to extract. A full list of available dimensions can be found in
 the <a class="reference external" href="https://duckling.wit.ai/">duckling documentation</a>.</p>
-<div class="last highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="l l-Scalar l-Scalar-Plain">pipeline</span><span class="p p-Indicator">:</span>
-<span class="p p-Indicator">-</span> <span class="l l-Scalar l-Scalar-Plain">name</span><span class="p p-Indicator">:</span> <span class="s">&quot;ner_duckling_http&quot;</span>
+<div class="last highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">pipeline</span><span class="p">:</span>
+<span class="p p-Indicator">-</span> <span class="nt">name</span><span class="p">:</span> <span class="s">&quot;ner_duckling_http&quot;</span>
   <span class="c1"># url of the running duckling server</span>
-  <span class="l l-Scalar l-Scalar-Plain">url</span><span class="p p-Indicator">:</span> <span class="s">&quot;http://localhost:8000&quot;</span>
+  <span class="nt">url</span><span class="p">:</span> <span class="s">&quot;http://localhost:8000&quot;</span>
   <span class="c1"># dimensions to extract</span>
-  <span class="l l-Scalar l-Scalar-Plain">dimensions</span><span class="p p-Indicator">:</span> <span class="p p-Indicator">[</span><span class="s">&quot;time&quot;</span><span class="p p-Indicator">,</span> <span class="s">&quot;number&quot;</span><span class="p p-Indicator">,</span> <span class="s">&quot;amount-of-money&quot;</span><span class="p p-Indicator">,</span> <span class="s">&quot;distance&quot;</span><span class="p p-Indicator">]</span>
+  <span class="nt">dimensions</span><span class="p">:</span> <span class="p p-Indicator">[</span><span class="s">&quot;time&quot;</span><span class="p p-Indicator">,</span> <span class="s">&quot;number&quot;</span><span class="p p-Indicator">,</span> <span class="s">&quot;amount-of-money&quot;</span><span class="p p-Indicator">,</span> <span class="s">&quot;distance&quot;</span><span class="p p-Indicator">]</span>
   <span class="c1"># allows you to configure the locale, by default the language is</span>
   <span class="c1"># used</span>
-  <span class="l l-Scalar l-Scalar-Plain">locale</span><span class="p p-Indicator">:</span> <span class="s">&quot;de_DE&quot;</span>
+  <span class="nt">locale</span><span class="p">:</span> <span class="s">&quot;de_DE&quot;</span>
   <span class="c1"># if not set the default timezone of Duckling is going to be used</span>
   <span class="c1"># needed to calculate dates from relative expressions like &quot;tomorrow&quot;</span>
-  <span class="l l-Scalar l-Scalar-Plain">timezone</span><span class="p p-Indicator">:</span> <span class="s">&quot;Europe/Berlin&quot;</span>
+  <span class="nt">timezone</span><span class="p">:</span> <span class="s">&quot;Europe/Berlin&quot;</span>
 </pre></div>
 </div>
 </td>

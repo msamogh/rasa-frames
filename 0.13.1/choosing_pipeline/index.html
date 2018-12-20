@@ -230,23 +230,23 @@ To do this, use these flags:</p>
 </ul>
 </div></blockquote>
 <p>Here’s an example configuration:</p>
-<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="l l-Scalar l-Scalar-Plain">language</span><span class="p p-Indicator">:</span> <span class="s">&quot;en&quot;</span>
+<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">language</span><span class="p">:</span> <span class="s">&quot;en&quot;</span>
 
-<span class="l l-Scalar l-Scalar-Plain">pipeline</span><span class="p p-Indicator">:</span>
-<span class="p p-Indicator">-</span> <span class="l l-Scalar l-Scalar-Plain">name</span><span class="p p-Indicator">:</span> <span class="s">&quot;intent_featurizer_count_vectors&quot;</span>
-<span class="p p-Indicator">-</span> <span class="l l-Scalar l-Scalar-Plain">name</span><span class="p p-Indicator">:</span> <span class="s">&quot;intent_classifier_tensorflow_embedding&quot;</span>
-  <span class="l l-Scalar l-Scalar-Plain">intent_tokenization_flag</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">true</span>
-  <span class="l l-Scalar l-Scalar-Plain">intent_split_symbol</span><span class="p p-Indicator">:</span> <span class="s">&quot;_&quot;</span>
+<span class="nt">pipeline</span><span class="p">:</span>
+<span class="p p-Indicator">-</span> <span class="nt">name</span><span class="p">:</span> <span class="s">&quot;intent_featurizer_count_vectors&quot;</span>
+<span class="p p-Indicator">-</span> <span class="nt">name</span><span class="p">:</span> <span class="s">&quot;intent_classifier_tensorflow_embedding&quot;</span>
+  <span class="nt">intent_tokenization_flag</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">true</span>
+  <span class="nt">intent_split_symbol</span><span class="p">:</span> <span class="s">&quot;_&quot;</span>
 </pre></div>
 </div>
 <div class="section" id="custom-pipelines">
 <h3>Custom pipelines<a class="headerlink" href="#custom-pipelines" title="Permalink to this headline">¶</a></h3>
 <p>Creating your own pipelines is possible by directly passing the names of the
 components to Rasa NLU in the <code class="docutils literal notranslate"><span class="pre">pipeline</span></code> configuration variable, e.g.</p>
-<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="l l-Scalar l-Scalar-Plain">pipeline</span><span class="p p-Indicator">:</span>
-<span class="p p-Indicator">-</span> <span class="l l-Scalar l-Scalar-Plain">name</span><span class="p p-Indicator">:</span> <span class="s">&quot;nlp_spacy&quot;</span>
-<span class="p p-Indicator">-</span> <span class="l l-Scalar l-Scalar-Plain">name</span><span class="p p-Indicator">:</span> <span class="s">&quot;ner_crf&quot;</span>
-<span class="p p-Indicator">-</span> <span class="l l-Scalar l-Scalar-Plain">name</span><span class="p p-Indicator">:</span> <span class="s">&quot;ner_synonyms&quot;</span>
+<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">pipeline</span><span class="p">:</span>
+<span class="p p-Indicator">-</span> <span class="nt">name</span><span class="p">:</span> <span class="s">&quot;nlp_spacy&quot;</span>
+<span class="p p-Indicator">-</span> <span class="nt">name</span><span class="p">:</span> <span class="s">&quot;ner_crf&quot;</span>
+<span class="p p-Indicator">-</span> <span class="nt">name</span><span class="p">:</span> <span class="s">&quot;ner_synonyms&quot;</span>
 </pre></div>
 </div>
 <p>This creates a pipeline that only does entity recognition, but no
