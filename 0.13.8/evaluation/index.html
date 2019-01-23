@@ -149,6 +149,7 @@
       <div class="other-versions">
           <p>tags</p>
           <div class="dropdown-content">
+              <a href="../../0.14.0/evaluation/">0.14.0</a>
               <a href="../../0.13.8/evaluation/">0.13.8</a>
               <a href="../../0.13.7/evaluation/">0.13.7</a>
               <a href="../../0.13.6/evaluation/">0.13.6</a>
@@ -188,9 +189,12 @@
   
 
 
+    
+    
 
 
 
+    <p class="scv-banner"><a href="../../0.14.0/evaluation/"><b>Warning:</b> This document is for an old version of Rasa NLU. The latest version is 0.14.0.</a></p>
 <div class="section" id="evaluating-and-improving-models">
 <span id="section-evaluation"></span><h1>Evaluating and Improving Models<a class="headerlink" href="#evaluating-and-improving-models" title="Permalink to this headline">¶</a></h1>
 <div class="section" id="improving-your-models-from-feedback">
@@ -337,7 +341,8 @@ run:</p>
 </div>
 <p>Which will produce the following output:</p>
 <div class="highlight-text notranslate"><div class="highlight"><pre><span></span>usage: evaluate.py [-h] -d DATA [--mode MODE] [-c CONFIG] [-m MODEL]
-                   [-f FOLDS] [--errors ERRORS] [--histogram HISTOGRAM]
+                   [-f FOLDS] [--report [REPORT]] [--successes [SUCCESSES]]
+                   [--errors ERRORS] [--histogram HISTOGRAM]
                    [--confmat CONFMAT] [--debug] [-v]
 
 evaluate a Rasa NLU pipeline with cross validation or on external data
@@ -353,7 +358,10 @@ optional arguments:
                         path to model (evaluation only)
   -f FOLDS, --folds FOLDS
                         number of CV folds (crossvalidation only)
-  --errors ERRORS       output path for the json with wrong predictions
+  --report [REPORT]     output path to save the metrics report
+  --successes [SUCCESSES]
+                        output path to save successful predictions
+  --errors ERRORS       output path to save model errors
   --histogram HISTOGRAM
                         output path for the confidence histogram
   --confmat CONFMAT     output path for the confusion matrix plot

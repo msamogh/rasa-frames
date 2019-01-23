@@ -127,6 +127,7 @@
 <li class="toctree-l1"><a class="reference internal" href="../http/">HTTP API</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../python/">Python API</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../persist/">Storing Models in the Cloud</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../endpoint_configuration/">Endpoint Configuration</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../docker/">Running in Docker</a></li>
 </ul>
 <p class="caption"><span class="caption-text">Developer Documentation</span></p>
@@ -143,12 +144,13 @@
     <div class="versions-content">
       <div>
         <span class="current-version">
-          viewing: 0.13.8
+          viewing: 0.14.0
         </span>
       </div>
       <div class="other-versions">
           <p>tags</p>
           <div class="dropdown-content">
+              <a href=".././0.14.0/evaluation/">0.14.0</a>
               <a href=".././0.13.8/evaluation/">0.13.8</a>
               <a href=".././0.13.7/evaluation/">0.13.7</a>
               <a href=".././0.13.6/evaluation/">0.13.6</a>
@@ -246,17 +248,22 @@ for every cross-validation fold.</p>
 </div>
 <div class="section" id="intent-classification">
 <h2>Intent Classification<a class="headerlink" href="#intent-classification" title="Permalink to this headline">¶</a></h2>
-<p>The evaluation script will log precision, recall, and f1 measure for
-each intent and once summarized for all.
-Furthermore, it creates a confusion matrix for you to see which
-intents are mistaken for which others.
-Samples which have not been predicted correctly are logged and saved to a file
-called <code class="docutils literal notranslate"><span class="pre">errors.json</span></code> for easier debugging.
-Finally, the evaluation script creates a histogram of the confidence distribution for all predictions,
-separating the confidence of wrong and correct predictions in different bars of the histogram.
-Improving the quality of your training data will move the blue-ish histogram bars
-(confidence of the correct predictions) to the right and the wine-ish histogram bars
-(confidence of wrong predictions) to the left.</p>
+<p>The evaluation script will produce a report, confusion matrix
+and confidence histogram for your model.</p>
+<p>The report logs precision, recall, and f1 measure for
+each intent, as well as provide an overall average.  You can save this
+report as a JSON file using the <cite>–report</cite> flag.</p>
+<p>The confusion matrix shows you which
+intents are mistaken for others; any samples which have been
+incorrectly predicted are logged and saved to a file
+called <code class="docutils literal notranslate"><span class="pre">errors.json</span></code> for easier debugging.</p>
+<p>The histogram that the script produces allows you to visualise the
+confidence distribution for all predictions,
+with the volume of correct and incorrect predictions being displayed by
+blue and red bars respectively.
+Improving the quality of your training data will move the blue
+histogram bars to the right and the red histogram bars
+to the left of the plot.</p>
 <div class="admonition note">
 <p class="first admonition-title">Note</p>
 <p class="last">A confusion matrix will <strong>only</strong> be created if you are evaluating a model on a test set.
@@ -337,7 +344,8 @@ run:</p>
 </div>
 <p>Which will produce the following output:</p>
 <div class="highlight-text notranslate"><div class="highlight"><pre><span></span>usage: evaluate.py [-h] -d DATA [--mode MODE] [-c CONFIG] [-m MODEL]
-                   [-f FOLDS] [--errors ERRORS] [--histogram HISTOGRAM]
+                   [-f FOLDS] [--report [REPORT]] [--successes [SUCCESSES]]
+                   [--errors ERRORS] [--histogram HISTOGRAM]
                    [--confmat CONFMAT] [--debug] [-v]
 
 evaluate a Rasa NLU pipeline with cross validation or on external data
@@ -353,7 +361,10 @@ optional arguments:
                         path to model (evaluation only)
   -f FOLDS, --folds FOLDS
                         number of CV folds (crossvalidation only)
-  --errors ERRORS       output path for the json with wrong predictions
+  --report [REPORT]     output path to save the metrics report
+  --successes [SUCCESSES]
+                        output path to save successful predictions
+  --errors ERRORS       output path to save model errors
   --histogram HISTOGRAM
                         output path for the confidence histogram
   --confmat CONFMAT     output path for the confusion matrix plot

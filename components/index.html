@@ -127,6 +127,7 @@
 <li class="toctree-l1"><a class="reference internal" href="../http/">HTTP API</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../python/">Python API</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../persist/">Storing Models in the Cloud</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../endpoint_configuration/">Endpoint Configuration</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../docker/">Running in Docker</a></li>
 </ul>
 <p class="caption"><span class="caption-text">Developer Documentation</span></p>
@@ -143,12 +144,13 @@
     <div class="versions-content">
       <div>
         <span class="current-version">
-          viewing: 0.13.8
+          viewing: 0.14.0
         </span>
       </div>
       <div class="other-versions">
           <p>tags</p>
           <div class="dropdown-content">
+              <a href=".././0.14.0/components/">0.14.0</a>
               <a href=".././0.13.8/components/">0.13.8</a>
               <a href=".././0.13.7/components/">0.13.7</a>
               <a href=".././0.13.6/components/">0.13.6</a>
@@ -398,9 +400,27 @@ a language-specific tokenizer is required in the pipeline before this component
 </tr>
 <tr class="field-even field"><th class="field-name">Configuration:</th><td class="field-body"><p class="first">See <a class="reference external" href="http://scikit-learn.org/stable/modules/generated/sklearn.feature_extraction.text.CountVectorizer.html">sklearn’s CountVectorizer docs</a>
 for detailed description of the configuration parameters</p>
+<p>This featurizer can be configured to use word or character n-grams, using <code class="docutils literal notranslate"><span class="pre">analyzer</span></code> config parameter.
+By default <code class="docutils literal notranslate"><span class="pre">analyzer</span></code> is set to <code class="docutils literal notranslate"><span class="pre">word</span></code> so word token counts are used as features.
+If you want to use character n-grams, set <code class="docutils literal notranslate"><span class="pre">analyzer</span></code> to <code class="docutils literal notranslate"><span class="pre">char</span></code> or <code class="docutils literal notranslate"><span class="pre">char_wb</span></code>.</p>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">Option ‘char_wb’ creates character n-grams only from text inside word boundaries;
+n-grams at the edges of words are padded with space.
+This option can be used to create <a class="reference external" href="https://arxiv.org/abs/1810.07150">Subword Semantic Hashing</a></p>
+</div>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">For character n-grams do not forget to increase <code class="docutils literal notranslate"><span class="pre">min_ngram</span></code> and <code class="docutils literal notranslate"><span class="pre">max_ngram</span></code> parameters.
+Otherwise the vocabulary will contain only single letters</p>
+</div>
 <p>Handling Out-Of-Vacabulary (OOV) words:</p>
 <blockquote>
-<div><p>Since the training is performed on limited vocabulary data, it cannot be guaranteed that during prediction
+<div><div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">Enabled only if <code class="docutils literal notranslate"><span class="pre">analyzer</span></code> is <code class="docutils literal notranslate"><span class="pre">word</span></code>.</p>
+</div>
+<p>Since the training is performed on limited vocabulary data, it cannot be guaranteed that during prediction
 an algorithm will not encounter an unknown word (a word that were not seen during training).
 In order to teach an algorithm how to treat unknown words, some words in training data can be substituted by generic word <code class="docutils literal notranslate"><span class="pre">OOV_token</span></code>.
 In this case during prediction all unknown words will be treated as this generic word <code class="docutils literal notranslate"><span class="pre">OOV_token</span></code>.</p>
@@ -409,7 +429,7 @@ maybe some additional general words. Then an algorithm will likely classify a me
 <div class="admonition note">
 <p class="first admonition-title">Note</p>
 <p>This featurizer creates a bag-of-words representation by <strong>counting</strong> words,
-so the number of <code class="docutils literal notranslate"><span class="pre">OOV_token</span></code> s might be important.</p>
+so the number of <code class="docutils literal notranslate"><span class="pre">OOV_token</span></code> in the sentence might be important.</p>
 <ul class="last simple">
 <li><code class="docutils literal notranslate"><span class="pre">OOV_token</span></code> set a keyword for unseen words; if training data contains <code class="docutils literal notranslate"><span class="pre">OOV_token</span></code> as words in some messages,
 during prediction the words that were not seen during training will be substituted with provided <code class="docutils literal notranslate"><span class="pre">OOV_token</span></code>;
@@ -424,35 +444,39 @@ as Out-Of-Vacabulary is known, it can be set to <code class="docutils literal no
 Unseen words will be substituted with <code class="docutils literal notranslate"><span class="pre">OOV_token</span></code> <strong>only</strong> if this token is present in the training data or <code class="docutils literal notranslate"><span class="pre">OOV_words</span></code> list is provided.</p>
 </div>
 </div></blockquote>
-<div class="last highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">pipeline</span><span class="p">:</span>
-<span class="p p-Indicator">-</span> <span class="nt">name</span><span class="p">:</span> <span class="s">&quot;intent_featurizer_count_vectors&quot;</span>
-  <span class="c1"># the parameters are taken from</span>
-  <span class="c1"># sklearn&#39;s CountVectorizer</span>
-  <span class="c1"># regular expression for tokens</span>
-  <span class="nt">&quot;token_pattern&quot;</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">r&#39;(?u)\b\w\w+\b&#39;</span>
-  <span class="c1"># remove accents during the preprocessing step</span>
-  <span class="nt">&quot;strip_accents&quot;</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">None</span>  <span class="c1"># {&#39;ascii&#39;, &#39;unicode&#39;, None}</span>
-  <span class="c1"># list of stop words</span>
-  <span class="nt">&quot;stop_words&quot;</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">None</span>  <span class="c1"># string {&#39;english&#39;}, list, or None (default)</span>
-  <span class="c1"># min document frequency of a word to add to vocabulary</span>
-  <span class="c1"># float - the parameter represents a proportion of documents</span>
-  <span class="c1"># integer - absolute counts</span>
-  <span class="nt">&quot;min_df&quot;</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">1</span>  <span class="c1"># float in range [0.0, 1.0] or int</span>
-  <span class="c1"># max document frequency of a word to add to vocabulary</span>
-  <span class="c1"># float - the parameter represents a proportion of documents</span>
-  <span class="c1"># integer - absolute counts</span>
-  <span class="nt">&quot;max_df&quot;</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">1.0</span>  <span class="c1"># float in range [0.0, 1.0] or int</span>
-  <span class="c1"># set ngram range</span>
-  <span class="nt">&quot;min_ngram&quot;</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">1</span>  <span class="c1"># int</span>
-  <span class="nt">&quot;max_ngram&quot;</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">1</span>  <span class="c1"># int</span>
-  <span class="c1"># limit vocabulary size</span>
-  <span class="nt">&quot;max_features&quot;</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">None</span>  <span class="c1"># int or None</span>
-  <span class="c1"># if convert all characters to lowercase</span>
-  <span class="nt">&quot;lowercase&quot;</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">true</span>  <span class="c1"># bool</span>
-  <span class="c1"># handling Out-Of-Vacabulary (OOV) words</span>
-  <span class="c1"># will be converted to lowercase if lowercase is true</span>
-  <span class="nt">&quot;OOV_token&quot;</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">None</span>  <span class="c1"># string or None</span>
-  <span class="nt">&quot;OOV_words&quot;</span><span class="p">:</span> <span class="p p-Indicator">[]</span>  <span class="c1"># list of strings</span>
+<div class="last highlight-yaml notranslate"><div class="highlight"><pre><span></span>pipeline:
+- name: &quot;intent_featurizer_count_vectors&quot;
+  # whether to use word or character n-grams
+  # &#39;char_wb&#39; creates character n-grams only inside word boundaries
+  # n-grams at the edges of words are padded with space.
+  &quot;analyzer&quot;: &#39;word&#39;,  # use &#39;char&#39; or &#39;char_wb&#39; for character
+  # the parameters are taken from
+  # sklearn&#39;s CountVectorizer
+  # regular expression for tokens
+  &quot;token_pattern&quot;: r&#39;(?u)\b\w\w+\b&#39;
+  # remove accents during the preprocessing step
+  &quot;strip_accents&quot;: None  # {&#39;ascii&#39;, &#39;unicode&#39;, None}
+  # list of stop words
+  &quot;stop_words&quot;: None  # string {&#39;english&#39;}, list, or None (default)
+  # min document frequency of a word to add to vocabulary
+  # float - the parameter represents a proportion of documents
+  # integer - absolute counts
+  &quot;min_df&quot;: 1  # float in range [0.0, 1.0] or int
+  # max document frequency of a word to add to vocabulary
+  # float - the parameter represents a proportion of documents
+  # integer - absolute counts
+  &quot;max_df&quot;: 1.0  # float in range [0.0, 1.0] or int
+  # set ngram range
+  &quot;min_ngram&quot;: 1  # int
+  &quot;max_ngram&quot;: 1  # int
+  # limit vocabulary size
+  &quot;max_features&quot;: None  # int or None
+  # if convert all characters to lowercase
+  &quot;lowercase&quot;: true  # bool
+  # handling Out-Of-Vacabulary (OOV) words
+  # will be converted to lowercase if lowercase is true
+  &quot;OOV_token&quot;: None  # string or None
+  &quot;OOV_words&quot;: []  # list of strings
 </pre></div>
 </div>
 </td>
@@ -636,8 +660,8 @@ modeling hierarchical intent structure, use these flags:</p>
 <li><dl class="first docutils">
 <dt>neural network’s architecture:</dt>
 <dd><ul class="first last">
-<li><code class="docutils literal notranslate"><span class="pre">num_hidden_layers_a</span></code> and <code class="docutils literal notranslate"><span class="pre">hidden_layer_size_a</span></code> set the number of hidden layers and their sizes before embedding layer for user inputs;</li>
-<li><code class="docutils literal notranslate"><span class="pre">num_hidden_layers_b</span></code> and <code class="docutils literal notranslate"><span class="pre">hidden_layer_size_b</span></code> set the number of hidden layers and their sizes before embedding layer for intent labels;</li>
+<li><code class="docutils literal notranslate"><span class="pre">hidden_layers_sizes_a</span></code> sets a list of hidden layer sizes before the embedding layer for user inputs, the number of hidden layers is equal to the length of the list</li>
+<li><code class="docutils literal notranslate"><span class="pre">hidden_layers_sizes_b</span></code> sets a list of hidden layer sizes before the embedding layer for intent labels, the number of hidden layers is equal to the length of the list</li>
 </ul>
 </dd>
 </dl>
@@ -660,6 +684,7 @@ modeling hierarchical intent structure, use these flags:</p>
 <li><code class="docutils literal notranslate"><span class="pre">similarity_type</span></code> sets the type of the similarity, it should be either <code class="docutils literal notranslate"><span class="pre">cosine</span></code> or <code class="docutils literal notranslate"><span class="pre">inner</span></code>;</li>
 <li><code class="docutils literal notranslate"><span class="pre">num_neg</span></code> sets the number of incorrect intent labels, the algorithm will minimize their similarity to the user input during training;</li>
 <li><code class="docutils literal notranslate"><span class="pre">use_max_sim_neg</span></code> if <code class="docutils literal notranslate"><span class="pre">true</span></code> the algorithm only minimizes maximum similarity over incorrect intent labels;</li>
+<li><code class="docutils literal notranslate"><span class="pre">random_seed</span></code> (None or int) An integer sets the random seed for numpy and tensorflow, so that the random initialisation is always the same and produces the same training result</li>
 </ul>
 </dd>
 </dl>
@@ -691,10 +716,8 @@ If constant <code class="docutils literal notranslate"><span class="pre">batch_s
 <div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">pipeline</span><span class="p">:</span>
 <span class="p p-Indicator">-</span> <span class="nt">name</span><span class="p">:</span> <span class="s">&quot;intent_classifier_tensorflow_embedding&quot;</span>
   <span class="c1"># nn architecture</span>
-  <span class="nt">&quot;num_hidden_layers_a&quot;</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">2</span>
-  <span class="nt">&quot;hidden_layer_size_a&quot;</span><span class="p">:</span> <span class="p p-Indicator">[</span><span class="nv">256</span><span class="p p-Indicator">,</span> <span class="nv">128</span><span class="p p-Indicator">]</span>
-  <span class="nt">&quot;num_hidden_layers_b&quot;</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">0</span>
-  <span class="nt">&quot;hidden_layer_size_b&quot;</span><span class="p">:</span> <span class="p p-Indicator">[]</span>
+  <span class="nt">&quot;hidden_layers_sizes_a&quot;</span><span class="p">:</span> <span class="p p-Indicator">[</span><span class="nv">256</span><span class="p p-Indicator">,</span> <span class="nv">128</span><span class="p p-Indicator">]</span>
+  <span class="nt">&quot;hidden_layers_sizes_b&quot;</span><span class="p">:</span> <span class="p p-Indicator">[]</span>
   <span class="nt">&quot;batch_size&quot;</span><span class="p">:</span> <span class="p p-Indicator">[</span><span class="nv">64</span><span class="p p-Indicator">,</span> <span class="nv">256</span><span class="p p-Indicator">]</span>
   <span class="nt">&quot;epochs&quot;</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">300</span>
   <span class="c1"># embedding parameters</span>
@@ -704,11 +727,12 @@ If constant <code class="docutils literal notranslate"><span class="pre">batch_s
   <span class="nt">&quot;similarity_type&quot;</span><span class="p">:</span> <span class="s">&quot;cosine&quot;</span>  <span class="c1"># string &#39;cosine&#39; or &#39;inner&#39;</span>
   <span class="nt">&quot;num_neg&quot;</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">20</span>
   <span class="nt">&quot;use_max_sim_neg&quot;</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">true</span>  <span class="c1"># flag which loss function to use</span>
+  <span class="nt">&quot;random_seed&quot;</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">None</span> <span class="c1"># set to any int to generate a reproducible training result</span>
   <span class="c1"># regularization</span>
   <span class="nt">&quot;C2&quot;</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">0.002</span>
   <span class="nt">&quot;C_emb&quot;</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">0.8</span>
   <span class="nt">&quot;droprate&quot;</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">0.2</span>
-  <span class="c1"># flag if to tokenize intents</span>
+  <span class="c1"># flag for tokenizing intents</span>
   <span class="nt">&quot;intent_tokenization_flag&quot;</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">false</span>
   <span class="nt">&quot;intent_split_symbol&quot;</span><span class="p">:</span> <span class="s">&quot;_&quot;</span>
   <span class="c1"># visualization of accuracy</span>

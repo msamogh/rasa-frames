@@ -127,6 +127,7 @@
 <li class="toctree-l1 current"><a class="current reference internal" href="#">HTTP API</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../python/">Python API</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../persist/">Storing Models in the Cloud</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../endpoint_configuration/">Endpoint Configuration</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../docker/">Running in Docker</a></li>
 </ul>
 <p class="caption"><span class="caption-text">Developer Documentation</span></p>
@@ -143,12 +144,13 @@
     <div class="versions-content">
       <div>
         <span class="current-version">
-          viewing: 0.13.8
+          viewing: 0.14.0
         </span>
       </div>
       <div class="other-versions">
           <p>tags</p>
           <div class="dropdown-content">
+              <a href=".././0.14.0/http/">0.14.0</a>
               <a href=".././0.13.8/http/">0.13.8</a>
               <a href=".././0.13.7/http/">0.13.7</a>
               <a href=".././0.13.6/http/">0.13.6</a>
@@ -307,23 +309,33 @@ specify the project in which the model is located. N.b. if you don’t specify
 a model, the latest one will be selected. This endpoint returns some common
 sklearn  evaluation metrics (<a class="reference external" href="http://scikit-learn.org/stable/modules/generated/sklearn.metrics.accuracy_score.html#sklearn.metrics.accuracy_score">accuracy</a>, <a class="reference external" href="http://scikit-learn.org/stable/modules/generated/sklearn.metrics.f1_score.html">f1 score</a>,
 <a class="reference external" href="http://scikit-learn.org/stable/modules/generated/sklearn.metrics.precision_score.html">precision</a>, as well as
-a summary <a class="reference external" href="http://scikit-learn.org/stable/modules/generated/sklearn.metrics.classification_report.html">report</a>).</p>
+a summary <a class="reference external" href="http://scikit-learn.org/stable/modules/generated/sklearn.metrics.classification_report.html">report</a>) for both intents and entities.</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>$ curl -XPOST localhost:5000/evaluate?project<span class="o">=</span>my_project<span class="p">&amp;</span><span class="nv">model</span><span class="o">=</span>model_XXXXXX -d @data/examples/rasa/demo-rasa.json <span class="p">|</span> python -mjson.tool
 
 <span class="o">{</span>
-    <span class="s2">&quot;accuracy&quot;</span>: <span class="m">0</span>.19047619047619047,
-    <span class="s2">&quot;f1_score&quot;</span>: <span class="m">0</span>.06095238095238095,
-    <span class="s2">&quot;precision&quot;</span>: <span class="m">0</span>.036281179138321996,
-    <span class="s2">&quot;predictions&quot;</span>: <span class="o">[</span>
-        <span class="o">{</span>
-            <span class="s2">&quot;intent&quot;</span>: <span class="s2">&quot;greet&quot;</span>,
-            <span class="s2">&quot;predicted&quot;</span>: <span class="s2">&quot;greet&quot;</span>,
-            <span class="s2">&quot;text&quot;</span>: <span class="s2">&quot;hey&quot;</span>,
-            <span class="s2">&quot;confidence&quot;</span>: <span class="m">1</span>.0
-        <span class="o">}</span>,
-        ...,
-    <span class="o">]</span>
-    <span class="s2">&quot;report&quot;</span>: ...
+    <span class="s2">&quot;intent_evaluation&quot;</span>: <span class="o">{</span>
+        <span class="s2">&quot;accuracy&quot;</span>: <span class="m">0</span>.19047619047619047,
+        <span class="s2">&quot;f1_score&quot;</span>: <span class="m">0</span>.06095238095238095,
+        <span class="s2">&quot;precision&quot;</span>: <span class="m">0</span>.036281179138321996,
+        <span class="s2">&quot;predictions&quot;</span>: <span class="o">[</span>
+            <span class="o">{</span>
+                <span class="s2">&quot;intent&quot;</span>: <span class="s2">&quot;greet&quot;</span>,
+                <span class="s2">&quot;predicted&quot;</span>: <span class="s2">&quot;greet&quot;</span>,
+                <span class="s2">&quot;text&quot;</span>: <span class="s2">&quot;hey&quot;</span>,
+                <span class="s2">&quot;confidence&quot;</span>: <span class="m">1</span>.0
+            <span class="o">}</span>,
+            ...,
+        <span class="o">]</span>
+        <span class="s2">&quot;report&quot;</span>: ...
+    <span class="o">}</span>,
+    <span class="s2">&quot;entity_evaluation&quot;</span>: <span class="o">{</span>
+        <span class="s2">&quot;ner_crf&quot;</span>: <span class="o">{</span>
+            <span class="s2">&quot;report&quot;</span>: ...,
+            <span class="s2">&quot;precision&quot;</span>: <span class="m">0</span>.7606987393295268,
+            <span class="s2">&quot;f1_score&quot;</span>: <span class="m">0</span>.812633994625117,
+            <span class="s2">&quot;accuracy&quot;</span>: <span class="m">0</span>.8721804511278195
+        <span class="o">}</span>
+    <span class="o">}</span>
 <span class="o">}</span>
 </pre></div>
 </div>
