@@ -271,7 +271,7 @@ To train a model:</p>
 <span id="config"></span><h3>Config<a class="headerlink" href="#module-rasa_nlu.config" title="Permalink to this headline">¶</a></h3>
 <dl class="function">
 <dt id="rasa_nlu.config.load">
-<code class="descclassname">rasa_nlu.config.</code><code class="descname">load</code><span class="sig-paren">(</span><em>filename=None</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#rasa_nlu.config.load" title="Permalink to this definition">¶</a></dt>
+<code class="descclassname">rasa_nlu.config.</code><code class="descname">load</code><span class="sig-paren">(</span><em>filename: Union[str</em>, <em>NoneType] = None</em>, <em>**kwargs</em><span class="sig-paren">)</span> &#x2192; rasa_nlu.config.RasaNLUModelConfig<a class="headerlink" href="#rasa_nlu.config.load" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="class">
@@ -291,27 +291,26 @@ defaults with a dictionary <code class="docutils literal notranslate"><span clas
 <h3>Interpreter<a class="headerlink" href="#interpreter" title="Permalink to this headline">¶</a></h3>
 <dl class="class">
 <dt id="rasa_nlu.model.Interpreter">
-<em class="property">class </em><code class="descclassname">rasa_nlu.model.</code><code class="descname">Interpreter</code><span class="sig-paren">(</span><em>pipeline</em>, <em>context</em>, <em>model_metadata=None</em><span class="sig-paren">)</span><a class="headerlink" href="#rasa_nlu.model.Interpreter" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="descclassname">rasa_nlu.model.</code><code class="descname">Interpreter</code><span class="sig-paren">(</span><em>pipeline: List[rasa_nlu.components.Component], context: Union[typing.Dict[str, typing.Any], NoneType], model_metadata: Union[rasa_nlu.model.Metadata, NoneType] = None</em><span class="sig-paren">)</span><a class="headerlink" href="#rasa_nlu.model.Interpreter" title="Permalink to this definition">¶</a></dt>
 <dd><p>Use a trained pipeline of components to parse text messages.</p>
 <dl class="staticmethod">
 <dt id="rasa_nlu.model.Interpreter.load">
-<em class="property">static </em><code class="descname">load</code><span class="sig-paren">(</span><em>model_dir</em>, <em>component_builder=None</em>, <em>skip_validation=False</em><span class="sig-paren">)</span><a class="headerlink" href="#rasa_nlu.model.Interpreter.load" title="Permalink to this definition">¶</a></dt>
+<em class="property">static </em><code class="descname">load</code><span class="sig-paren">(</span><em>model_dir: str</em>, <em>component_builder: Union[rasa_nlu.components.ComponentBuilder</em>, <em>NoneType] = None</em>, <em>skip_validation: bool = False</em><span class="sig-paren">)</span> &#x2192; rasa_nlu.model.Interpreter<a class="headerlink" href="#rasa_nlu.model.Interpreter.load" title="Permalink to this definition">¶</a></dt>
 <dd><p>Create an interpreter based on a persisted model.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
-<li><strong>model_dir</strong> (<em>str</em>) – The path of the model to load</li>
-<li><strong>component_builder</strong> (<a class="reference internal" href="#rasa_nlu.components.ComponentBuilder" title="rasa_nlu.components.ComponentBuilder"><em>ComponentBuilder</em></a>) – The
-<code class="xref py py-class docutils literal notranslate"><span class="pre">ComponentBuilder</span></code> to use.</li>
+<li><strong>skip_validation</strong> – If set to <cite>True</cite>, tries to check that all
+required packages for the components are installed
+before loading them.</li>
+<li><strong>model_dir</strong> – The path of the model to load</li>
+<li><strong>component_builder</strong> – The <code class="xref py py-class docutils literal notranslate"><span class="pre">ComponentBuilder</span></code> to use.</li>
 </ul>
 </td>
 </tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">An interpreter that uses the loaded model.</p>
-</td>
-</tr>
-<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last"><a class="reference internal" href="#rasa_nlu.model.Interpreter" title="rasa_nlu.model.Interpreter">Interpreter</a></p>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">An interpreter that uses the loaded model.</p>
 </td>
 </tr>
 </tbody>
@@ -325,11 +324,11 @@ defaults with a dictionary <code class="docutils literal notranslate"><span clas
 <h3>Metadata<a class="headerlink" href="#metadata" title="Permalink to this headline">¶</a></h3>
 <dl class="class">
 <dt id="rasa_nlu.model.Metadata">
-<em class="property">class </em><code class="descclassname">rasa_nlu.model.</code><code class="descname">Metadata</code><span class="sig-paren">(</span><em>metadata</em>, <em>model_dir</em><span class="sig-paren">)</span><a class="headerlink" href="#rasa_nlu.model.Metadata" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="descclassname">rasa_nlu.model.</code><code class="descname">Metadata</code><span class="sig-paren">(</span><em>metadata: Dict[str, Any], model_dir: Union[str, NoneType]</em><span class="sig-paren">)</span><a class="headerlink" href="#rasa_nlu.model.Metadata" title="Permalink to this definition">¶</a></dt>
 <dd><p>Captures all information about a model to load and prepare it.</p>
 <dl class="staticmethod">
 <dt id="rasa_nlu.model.Metadata.load">
-<em class="property">static </em><code class="descname">load</code><span class="sig-paren">(</span><em>model_dir</em><span class="sig-paren">)</span><a class="headerlink" href="#rasa_nlu.model.Metadata.load" title="Permalink to this definition">¶</a></dt>
+<em class="property">static </em><code class="descname">load</code><span class="sig-paren">(</span><em>model_dir: str</em><span class="sig-paren">)</span><a class="headerlink" href="#rasa_nlu.model.Metadata.load" title="Permalink to this definition">¶</a></dt>
 <dd><p>Loads the metadata from a models directory.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
@@ -352,12 +351,12 @@ defaults with a dictionary <code class="docutils literal notranslate"><span clas
 <h3>ComponentBuilder<a class="headerlink" href="#componentbuilder" title="Permalink to this headline">¶</a></h3>
 <dl class="class">
 <dt id="rasa_nlu.components.ComponentBuilder">
-<em class="property">class </em><code class="descclassname">rasa_nlu.components.</code><code class="descname">ComponentBuilder</code><span class="sig-paren">(</span><em>use_cache=True</em><span class="sig-paren">)</span><a class="headerlink" href="#rasa_nlu.components.ComponentBuilder" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="descclassname">rasa_nlu.components.</code><code class="descname">ComponentBuilder</code><span class="sig-paren">(</span><em>use_cache: bool = True</em><span class="sig-paren">)</span><a class="headerlink" href="#rasa_nlu.components.ComponentBuilder" title="Permalink to this definition">¶</a></dt>
 <dd><p>Creates trainers and interpreters based on configurations.</p>
 <p>Caches components for reuse.</p>
 <dl class="method">
 <dt id="rasa_nlu.components.ComponentBuilder.load_component">
-<code class="descname">load_component</code><span class="sig-paren">(</span><em>component_name</em>, <em>model_dir</em>, <em>model_metadata</em>, <em>**context</em><span class="sig-paren">)</span><a class="headerlink" href="#rasa_nlu.components.ComponentBuilder.load_component" title="Permalink to this definition">¶</a></dt>
+<code class="descname">load_component</code><span class="sig-paren">(</span><em>component_name: str</em>, <em>model_dir: str</em>, <em>model_metadata: Metadata</em>, <em>**context</em><span class="sig-paren">)</span> &#x2192; rasa_nlu.components.Component<a class="headerlink" href="#rasa_nlu.components.ComponentBuilder.load_component" title="Permalink to this definition">¶</a></dt>
 <dd><p>Tries to retrieve a component from the cache, else calls
 <code class="docutils literal notranslate"><span class="pre">load</span></code> to create a new component.</p>
 <table class="docutils field-list" frame="void" rules="none">
