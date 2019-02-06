@@ -12,12 +12,23 @@ class WhitespaceTokenizer(Tokenizer, Component):
 
     provides = ["tokens"]
 
+    defaults = {
+        "intent_split_symbol": ' ',
+    }
+
+    def __init__(self, component_config=None):
+        """Construct a new count vectorizer using the sklearn framework."""
+
+        super(WhitespaceTokenizer, self).__init__(component_config)
+        self.intent_split_symbol = self.component_config['intent_split_symbol']
+
     def train(self, training_data: TrainingData, config: RasaNLUModelConfig,
               **kwargs: Any) -> None:
 
         for example in training_data.training_examples:
             example.set("tokens", self.tokenize(example.text))
-            example.set("intent_tokens", self.tokenize(example.get("intent"), '_'))
+            example.set("intent_tokens", self.tokenize(example.get("intent"),
+                                                       self.intent_split_symbol))
 
     def process(self, message: Message, **kwargs: Any) -> None:
 
