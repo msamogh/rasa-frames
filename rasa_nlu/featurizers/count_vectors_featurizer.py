@@ -3,6 +3,7 @@ import os
 import re
 from typing import Any, Dict, List, Optional, Text
 
+import numpy as np
 from rasa_nlu import utils
 from rasa_nlu.config import RasaNLUModelConfig
 from rasa_nlu.featurizers import Featurizer
@@ -34,6 +35,7 @@ class CountVectorsFeaturizer(Featurizer):
     defaults = {
         # the parameters are taken from
         # sklearn's CountVectorizer
+        "sequence": False,
 
         # whether to use word or character n-grams
         # 'char_wb' creates character n-grams inside word boundaries
@@ -81,6 +83,7 @@ class CountVectorsFeaturizer(Featurizer):
         return ["sklearn"]
 
     def _load_count_vect_params(self):
+        self.sequence = self.component_config['sequence']
         # set analyzer
         self.analyzer = self.component_config['analyzer']
 
@@ -184,6 +187,10 @@ class CountVectorsFeaturizer(Featurizer):
         return tokens
 
     @staticmethod
+    def _get_message_sequence(message):
+        return message.split()
+
+    @staticmethod
     def _get_message_text(message):
         if message.get("spacy_doc"):  # if lemmatize is possible
             return ' '.join([t.lemma_ for t in message.get("spacy_doc")])
@@ -242,16 +249,31 @@ class CountVectorsFeaturizer(Featurizer):
 
         try:
             # noinspection PyPep8Naming
-            X = self.vect.fit_transform(lem_exs).toarray()
+            if not self.sequence:
+                X = self.vect.fit_transform(lem_exs).toarray()
+            else:
+                self.vect.fit(lem_exs)
+                feature_len = len(self.vect.vocabulary_.keys())
+                seq_len = max([len(ex) for ex in lem_exs])
+                num_exs = len(lem_exs)
+                X = np.ones([num_exs, seq_len, feature_len], dtype=np.int32) * -1
+
+                for i, ex in enumerate(lem_exs):
+                    x = self.vect.transform(self._get_message_sequence(ex)).toarray()
+                    X[i, :x.shape[0], :] = x
+
         except ValueError:
             self.vect = None
             return
 
         for i, example in enumerate(training_data.intent_examples):
             # create bag for each example
-            example.set("text_features",
-                        self._combine_with_existing_text_features(example,
-                                                                  X[i]))
+            if not self.sequence:
+                example.set("text_features",
+                            self._combine_with_existing_text_features(example,
+                                                                      X[i]))
+            else:
+                example.set("text_features", X[i])
 
     def process(self, message: Message, **kwargs: Any) -> None:
         if self.vect is None:

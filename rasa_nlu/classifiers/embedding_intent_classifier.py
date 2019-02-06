@@ -245,7 +245,6 @@ class EmbeddingIntentClassifier(Component):
             return np.eye(len(intent_dict))
 
     # noinspection PyPep8Naming
-
     def _create_all_Y(self, size: int) -> np.ndarray:
         """Stack encoded_all_intents on top of each other
 
@@ -255,8 +254,7 @@ class EmbeddingIntentClassifier(Component):
 
         return np.stack([self.encoded_all_intents] * size)
 
-        # noinspection PyPep8Naming
-
+    # noinspection PyPep8Naming
     def _prepare_data_for_training(
             self,
             training_data: 'TrainingData',
@@ -275,8 +273,7 @@ class EmbeddingIntentClassifier(Component):
 
         return X, Y, intents_for_X
 
-        # tf helpers:
-
+    # tf helpers:
     def _create_tf_embed_nn(self, x_in: 'tf.Tensor', is_training: 'tf.Tensor',
                             layer_sizes: List[int], name: Text) -> 'tf.Tensor':
         """Create nn with hidden layers and name"""
@@ -492,8 +489,7 @@ class EmbeddingIntentClassifier(Component):
         train_acc = np.mean(np.argmax(train_sim, -1) == intents_for_X[ids])
         return train_acc
 
-        # noinspection PyPep8Naming
-
+    # noinspection PyPep8Naming
     def train(self,
               training_data: 'TrainingData',
               cfg: Optional['RasaNLUModelConfig'] = None,
@@ -528,6 +524,9 @@ class EmbeddingIntentClassifier(Component):
             # set random seed
             np.random.seed(self.random_seed)
             tf.set_random_seed(self.random_seed)
+
+            print(X.shape)
+            exit()
 
             self.a_in = tf.placeholder(tf.float32, (None, X.shape[-1]),
                                        name='a')
