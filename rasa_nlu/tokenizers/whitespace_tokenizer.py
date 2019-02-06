@@ -17,8 +17,6 @@ class WhitespaceTokenizer(Tokenizer, Component):
     }
 
     def __init__(self, component_config=None):
-        """Construct a new count vectorizer using the sklearn framework."""
-
         super(WhitespaceTokenizer, self).__init__(component_config)
         self.intent_split_symbol = self.component_config['intent_split_symbol']
 
