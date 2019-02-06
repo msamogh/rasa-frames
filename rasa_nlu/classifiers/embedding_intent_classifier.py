@@ -59,6 +59,8 @@ class EmbeddingIntentClassifier(Component):
         # the number of hidden layers is thus equal to the length of this list
         "hidden_layers_sizes_b": [],
 
+        "share_embedding": False,
+
         # training parameters
         # initial and final batch sizes - batch size will be
         # linearly increased for each epoch
@@ -148,6 +150,12 @@ class EmbeddingIntentClassifier(Component):
     def _load_nn_architecture_params(self, config: Dict[Text, Any]) -> None:
         self.hidden_layer_sizes = {'a': config['hidden_layers_sizes_a'],
                                    'b': config['hidden_layers_sizes_b']}
+
+        self.share_embedding = config['share_embedding']
+        if self.share_embedding:
+            if self.hidden_layer_sizes['a'] != self.hidden_layer_sizes['b']:
+                raise ValueError("If embeddings are shared "
+                                 "hidden_layer_sizes must coincide")
 
         self.batch_size = config['batch_size']
         self.epochs = config['epochs']
@@ -277,6 +285,10 @@ class EmbeddingIntentClassifier(Component):
 
         reg = tf.contrib.layers.l2_regularizer(self.C2)
         x = x_in
+
+        print(x.shape)
+        exit()
+
         for i, layer_size in enumerate(layer_sizes):
             x = tf.layers.dense(inputs=x,
                                 units=layer_size,
@@ -300,10 +312,11 @@ class EmbeddingIntentClassifier(Component):
 
         emb_a = self._create_tf_embed_nn(a_in, is_training,
                                          self.hidden_layer_sizes['a'],
-                                         name='a')
+                                         name='a_and_b' if self.share_embedding else 'a')
         emb_b = self._create_tf_embed_nn(b_in, is_training,
                                          self.hidden_layer_sizes['b'],
-                                         name='b')
+                                         name='a_and_b' if self.share_embedding else 'b')
+
         return emb_a, emb_b
 
     def _tf_sim(self,
@@ -541,6 +554,12 @@ class EmbeddingIntentClassifier(Component):
         X, Y, intents_for_X = self._prepare_data_for_training(
             training_data, intent_dict)
 
+        if self.share_embedding:
+            if X.shape != Y.shape:
+                raise ValueError("If embeddings are shared "
+                                 "text features and intent features "
+                                 "must coincide")
+
         # check if number of negatives is less than number of intents
         logger.debug("Check if num_neg {} is smaller than "
                      "number of intents {}, "
@@ -559,11 +578,12 @@ class EmbeddingIntentClassifier(Component):
             print(X.shape)
             print(Y.shape)
             print(self.encoded_all_intents.shape)
-            exit()
 
-            self.a_in = tf.placeholder(tf.float32, (None, X.shape[-1]),
+            sequence_len = X.shape[1]  # None
+            self.a_in = tf.placeholder(tf.float32, (None, sequence_len, X.shape[-1]),
                                        name='a')
-            self.b_in = tf.placeholder(tf.float32, (None, None, Y.shape[-1]),
+            sequence_len = Y.shape[1]  # None
+            self.b_in = tf.placeholder(tf.float32, (None, sequence_len, None, Y.shape[-1]),
                                        name='b')
 
             is_training = tf.placeholder_with_default(False, shape=())

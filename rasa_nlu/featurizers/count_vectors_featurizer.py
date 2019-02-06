@@ -218,11 +218,12 @@ class CountVectorsFeaturizer(Featurizer):
                            "will be ignored during prediction."
                            "".format(self.OOV_token))
 
-    def _create_sequence(self, vect, texts):
+    def _create_sequence(self, vect, texts, seq_len=None):
         feature_len = len(vect.vocabulary_.keys())
 
         texts = [self._get_text_sequence(text) for text in texts]
-        seq_len = max([len(tokens) for tokens in texts])
+        if seq_len is None:
+            seq_len = max([len(tokens) for tokens in texts])
         num_exs = len(texts)
 
         X = np.ones([num_exs, seq_len, feature_len], dtype=np.int32) * -1
@@ -309,8 +310,9 @@ class CountVectorsFeaturizer(Featurizer):
             else:
                 if self.use_shared_vocab:
                     self.vect.fit(lem_exs + lem_ints)
-                    X = self._create_sequence(self.vect, lem_exs)
-                    Y = self._create_sequence(self.vect, lem_ints)
+                    seq_len = max([len(tokens) for tokens in lem_exs + lem_ints])
+                    X = self._create_sequence(self.vect, lem_exs, seq_len)
+                    Y = self._create_sequence(self.vect, lem_ints, seq_len)
                 else:
                     self.vect[0].fit(lem_exs)
                     X = self._create_sequence(self.vect[0], lem_exs)

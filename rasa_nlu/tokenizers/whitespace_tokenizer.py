@@ -25,8 +25,9 @@ class WhitespaceTokenizer(Tokenizer, Component):
 
         for example in training_data.training_examples:
             example.set("tokens", self.tokenize(example.text))
-            example.set("intent_tokens", self.tokenize(example.get("intent"),
-                                                       self.intent_split_symbol))
+            example.set("intent_tokens",
+                        self.tokenize(example.get("intent"),
+                                      self.intent_split_symbol))
 
     def process(self, message: Message, **kwargs: Any) -> None:
 
