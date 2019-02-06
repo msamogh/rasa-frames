@@ -213,34 +213,32 @@ class EmbeddingIntentClassifier(Component):
                 for idx, intent in enumerate(sorted(distinct_intents))}
 
     @staticmethod
-    def _create_intent_token_dict(intents: List[Text],
-                                  intent_split_symbol: Text) -> Dict[Text, int]:
-        """Create intent token dictionary"""
-
-        distinct_tokens = set([token
-                               for intent in intents
-                               for token in intent.split(intent_split_symbol)])
-        return {token: idx
-                for idx, token in enumerate(sorted(distinct_tokens))}
+    def _find_example_for_intent(intent, examples):
+        for ex in examples:
+            if ex.get("intent") == intent:
+                return ex
 
     def _create_encoded_intents(self,
-                                intent_dict: Dict[Text, int]) -> np.ndarray:
+                                intent_dict: Dict[Text, int],
+                                training_data: 'TrainingData') -> np.ndarray:
         """Create matrix with intents encoded in rows as bag of words.
 
         If intent_tokenization_flag is off, returns identity matrix.
         """
 
         if self.intent_tokenization_flag:
-            intent_token_dict = self._create_intent_token_dict(
-                list(intent_dict.keys()), self.intent_split_symbol)
+            encoded_all_intents = []
 
-            encoded_all_intents = np.zeros((len(intent_dict),
-                                            len(intent_token_dict)))
             for key, idx in intent_dict.items():
-                for t in key.split(self.intent_split_symbol):
-                    encoded_all_intents[idx, intent_token_dict[t]] = 1
+                encoded_all_intents.insert(
+                    idx,
+                    self._find_example_for_intent(
+                        key,
+                        training_data.intent_examples
+                    ).get("intent_features")
+                )
 
-            return encoded_all_intents
+            return np.array(encoded_all_intents)
         else:
             return np.eye(len(intent_dict))
 
@@ -255,21 +253,20 @@ class EmbeddingIntentClassifier(Component):
         return np.stack([self.encoded_all_intents] * size)
 
     # noinspection PyPep8Naming
+    @staticmethod
     def _prepare_data_for_training(
-            self,
-            training_data: 'TrainingData',
-            intent_dict: Dict[Text, int]
+        training_data: 'TrainingData',
+        intent_dict: Dict[Text, int]
     ) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
         """Prepare data for training"""
 
         X = np.stack([e.get("text_features")
                       for e in training_data.intent_examples])
+        Y = np.stack([e.get("intent_features")
+                      for e in training_data.intent_examples])
 
         intents_for_X = np.array([intent_dict[e.get("intent")]
                                   for e in training_data.intent_examples])
-
-        Y = np.stack([self.encoded_all_intents[intent_idx]
-                      for intent_idx in intents_for_X])
 
         return X, Y, intents_for_X
 
@@ -384,6 +381,40 @@ class EmbeddingIntentClassifier(Component):
             batch_neg_b[b] = self.encoded_all_intents[negs]
 
         return np.concatenate([batch_pos_b, batch_neg_b], 1)
+
+    def _create_seq_batch_b(self,
+                            batch_pos_b: np.ndarray,
+                            intent_ids: np.ndarray
+                            ) -> np.ndarray:
+        """Create batch of actions.
+
+        The first is correct action
+        and the rest are wrong actions sampled randomly.
+        """
+
+        batch_pos_b = batch_pos_b[:, :, np.newaxis, :]
+
+        # sample negatives
+        batch_neg_b = np.zeros((batch_pos_b.shape[0],
+                                batch_pos_b.shape[1],
+                                self.num_neg,
+                                batch_pos_b.shape[-1]),
+                               dtype=int)
+        for b in range(batch_pos_b.shape[0]):
+            for h in range(batch_pos_b.shape[1]):
+                # create negative indexes out of possible ones
+                # except for correct index of b
+                negative_indexes = [
+                    i
+                    for i in range(self.encoded_all_intents.shape[0])
+                    if i != intent_ids[b, h]
+                ]
+
+                negs = np.random.choice(negative_indexes, size=self.num_neg)
+
+                batch_neg_b[b, h] = self.encoded_all_intents[negs]
+
+        return np.concatenate([batch_pos_b, batch_neg_b], -2)
 
     def _linearly_increasing_batch_size(self, epoch: int) -> int:
         """Linearly increase batch size with every epoch.
@@ -505,7 +536,7 @@ class EmbeddingIntentClassifier(Component):
 
         self.inv_intent_dict = {v: k for k, v in intent_dict.items()}
         self.encoded_all_intents = self._create_encoded_intents(
-            intent_dict)
+            intent_dict, training_data)
 
         X, Y, intents_for_X = self._prepare_data_for_training(
             training_data, intent_dict)
@@ -526,6 +557,8 @@ class EmbeddingIntentClassifier(Component):
             tf.set_random_seed(self.random_seed)
 
             print(X.shape)
+            print(Y.shape)
+            print(self.encoded_all_intents.shape)
             exit()
 
             self.a_in = tf.placeholder(tf.float32, (None, X.shape[-1]),

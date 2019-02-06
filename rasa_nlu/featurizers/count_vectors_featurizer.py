@@ -37,6 +37,8 @@ class CountVectorsFeaturizer(Featurizer):
         # sklearn's CountVectorizer
         "sequence": False,
 
+        "use_shared_vocab": False,
+
         # whether to use word or character n-grams
         # 'char_wb' creates character n-grams inside word boundaries
         # n-grams at the edges of words are padded with space.
@@ -84,6 +86,7 @@ class CountVectorsFeaturizer(Featurizer):
 
     def _load_count_vect_params(self):
         self.sequence = self.component_config['sequence']
+        self.use_shared_vocab = self.component_config['use_shared_vocab']
         # set analyzer
         self.analyzer = self.component_config['analyzer']
 
@@ -187,10 +190,6 @@ class CountVectorsFeaturizer(Featurizer):
         return tokens
 
     @staticmethod
-    def _get_message_sequence(message):
-        return message.split()
-
-    @staticmethod
     def _get_message_text(message):
         if message.get("spacy_doc"):  # if lemmatize is possible
             return ' '.join([t.lemma_ for t in message.get("spacy_doc")])
@@ -198,6 +197,14 @@ class CountVectorsFeaturizer(Featurizer):
             return ' '.join([t.text for t in message.get("tokens")])
         else:
             return message.text
+
+    @staticmethod
+    def _get_message_intent(message):
+        return ' '.join([t.text for t in message.get("intent_tokens")])
+
+    @staticmethod
+    def _get_text_sequence(text):
+        return text.split()
 
     # noinspection PyPep8Naming
     def _check_OOV_present(self, examples):
@@ -210,6 +217,20 @@ class CountVectorsFeaturizer(Featurizer):
                            "in the training data. All unseen words "
                            "will be ignored during prediction."
                            "".format(self.OOV_token))
+
+    def _create_sequence(self, vect, texts):
+        feature_len = len(vect.vocabulary_.keys())
+
+        texts = [self._get_text_sequence(text) for text in texts]
+        seq_len = max([len(tokens) for tokens in texts])
+        num_exs = len(texts)
+
+        X = np.ones([num_exs, seq_len, feature_len], dtype=np.int32) * -1
+
+        for i, tokens in enumerate(texts):
+            x = vect.transform(tokens).toarray()
+            X[i, :x.shape[0], :] = x
+        return X
 
     def train(self,
               training_data: TrainingData,
@@ -229,38 +250,73 @@ class CountVectorsFeaturizer(Featurizer):
             self.OOV_words = [t.lemma_
                               for w in self.OOV_words
                               for t in spacy_nlp(w)]
-
-        self.vect = CountVectorizer(token_pattern=self.token_pattern,
-                                    strip_accents=self.strip_accents,
-                                    lowercase=self.lowercase,
-                                    stop_words=self.stop_words,
-                                    ngram_range=(self.min_ngram,
-                                                 self.max_ngram),
-                                    max_df=self.max_df,
-                                    min_df=self.min_df,
-                                    max_features=self.max_features,
-                                    tokenizer=self._tokenizer,
-                                    analyzer=self.analyzer)
+        if self.use_shared_vocab:
+            self.vect = CountVectorizer(token_pattern=self.token_pattern,
+                                        strip_accents=self.strip_accents,
+                                        lowercase=self.lowercase,
+                                        stop_words=self.stop_words,
+                                        ngram_range=(self.min_ngram,
+                                                     self.max_ngram),
+                                        max_df=self.max_df,
+                                        min_df=self.min_df,
+                                        max_features=self.max_features,
+                                        tokenizer=self._tokenizer,
+                                        analyzer=self.analyzer)
+        else:
+            self.vect = [CountVectorizer(token_pattern=self.token_pattern,
+                                         strip_accents=self.strip_accents,
+                                         lowercase=self.lowercase,
+                                         stop_words=self.stop_words,
+                                         ngram_range=(self.min_ngram,
+                                                      self.max_ngram),
+                                         max_df=self.max_df,
+                                         min_df=self.min_df,
+                                         max_features=self.max_features,
+                                         tokenizer=self._tokenizer,
+                                         analyzer=self.analyzer),
+                         CountVectorizer(token_pattern=self.token_pattern,
+                                         strip_accents=self.strip_accents,
+                                         lowercase=self.lowercase,
+                                         stop_words=self.stop_words,
+                                         ngram_range=(self.min_ngram,
+                                                      self.max_ngram),
+                                         max_df=self.max_df,
+                                         min_df=self.min_df,
+                                         max_features=self.max_features,
+                                         tokenizer=self._tokenizer,
+                                         analyzer=self.analyzer)]
 
         lem_exs = [self._get_message_text(example)
                    for example in training_data.intent_examples]
 
         self._check_OOV_present(lem_exs)
 
-        try:
-            # noinspection PyPep8Naming
-            if not self.sequence:
-                X = self.vect.fit_transform(lem_exs).toarray()
-            else:
-                self.vect.fit(lem_exs)
-                feature_len = len(self.vect.vocabulary_.keys())
-                seq_len = max([len(ex) for ex in lem_exs])
-                num_exs = len(lem_exs)
-                X = np.ones([num_exs, seq_len, feature_len], dtype=np.int32) * -1
+        lem_ints = [self._get_message_intent(example)
+                    for example in training_data.intent_examples]
 
-                for i, ex in enumerate(lem_exs):
-                    x = self.vect.transform(self._get_message_sequence(ex)).toarray()
-                    X[i, :x.shape[0], :] = x
+        self._check_OOV_present(lem_ints)
+
+        # noinspection PyPep8Naming
+        try:
+            if not self.sequence:
+                if self.use_shared_vocab:
+                    self.vect.fit(lem_exs + lem_ints)
+                    X = self.vect.transform(lem_exs).toarray()
+                    Y = self.vect.transform(lem_ints).toarray()
+                else:
+                    X = self.vect[0].fit_transform(lem_exs).toarray()
+                    Y = self.vect[1].fit_transform(lem_ints).toarray()
+            else:
+                if self.use_shared_vocab:
+                    self.vect.fit(lem_exs + lem_ints)
+                    X = self._create_sequence(self.vect, lem_exs)
+                    Y = self._create_sequence(self.vect, lem_ints)
+                else:
+                    self.vect[0].fit(lem_exs)
+                    X = self._create_sequence(self.vect[0], lem_exs)
+                    self.vect[1].fit(lem_ints)
+                    Y = self._create_sequence(self.vect[1], lem_ints)
+                    print(len(self.vect[1].vocabulary_))
 
         except ValueError:
             self.vect = None
@@ -275,6 +331,8 @@ class CountVectorsFeaturizer(Featurizer):
             else:
                 example.set("text_features", X[i])
 
+            example.set("intent_features", Y[i])
+
     def process(self, message: Message, **kwargs: Any) -> None:
         if self.vect is None:
             logger.error("There is no trained CountVectorizer: "
@@ -282,11 +340,17 @@ class CountVectorsFeaturizer(Featurizer):
                          "didn't receive enough training data")
         else:
             message_text = self._get_message_text(message)
+            if not self.sequence:
+                if self.use_shared_vocab:
+                    vect = self.vect
+                else:
+                    vect = self.vect[0]
+                bag = vect.transform([message_text]).toarray().squeeze()
+                message.set("text_features",
+                            self._combine_with_existing_text_features(message,
+                                                                      bag))
+            # else:
 
-            bag = self.vect.transform([message_text]).toarray().squeeze()
-            message.set("text_features",
-                        self._combine_with_existing_text_features(message,
-                                                                  bag))
 
     def persist(self, model_dir: Text) -> Dict[Text, Any]:
         """Persist this model into the passed directory.
