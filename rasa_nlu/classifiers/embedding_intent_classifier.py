@@ -363,9 +363,19 @@ class EmbeddingIntentClassifier(Component):
 
             x = tf.transpose(x, [1, 0, 2])
             x = tf.reduce_sum(x * last, 1)
+
         elif self.gpu:
-            # TODO use tf.contrib.cudnn_rnn.CudnnLSTM
-            raise NotImplementedError
+            last = tf.expand_dims(mask * tf.cumprod(1 - mask, axis=1, exclusive=True, reverse=True), -1)
+            x = tf.transpose(tf.nn.relu(x_in), [1, 0, 2])
+
+            cell = tf.contrib.cudnn_rnn.CudnnLSTM(len(layer_sizes),
+                                                  layer_sizes[0],
+                                                  name='rnn_encoder_{}'.format(name))
+            x, _ = cell(x, training=is_training)
+
+            x = tf.transpose(x, [1, 0, 2])
+            x = tf.reduce_sum(x * last, 1)
+
         else:
             real_length = tf.cast(tf.reduce_sum(mask, 1), tf.int32)
             cells = []
