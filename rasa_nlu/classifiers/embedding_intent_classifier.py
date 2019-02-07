@@ -263,8 +263,8 @@ class EmbeddingIntentClassifier(Component):
         return np.stack([self.encoded_all_intents] * size)
 
     # noinspection PyPep8Naming
-    @staticmethod
     def _prepare_data_for_training(
+        self,
         training_data: 'TrainingData',
         intent_dict: Dict[Text, int]
     ) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
@@ -272,11 +272,16 @@ class EmbeddingIntentClassifier(Component):
 
         X = np.stack([e.get("text_features")
                       for e in training_data.intent_examples])
-        Y = np.stack([e.get("intent_features")
-                      for e in training_data.intent_examples])
 
         intents_for_X = np.array([intent_dict[e.get("intent")]
                                   for e in training_data.intent_examples])
+
+        if self.intent_tokenization_flag:
+            Y = np.stack([e.get("intent_features")
+                          for e in training_data.intent_examples])
+        else:
+            Y = np.stack([self.encoded_all_intents[intent_idx]
+                          for intent_idx in intents_for_X])
 
         return X, Y, intents_for_X
 
