@@ -60,6 +60,9 @@ class EmbeddingIntentClassifier(Component):
         "hidden_layers_sizes_b": [],
 
         "share_embedding": False,
+        "bidirectional": False,
+        "fused": False,
+        "gpu": False,
 
         # training parameters
         "layer_norm": True,
@@ -157,6 +160,11 @@ class EmbeddingIntentClassifier(Component):
             if self.hidden_layer_sizes['a'] != self.hidden_layer_sizes['b']:
                 raise ValueError("If embeddings are shared "
                                  "hidden_layer_sizes must coincide")
+        self.bidirectional = config['bidirectional']
+        self.fused = config['fused']
+        self.gpu = config['gpu']
+        if self.gpu and self.fused:
+            raise ValueError("Either `gpu` or `fused` should be specified")
 
         self.batch_size = config['batch_size']
         self.epochs = config['epochs']
@@ -343,27 +351,42 @@ class EmbeddingIntentClassifier(Component):
         # if there is at least one `-1` it should be masked
         mask = tf.sign(tf.reduce_max(x_in, -1) + 1)
 
-        real_length = tf.cast(tf.reduce_sum(mask, 1), tf.int32)
+        if self.fused:
+            last = tf.expand_dims(mask * tf.cumprod(1 - mask, axis=1, exclusive=True, reverse=True), -1)
+            x = tf.transpose(tf.nn.relu(x_in), [1, 0, 2])
 
-        cells = []
-        for layer_size in layer_sizes:
-            cells.append(self._create_rnn_cell(is_training, layer_size, real_length))
+            for i, layer_size in enumerate(layer_sizes):
+                cell = tf.contrib.rnn.LSTMBlockFusedCell(layer_size,
+                                                         reuse=tf.AUTO_REUSE,
+                                                         name='rnn_encoder_{}_{}'.format(name, i))
+                x, _ = cell(x, dtype=tf.float32)
 
-        if len(cells) == 1:
-            cell = cells[0]
+            x = tf.transpose(x, [1, 0, 2])
+            x = tf.reduce_sum(x * last, 1)
+        elif self.gpu:
+            # TODO use tf.contrib.cudnn_rnn.CudnnLSTM
+            raise NotImplementedError
         else:
-            cell = tf.nn.rnn_cell.MultiRNNCell(cells)
+            real_length = tf.cast(tf.reduce_sum(mask, 1), tf.int32)
+            cells = []
+            for layer_size in layer_sizes:
+                cells.append(self._create_rnn_cell(is_training, layer_size, real_length))
 
-        _, cell_state = tf.nn.dynamic_rnn(
-            cell, x_in,
-            dtype=tf.float32,
-            sequence_length=real_length,
-            scope='rnn_encoder_{}'.format(name)
-        )
-        if len(cells) == 1:
-            x = cell_state.h
-        else:
-            x = cell_state[-1].h
+            if len(cells) == 1:
+                cell = cells[0]
+            else:
+                cell = tf.nn.rnn_cell.MultiRNNCell(cells)
+
+            _, cell_state = tf.nn.dynamic_rnn(
+                cell, x_in,
+                dtype=tf.float32,
+                sequence_length=real_length,
+                scope='rnn_encoder_{}'.format(name)
+            )
+            if len(cells) == 1:
+                x = cell_state.h
+            else:
+                x = cell_state[-1].h
 
         reg = tf.contrib.layers.l2_regularizer(self.C2)
         return tf.layers.dense(inputs=x,
@@ -396,7 +419,6 @@ class EmbeddingIntentClassifier(Component):
         else:
             # reshape b_in
             shape = tf.shape(b_in)
-            # shape = b_in.shape
             b_in = tf.reshape(b_in, [-1, shape[-2], b_in.shape[-1]])
             emb_b = self._create_tf_rnn_embed(b_in, is_training,
                                               self.hidden_layer_sizes['b'],
@@ -497,9 +519,12 @@ class EmbeddingIntentClassifier(Component):
             return int(self.batch_size)
 
         if self.epochs > 1:
-            return int(self.batch_size[0] +
-                       epoch * (self.batch_size[1] -
-                                self.batch_size[0]) / (self.epochs - 1))
+            batch_size = int(self.batch_size[0] +
+                             epoch * (self.batch_size[1] -
+                                      self.batch_size[0]) / (self.epochs - 1))
+
+            return batch_size if batch_size % 2 == 0 else batch_size + 1
+
         else:
             return int(self.batch_size[0])
 
@@ -535,7 +560,12 @@ class EmbeddingIntentClassifier(Component):
             for i in range(batches_per_epoch):
                 end_idx = (i + 1) * batch_size
                 start_idx = i * batch_size
+
                 batch_a = X[indices[start_idx:end_idx]]
+                if batch_a.shape[0] % 2 != 0:
+                    start_idx -= 1
+                batch_a = X[indices[start_idx:end_idx]]
+
                 batch_pos_b = Y[indices[start_idx:end_idx]]
                 intents_for_b = intents_for_X[indices[start_idx:end_idx]]
                 # add negatives
