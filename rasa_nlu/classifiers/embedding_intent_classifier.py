@@ -62,6 +62,7 @@ class EmbeddingIntentClassifier(Component):
         "share_embedding": False,
 
         # training parameters
+        "layer_norm": True,
         # initial and final batch sizes - batch size will be
         # linearly increased for each epoch
         "batch_size": [64, 256],
@@ -161,6 +162,7 @@ class EmbeddingIntentClassifier(Component):
         self.epochs = config['epochs']
 
     def _load_embedding_params(self, config: Dict[Text, Any]) -> None:
+        self.layer_norm = config['layer_norm']
         self.embed_dim = config['embed_dim']
         self.mu_pos = config['mu_pos']
         self.mu_neg = config['mu_neg']
@@ -285,23 +287,85 @@ class EmbeddingIntentClassifier(Component):
 
         reg = tf.contrib.layers.l2_regularizer(self.C2)
         x = x_in
-
-        print(x.shape)
-        exit()
-
         for i, layer_size in enumerate(layer_sizes):
             x = tf.layers.dense(inputs=x,
                                 units=layer_size,
                                 activation=tf.nn.relu,
                                 kernel_regularizer=reg,
-                                name='hidden_layer_{}_{}'.format(name, i))
+                                name='hidden_layer_{}_{}'.format(name, i),
+                                reuse=tf.AUTO_REUSE)
             x = tf.layers.dropout(x, rate=self.droprate, training=is_training)
 
         x = tf.layers.dense(inputs=x,
                             units=self.embed_dim,
                             kernel_regularizer=reg,
-                            name='embed_layer_{}'.format(name))
+                            name='embed_layer_{}'.format(name),
+                            reuse=tf.AUTO_REUSE)
         return x
+
+    def _create_rnn_cell(self,
+                         is_training: 'tf.Tensor',
+                         rnn_size: int,
+                         real_length) -> 'tf.contrib.rnn.RNNCell':
+        """Create one rnn cell."""
+
+        # chrono initialization for forget bias
+        # assuming that characteristic time is max dialogue length
+        # left border that initializes forget gate close to 0
+        bias_0 = -1.0
+        characteristic_time = tf.reduce_mean(tf.cast(real_length, tf.float32))
+        # right border that initializes forget gate close to 1
+        bias_1 = tf.log(characteristic_time - 1.)
+        fbias = (bias_1 - bias_0) * np.random.random(rnn_size) + bias_0
+
+        keep_prob = 1.0 - (self.droprate *
+                           tf.cast(is_training, tf.float32))
+
+        return ChronoBiasLayerNormBasicLSTMCell(
+            num_units=rnn_size,
+            layer_norm=self.layer_norm,
+            forget_bias=fbias,
+            input_bias=-fbias,
+            dropout_keep_prob=keep_prob,
+            reuse=tf.AUTO_REUSE
+        )
+
+    def _create_tf_rnn_embed(self, x_in: 'tf.Tensor', is_training: 'tf.Tensor',
+                            layer_sizes: List[int], name: Text) -> 'tf.Tensor':
+        """Create rnn for dialogue level embedding."""
+
+        # mask different length sequences
+        # if there is at least one `-1` it should be masked
+        mask = tf.sign(tf.reduce_max(x_in, -1) + 1)
+
+        real_length = tf.cast(tf.reduce_sum(mask, 1), tf.int32)
+
+        cells = []
+        for layer_size in layer_sizes:
+            cells.append(self._create_rnn_cell(is_training, layer_size, real_length))
+
+        if len(cells) == 1:
+            cell = cells[0]
+        else:
+            cell = tf.nn.rnn_cell.MultiRNNCell(cells)
+
+        _, cell_state = tf.nn.dynamic_rnn(
+            cell, x_in,
+            dtype=tf.float32,
+            sequence_length=real_length,
+            scope='rnn_encoder_{}'.format(name)
+        )
+        if len(cells) == 1:
+            x = cell_state.h
+        else:
+            x = cell_state[-1].h
+
+        reg = tf.contrib.layers.l2_regularizer(self.C2)
+        return tf.layers.dense(inputs=x,
+                               units=self.embed_dim,
+                               kernel_regularizer=reg,
+                               name='embed_layer_{}'.format(name),
+                               reuse=tf.AUTO_REUSE)
 
     def _create_tf_embed(self,
                          a_in: 'tf.Tensor',
@@ -310,12 +374,30 @@ class EmbeddingIntentClassifier(Component):
                          ) -> Tuple['tf.Tensor', 'tf.Tensor']:
         """Create tf graph for training"""
 
-        emb_a = self._create_tf_embed_nn(a_in, is_training,
-                                         self.hidden_layer_sizes['a'],
-                                         name='a_and_b' if self.share_embedding else 'a')
-        emb_b = self._create_tf_embed_nn(b_in, is_training,
-                                         self.hidden_layer_sizes['b'],
-                                         name='a_and_b' if self.share_embedding else 'b')
+        if len(a_in.shape) == 2:
+            emb_a = self._create_tf_embed_nn(a_in, is_training,
+                                             self.hidden_layer_sizes['a'],
+                                             name='a_and_b' if self.share_embedding else 'a')
+        else:
+            emb_a = self._create_tf_rnn_embed(a_in, is_training,
+                                              self.hidden_layer_sizes['a'],
+                                              name='a_and_b' if self.share_embedding else 'a')
+
+        if len(b_in.shape) == 3:
+            emb_b = self._create_tf_embed_nn(b_in, is_training,
+                                             self.hidden_layer_sizes['b'],
+                                             name='a_and_b' if self.share_embedding else 'b')
+
+        else:
+            # reshape b_in
+            shape = tf.shape(b_in)
+            # shape = b_in.shape
+            b_in = tf.reshape(b_in, [-1, shape[-2], b_in.shape[-1]])
+            emb_b = self._create_tf_rnn_embed(b_in, is_training,
+                                              self.hidden_layer_sizes['b'],
+                                              name='a_and_b' if self.share_embedding else 'b')
+            # reshape back
+            emb_b = tf.reshape(emb_b, [shape[0], shape[1], self.embed_dim])
 
         return emb_a, emb_b
 
@@ -378,11 +460,16 @@ class EmbeddingIntentClassifier(Component):
         and the rest are wrong intents sampled randomly
         """
 
-        batch_pos_b = batch_pos_b[:, np.newaxis, :]
+        batch_pos_b = np.expand_dims(batch_pos_b, axis=1)
 
         # sample negatives
-        batch_neg_b = np.zeros((batch_pos_b.shape[0], self.num_neg,
-                                batch_pos_b.shape[-1]))
+        if len(batch_pos_b.shape) == 3:
+            batch_neg_b = np.zeros((batch_pos_b.shape[0], self.num_neg,
+                                    batch_pos_b.shape[-1]))
+        else:
+            batch_neg_b = np.zeros((batch_pos_b.shape[0], self.num_neg,
+                                    batch_pos_b.shape[-2], batch_pos_b.shape[-1]))
+
         for b in range(batch_pos_b.shape[0]):
             # create negative indexes out of possible ones
             # except for correct index of b
@@ -394,40 +481,6 @@ class EmbeddingIntentClassifier(Component):
             batch_neg_b[b] = self.encoded_all_intents[negs]
 
         return np.concatenate([batch_pos_b, batch_neg_b], 1)
-
-    def _create_seq_batch_b(self,
-                            batch_pos_b: np.ndarray,
-                            intent_ids: np.ndarray
-                            ) -> np.ndarray:
-        """Create batch of actions.
-
-        The first is correct action
-        and the rest are wrong actions sampled randomly.
-        """
-
-        batch_pos_b = batch_pos_b[:, :, np.newaxis, :]
-
-        # sample negatives
-        batch_neg_b = np.zeros((batch_pos_b.shape[0],
-                                batch_pos_b.shape[1],
-                                self.num_neg,
-                                batch_pos_b.shape[-1]),
-                               dtype=int)
-        for b in range(batch_pos_b.shape[0]):
-            for h in range(batch_pos_b.shape[1]):
-                # create negative indexes out of possible ones
-                # except for correct index of b
-                negative_indexes = [
-                    i
-                    for i in range(self.encoded_all_intents.shape[0])
-                    if i != intent_ids[b, h]
-                ]
-
-                negs = np.random.choice(negative_indexes, size=self.num_neg)
-
-                batch_neg_b[b, h] = self.encoded_all_intents[negs]
-
-        return np.concatenate([batch_pos_b, batch_neg_b], -2)
 
     def _linearly_increasing_batch_size(self, epoch: int) -> int:
         """Linearly increase batch size with every epoch.
@@ -575,16 +628,24 @@ class EmbeddingIntentClassifier(Component):
             np.random.seed(self.random_seed)
             tf.set_random_seed(self.random_seed)
 
-            print(X.shape)
-            print(Y.shape)
-            print(self.encoded_all_intents.shape)
+            if len(X.shape) == 2:
+                self.a_in = tf.placeholder(tf.float32, (None, X.shape[-1]),
+                                           name='a')
+            else:
+                sequence_len = X.shape[1]  # None
+                self.a_in = tf.placeholder(tf.float32, (None, None, X.shape[-1]),
+                                           name='a')
 
-            sequence_len = X.shape[1]  # None
-            self.a_in = tf.placeholder(tf.float32, (None, sequence_len, X.shape[-1]),
-                                       name='a')
-            sequence_len = Y.shape[1]  # None
-            self.b_in = tf.placeholder(tf.float32, (None, sequence_len, None, Y.shape[-1]),
-                                       name='b')
+            if len(Y.shape) == 2:
+                self.b_in = tf.placeholder(tf.float32, (None, None, Y.shape[-1]),
+                                           name='b')
+            else:
+                if not self.hidden_layer_sizes['b']:
+                    raise ValueError("If Y is a sequence, hidden_layer_sizes_b "
+                                     "should be specified")
+                sequence_len = Y.shape[1]  # None
+                self.b_in = tf.placeholder(tf.float32, (None, None, None, Y.shape[-1]),
+                                           name='b')
 
             is_training = tf.placeholder_with_default(False, shape=())
 
@@ -776,3 +837,110 @@ class EmbeddingIntentClassifier(Component):
                            "doesn't exist"
                            "".format(os.path.abspath(model_dir)))
             return cls(component_config=meta)
+
+
+class ChronoBiasLayerNormBasicLSTMCell(tf.contrib.rnn.LayerNormBasicLSTMCell):
+    """Custom LayerNormBasicLSTMCell that allows chrono initialization
+        of gate biases.
+
+        See super class for description.
+
+        See https://arxiv.org/abs/1804.11188
+        for details about chrono initialization
+    """
+
+    def __init__(self,
+                 num_units,
+                 forget_bias=1.0,
+                 input_bias=0.0,
+                 activation=tf.tanh,
+                 layer_norm=True,
+                 norm_gain=1.0,
+                 norm_shift=0.0,
+                 dropout_keep_prob=1.0,
+                 dropout_prob_seed=None,
+                 out_layer_size=None,
+                 reuse=None):
+        """Initializes the basic LSTM cell
+
+        Additional args:
+            input_bias: float, The bias added to input gates.
+            out_layer_size: (optional) integer, The number of units in
+                the optional additional output layer.
+        """
+        super(ChronoBiasLayerNormBasicLSTMCell, self).__init__(
+            num_units,
+            forget_bias=forget_bias,
+            activation=activation,
+            layer_norm=layer_norm,
+            norm_gain=norm_gain,
+            norm_shift=norm_shift,
+            dropout_keep_prob=dropout_keep_prob,
+            dropout_prob_seed=dropout_prob_seed,
+            reuse=reuse
+        )
+        self._input_bias = input_bias
+        self._out_layer_size = out_layer_size
+
+    @property
+    def output_size(self):
+        return self._out_layer_size or self._num_units
+
+    @property
+    def state_size(self):
+        return tf.contrib.rnn.LSTMStateTuple(self._num_units,
+                                             self.output_size)
+
+    @staticmethod
+    def _dense_layer(args, layer_size):
+        """Optional out projection layer"""
+        proj_size = args.get_shape()[-1]
+        dtype = args.dtype
+        weights = tf.get_variable("kernel",
+                                  [proj_size, layer_size],
+                                  dtype=dtype)
+        bias = tf.get_variable("bias",
+                               [layer_size],
+                               dtype=dtype)
+        out = tf.nn.bias_add(tf.matmul(args, weights), bias)
+        return out
+
+    def call(self, inputs, state):
+        """LSTM cell with layer normalization and recurrent dropout."""
+        c, h = state
+        args = tf.concat([inputs, h], 1)
+        concat = self._linear(args)
+        dtype = args.dtype
+
+        i, j, f, o = tf.split(value=concat, num_or_size_splits=4, axis=1)
+        if self._layer_norm:
+            i = self._norm(i, "input", dtype=dtype)
+            j = self._norm(j, "transform", dtype=dtype)
+            f = self._norm(f, "forget", dtype=dtype)
+            o = self._norm(o, "output", dtype=dtype)
+
+        g = self._activation(j)
+        if (not isinstance(self._keep_prob, float)) or self._keep_prob < 1:
+            g = tf.nn.dropout(g, self._keep_prob, seed=self._seed)
+
+        new_c = (c * tf.sigmoid(f + self._forget_bias) +
+                 g * tf.sigmoid(i + self._input_bias))  # added input_bias
+
+        # do not do layer normalization on the new c,
+        # because there are no trainable weights
+        # if self._layer_norm:
+        #     new_c = self._norm(new_c, "state", dtype=dtype)
+
+        new_h = self._activation(new_c) * tf.sigmoid(o)
+
+        # added dropout to the hidden state h
+        if (not isinstance(self._keep_prob, float)) or self._keep_prob < 1:
+            new_h = tf.nn.dropout(new_h, self._keep_prob, seed=self._seed)
+
+        # add postprocessing of the output
+        if self._out_layer_size is not None:
+            with tf.variable_scope('out_layer'):
+                new_h = self._dense_layer(new_h, self._out_layer_size)
+
+        new_state = tf.contrib.rnn.LSTMStateTuple(new_c, new_h)
+        return new_h, new_state
