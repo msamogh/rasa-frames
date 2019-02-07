@@ -371,7 +371,7 @@ class EmbeddingIntentClassifier(Component):
             cell = tf.contrib.cudnn_rnn.CudnnLSTM(len(layer_sizes),
                                                   layer_sizes[0],
                                                   name='rnn_encoder_{}'.format(name))
-            x, _ = cell(x, training=is_training)
+            x, _ = cell(x)#, training=is_training)
 
             x = tf.transpose(x, [1, 0, 2])
             x = tf.reduce_sum(x * last, 1)
