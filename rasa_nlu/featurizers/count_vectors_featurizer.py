@@ -318,7 +318,6 @@ class CountVectorsFeaturizer(Featurizer):
                     X = self._create_sequence(self.vect[0], lem_exs)
                     self.vect[1].fit(lem_ints)
                     Y = self._create_sequence(self.vect[1], lem_ints)
-                    print(len(self.vect[1].vocabulary_))
 
         except ValueError:
             self.vect = None
@@ -342,17 +341,19 @@ class CountVectorsFeaturizer(Featurizer):
                          "didn't receive enough training data")
         else:
             message_text = self._get_message_text(message)
+            if self.use_shared_vocab:
+                vect = self.vect
+            else:
+                vect = self.vect[0]
+
             if not self.sequence:
-                if self.use_shared_vocab:
-                    vect = self.vect
-                else:
-                    vect = self.vect[0]
                 bag = vect.transform([message_text]).toarray().squeeze()
                 message.set("text_features",
                             self._combine_with_existing_text_features(message,
                                                                       bag))
-            # else:
-
+            else:
+                seq = self._create_sequence(vect, [message_text]).squeeze()
+                message.set("text_features", seq)
 
     def persist(self, model_dir: Text) -> Dict[Text, Any]:
         """Persist this model into the passed directory.

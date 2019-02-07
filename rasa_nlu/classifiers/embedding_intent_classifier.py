@@ -632,7 +632,6 @@ class EmbeddingIntentClassifier(Component):
                 self.a_in = tf.placeholder(tf.float32, (None, X.shape[-1]),
                                            name='a')
             else:
-                sequence_len = X.shape[1]  # None
                 self.a_in = tf.placeholder(tf.float32, (None, None, X.shape[-1]),
                                            name='a')
 
@@ -643,7 +642,6 @@ class EmbeddingIntentClassifier(Component):
                 if not self.hidden_layer_sizes['b']:
                     raise ValueError("If Y is a sequence, hidden_layer_sizes_b "
                                      "should be specified")
-                sequence_len = Y.shape[1]  # None
                 self.b_in = tf.placeholder(tf.float32, (None, None, None, Y.shape[-1]),
                                            name='b')
 
@@ -707,7 +705,7 @@ class EmbeddingIntentClassifier(Component):
 
         else:
             # get features (bag of words) for a message
-            X = message.get("text_features").reshape(1, -1)
+            X = np.expand_dims(message.get("text_features"), axis=0)
 
             # stack encoded_all_intents on top of each other
             # to create candidates for test examples
