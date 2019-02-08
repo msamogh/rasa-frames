@@ -168,6 +168,13 @@ class EmbeddingIntentClassifier(Component):
         self.gpu = config['gpu']
         if self.gpu and self.fused:
             raise ValueError("Either `gpu` or `fused` should be specified")
+        if self.gpu:
+            if any(self.hidden_layer_sizes['a'][0] != size
+                   for size in self.hidden_layer_sizes['a']):
+                raise ValueError("GPU training only supports identical sizes among layers a")
+            if any(self.hidden_layer_sizes['b'][0] != size
+                   for size in self.hidden_layer_sizes['b']):
+                raise ValueError("GPU training only supports identical sizes among layers b")
 
         self.batch_size = config['batch_size']
         self.epochs = config['epochs']
@@ -386,53 +393,88 @@ class EmbeddingIntentClassifier(Component):
         # mask different length sequences
         # if there is at least one `-1` it should be masked
         mask = tf.sign(tf.reduce_max(x_in, -1) + 1)
+        last = tf.expand_dims(mask * tf.cumprod(1 - mask, axis=1, exclusive=True, reverse=True), -1)
+        real_length = tf.cast(tf.reduce_sum(mask, 1), tf.int32)
+
+        x = tf.nn.relu(x_in)
 
         if self.fused:
             last = tf.expand_dims(mask * tf.cumprod(1 - mask, axis=1, exclusive=True, reverse=True), -1)
-            x = tf.transpose(tf.nn.relu(x_in), [1, 0, 2])
+            x = tf.transpose(x, [1, 0, 2])
 
             for i, layer_size in enumerate(layer_sizes):
-                cell = tf.contrib.rnn.LSTMBlockFusedCell(layer_size,
-                                                         reuse=tf.AUTO_REUSE,
-                                                         name='rnn_encoder_{}_{}'.format(name, i))
-                x, _ = cell(x, dtype=tf.float32)
+                if self.bidirectional:
+                    cell_fw = tf.contrib.rnn.LSTMBlockFusedCell(layer_size,
+                                                                reuse=tf.AUTO_REUSE,
+                                                                name='rnn_fw_encoder_{}_{}'.format(name, i))
+                    x_fw, _ = cell_fw(x, dtype=tf.float32)
+
+                    cell_bw = tf.contrib.rnn.LSTMBlockFusedCell(layer_size,
+                                                                reuse=tf.AUTO_REUSE,
+                                                                name='rnn_bw_encoder_{}_{}'.format(name, i))
+                    x_bw, _ = cell_bw(tf.reverse_sequence(x, real_length, seq_axis=0, batch_axis=1), dtype=tf.float32)
+
+                    x = tf.concat([x_fw, x_bw], -1)
+
+                else:
+                    cell = tf.contrib.rnn.LSTMBlockFusedCell(layer_size,
+                                                             reuse=tf.AUTO_REUSE,
+                                                             name='rnn_encoder_{}_{}'.format(name, i))
+                    x, _ = cell(x, dtype=tf.float32)
 
             x = tf.transpose(x, [1, 0, 2])
             x = tf.reduce_sum(x * last, 1)
 
         elif self.gpu:
-            last = tf.expand_dims(mask * tf.cumprod(1 - mask, axis=1, exclusive=True, reverse=True), -1)
-            x = tf.transpose(tf.nn.relu(x_in), [1, 0, 2])
+            # only trains and predicts on gpu
+            x = tf.transpose(x, [1, 0, 2])
+
+            if self.bidirectional:
+                direction = 'bidirectional'
+            else:
+                direction = 'unidirectional'
 
             cell = tf.contrib.cudnn_rnn.CudnnLSTM(len(layer_sizes),
                                                   layer_sizes[0],
+                                                  direction=direction,
                                                   name='rnn_encoder_{}'.format(name))
-            x, _ = cell(x)#, training=is_training)
+
+            def train_cell():
+                return cell(x, training=True)
+
+            def predict_cell():
+                return cell(x, training=False)
+
+            x = tf.cond(is_training, train_cell, predict_cell)
 
             x = tf.transpose(x, [1, 0, 2])
             x = tf.reduce_sum(x * last, 1)
 
         else:
-            real_length = tf.cast(tf.reduce_sum(mask, 1), tf.int32)
-            cells = []
-            for layer_size in layer_sizes:
-                cells.append(self._create_rnn_cell(is_training, layer_size, real_length))
+            for i, layer_size in enumerate(layer_sizes):
+                if self.bidirectional:
+                    cell_fw = self._create_rnn_cell(is_training, layer_size, real_length)
+                    cell_bw = self._create_rnn_cell(is_training, layer_size, real_length)
 
-            if len(cells) == 1:
-                cell = cells[0]
-            else:
-                cell = tf.nn.rnn_cell.MultiRNNCell(cells)
+                    x, _ = tf.nn.bidirectional_dynamic_rnn(
+                        cell_fw, cell_bw, x,
+                        dtype=tf.float32,
+                        sequence_length=real_length,
+                        scope='rnn_encoder_{}_{}'.format(name, i)
+                    )
+                    x = tf.concat(x, 2)
 
-            _, cell_state = tf.nn.dynamic_rnn(
-                cell, x_in,
-                dtype=tf.float32,
-                sequence_length=real_length,
-                scope='rnn_encoder_{}'.format(name)
-            )
-            if len(cells) == 1:
-                x = cell_state.h
-            else:
-                x = cell_state[-1].h
+                else:
+                    cell = self._create_rnn_cell(is_training, layer_size, real_length)
+
+                    x, _ = tf.nn.dynamic_rnn(
+                        cell, x,
+                        dtype=tf.float32,
+                        sequence_length=real_length,
+                        scope='rnn_encoder_{}_{}'.format(name, i)
+                    )
+
+            x = tf.reduce_sum(x * last, 1)
 
         reg = tf.contrib.layers.l2_regularizer(self.C2)
         return tf.layers.dense(inputs=x,
@@ -765,6 +807,9 @@ class EmbeddingIntentClassifier(Component):
                 self.a_in = tf.placeholder(tf.float32, (None, X.shape[-1]),
                                            name='a')
             else:
+                if not self.hidden_layer_sizes['a']:
+                    raise ValueError("If X is a sequence, hidden_layer_sizes_a "
+                                     "should be specified")
                 self.a_in = tf.placeholder(tf.float32, (None, None, X.shape[-1]),
                                            name='a')
 
@@ -778,7 +823,8 @@ class EmbeddingIntentClassifier(Component):
                 self.b_in = tf.placeholder(tf.float32, (None, None, None, Y.shape[-1]),
                                            name='b')
             if self.use_neg_from_batch:
-                negs_in = tf.placeholder_with_default(np.zeros((1, self.num_neg, 1), dtype=np.float32), (None, self.num_neg, None), name='negs')
+                negs_in = tf.placeholder_with_default(np.zeros((1, self.num_neg, 1), dtype=np.float32),
+                                                      (None, self.num_neg, None), name='negs')
             else:
                 negs_in = None
 
