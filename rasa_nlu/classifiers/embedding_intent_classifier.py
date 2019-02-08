@@ -411,7 +411,7 @@ class EmbeddingIntentClassifier(Component):
                          a_in: 'tf.Tensor',
                          b_in: 'tf.Tensor',
                          is_training: 'tf.Tensor',
-                         negs,
+                         negs_in,
                          ) -> Tuple['tf.Tensor', 'tf.Tensor']:
         """Create tf graph for training"""
 
@@ -444,7 +444,7 @@ class EmbeddingIntentClassifier(Component):
             def sample_neg_b():
                 all_b = emb_b[tf.newaxis, :, 0, :]
                 all_b = tf.tile(all_b, [tf.shape(emb_b)[0], 1, 1])
-                neg_b = tf.matmul(negs, all_b)
+                neg_b = tf.matmul(negs_in, all_b)
                 return tf.concat([emb_b, neg_b], 1)
 
             emb_b = tf.cond(is_training, sample_neg_b, lambda: emb_b)
