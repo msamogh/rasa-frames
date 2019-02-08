@@ -160,21 +160,21 @@ class TrainingData(object):
                           "training data. This may result in wrong "
                           "intent predictions.")
 
-        # emit warnings for intents with only a few training samples
-        for intent, count in self.examples_per_intent.items():
-            if count < self.MIN_EXAMPLES_PER_INTENT:
-                warnings.warn("Intent '{}' has only {} training examples! "
-                              "Minimum is {}, training may fail."
-                              .format(intent, count,
-                                      self.MIN_EXAMPLES_PER_INTENT))
-
-        # emit warnings for entities with only a few training samples
-        for entity_type, count in self.examples_per_entity.items():
-            if count < self.MIN_EXAMPLES_PER_ENTITY:
-                warnings.warn("Entity '{}' has only {} training examples! "
-                              "minimum is {}, training may fail."
-                              "".format(entity_type, count,
-                                        self.MIN_EXAMPLES_PER_ENTITY))
+        # # emit warnings for intents with only a few training samples
+        # for intent, count in self.examples_per_intent.items():
+        #     if count < self.MIN_EXAMPLES_PER_INTENT:
+        #         warnings.warn("Intent '{}' has only {} training examples! "
+        #                       "Minimum is {}, training may fail."
+        #                       .format(intent, count,
+        #                               self.MIN_EXAMPLES_PER_INTENT))
+        #
+        # # emit warnings for entities with only a few training samples
+        # for entity_type, count in self.examples_per_entity.items():
+        #     if count < self.MIN_EXAMPLES_PER_ENTITY:
+        #         warnings.warn("Entity '{}' has only {} training examples! "
+        #                       "minimum is {}, training may fail."
+        #                       "".format(entity_type, count,
+        #                                 self.MIN_EXAMPLES_PER_ENTITY))
 
     def train_test_split(self,
                          train_frac: float = 0.8
