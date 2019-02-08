@@ -69,10 +69,10 @@ def create_argument_parser():
     parser.add_argument('--errors', required=False, default="errors.json",
                         help="output path to save model errors")
 
-    parser.add_argument('--histogram', required=False, default="hist.png",
+    parser.add_argument('--histogram', required=False, default=None,
                         help="output path for the confidence histogram")
 
-    parser.add_argument('--confmat', required=False, default="confmat.png",
+    parser.add_argument('--confmat', required=False, default=None,
                         help="output path for the confusion matrix plot")
 
     utils.add_logging_option_arguments(parser, default=logging.INFO)
@@ -722,8 +722,9 @@ def run_evaluation(data_path, model,
     test_data = training_data.load_data(data_path,
                                         interpreter.model_metadata.language)
     extractors = get_entity_extractors(interpreter)
-    entity_predictions, tokens = get_entity_predictions(interpreter,
-                                                        test_data)
+    if extractors:
+        entity_predictions, tokens = get_entity_predictions(interpreter,
+                                                            test_data)
 
     if duckling_extractors.intersection(extractors):
         entity_predictions = remove_duckling_entities(entity_predictions)
