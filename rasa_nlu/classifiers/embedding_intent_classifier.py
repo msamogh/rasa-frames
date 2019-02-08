@@ -85,6 +85,7 @@ class EmbeddingIntentClassifier(Component):
         # the number of incorrect intents, the algorithm will minimize
         # their similarity to the input words during training
         "num_neg": 20,
+        "use_neg_from_batch": False,
         # flag: if true, only minimize the maximum similarity for
         # incorrect intent labels
         "use_max_sim_neg": True,
@@ -176,6 +177,7 @@ class EmbeddingIntentClassifier(Component):
         self.mu_neg = config['mu_neg']
         self.similarity_type = config['similarity_type']
         self.num_neg = config['num_neg']
+        self.use_neg_from_batch = config['use_neg_from_batch']
         self.use_max_sim_neg = config['use_max_sim_neg']
         self.random_seed = self.component_config['random_seed']
 
@@ -344,7 +346,7 @@ class EmbeddingIntentClassifier(Component):
         )
 
     def _create_tf_rnn_embed(self, x_in: 'tf.Tensor', is_training: 'tf.Tensor',
-                            layer_sizes: List[int], name: Text) -> 'tf.Tensor':
+                             layer_sizes: List[int], name: Text) -> 'tf.Tensor':
         """Create rnn for dialogue level embedding."""
 
         # mask different length sequences
@@ -408,7 +410,8 @@ class EmbeddingIntentClassifier(Component):
     def _create_tf_embed(self,
                          a_in: 'tf.Tensor',
                          b_in: 'tf.Tensor',
-                         is_training: 'tf.Tensor'
+                         is_training: 'tf.Tensor',
+                         negs,
                          ) -> Tuple['tf.Tensor', 'tf.Tensor']:
         """Create tf graph for training"""
 
@@ -435,6 +438,16 @@ class EmbeddingIntentClassifier(Component):
                                               name='a_and_b' if self.share_embedding else 'b')
             # reshape back
             emb_b = tf.reshape(emb_b, [shape[0], shape[1], self.embed_dim])
+
+        if self.use_neg_from_batch:
+
+            def sample_neg_b():
+                all_b = emb_b[tf.newaxis, :, 0, :]
+                all_b = tf.tile(all_b, [tf.shape(emb_b)[0], 1, 1])
+                neg_b = tf.matmul(negs, all_b)
+                return tf.concat([emb_b, neg_b], 1)
+
+            emb_b = tf.cond(is_training, sample_neg_b, lambda: emb_b)
 
         return emb_a, emb_b
 
@@ -519,6 +532,22 @@ class EmbeddingIntentClassifier(Component):
 
         return np.concatenate([batch_pos_b, batch_neg_b], 1)
 
+    def _negs_from_batch(self, batch_pos_b: np.ndarray) -> np.ndarray:
+        """Find incorrect intents in the batch
+        """
+
+        negs = []
+        for b in batch_pos_b:
+            # create negative indexes out of possible ones
+            # except for correct index of b
+            negative_indexes = [i for i in
+                                range(batch_pos_b.shape[0])
+                                if not np.array_equal(batch_pos_b[i], b)]
+            negs_ids = np.random.choice(negative_indexes, size=self.num_neg)
+            negs.append(np.eye(batch_pos_b.shape[0])[negs_ids])
+
+        return np.array(negs)
+
     def _linearly_increasing_batch_size(self, epoch: int) -> int:
         """Linearly increase batch size with every epoch.
 
@@ -544,6 +573,7 @@ class EmbeddingIntentClassifier(Component):
                   X: np.ndarray,
                   Y: np.ndarray,
                   intents_for_X: np.ndarray,
+                  negs_in,
                   loss: 'tf.Tensor',
                   is_training: 'tf.Tensor',
                   train_op: 'tf.Tensor'
@@ -579,14 +609,25 @@ class EmbeddingIntentClassifier(Component):
                 batch_pos_b = Y[indices[start_idx:end_idx]]
                 intents_for_b = intents_for_X[indices[start_idx:end_idx]]
                 # add negatives
-                batch_b = self._create_batch_b(batch_pos_b, intents_for_b)
+                if self.use_neg_from_batch:
+                    negs = self._negs_from_batch(batch_pos_b)
+                    batch_b = np.expand_dims(batch_pos_b, axis=1)
+                    sess_out = self.session.run(
+                        {'loss': loss, 'train_op': train_op},
+                        feed_dict={self.a_in: batch_a,
+                                   self.b_in: batch_b,
+                                   negs_in: negs,
+                                   is_training: True}
+                    )
+                else:
+                    batch_b = self._create_batch_b(batch_pos_b, intents_for_b)
 
-                sess_out = self.session.run(
-                    {'loss': loss, 'train_op': train_op},
-                    feed_dict={self.a_in: batch_a,
-                               self.b_in: batch_b,
-                               is_training: True}
-                )
+                    sess_out = self.session.run(
+                        {'loss': loss, 'train_op': train_op},
+                        feed_dict={self.a_in: batch_a,
+                                   self.b_in: batch_b,
+                                   is_training: True}
+                    )
                 ep_loss += sess_out.get('loss') / batches_per_epoch
 
             if self.evaluate_on_num_examples:
@@ -689,12 +730,16 @@ class EmbeddingIntentClassifier(Component):
                                      "should be specified")
                 self.b_in = tf.placeholder(tf.float32, (None, None, None, Y.shape[-1]),
                                            name='b')
+            if self.use_neg_from_batch:
+                negs_in = tf.placeholder_with_default(np.zeros((1, self.num_neg, 1), dtype=np.float32), (None, self.num_neg, None), name='negs')
+            else:
+                negs_in = None
 
             is_training = tf.placeholder_with_default(False, shape=())
 
             (self.word_embed,
              self.intent_embed) = self._create_tf_embed(self.a_in, self.b_in,
-                                                        is_training)
+                                                        is_training, negs_in)
 
             self.sim_op, sim_emb = self._tf_sim(self.word_embed,
                                                 self.intent_embed)
@@ -705,7 +750,7 @@ class EmbeddingIntentClassifier(Component):
             # train tensorflow graph
             self.session = tf.Session()
 
-            self._train_tf(X, Y, intents_for_X,
+            self._train_tf(X, Y, intents_for_X, negs_in,
                            loss, is_training, train_op)
 
     # process helpers
