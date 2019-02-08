@@ -269,13 +269,20 @@ class EmbeddingIntentClassifier(Component):
         import collections
         iou = []
         for intent_i in self.encoded_all_intents:
+            if len(intent_i.shape) == 2:
+                positive_i = np.sum([x for x in intent_i if -1 not in x], axis=0)
+            else:
+                positive_i = intent_i
 
-            positive_i = np.sum([x for x in intent_i if -1 not in x], axis=0)
             unique_i = np.nonzero(positive_i)[0]
 
             iou_i = []
             for intent_j in self.encoded_all_intents:
-                negative_j = np.sum([x for x in intent_j if -1 not in x], axis=0)
+                if len(intent_j.shape) == 2:
+                    negative_j = np.sum([x for x in intent_j if -1 not in x], axis=0)
+                else:
+                    negative_j = intent_j
+
                 unique_j = np.nonzero(negative_j)[0]
 
                 merged_ij = np.concatenate((unique_i, unique_j), axis=0)
@@ -566,8 +573,7 @@ class EmbeddingIntentClassifier(Component):
 
     def _negs_from_batch(self, batch_pos_b: np.ndarray,
                          intent_ids: np.ndarray) -> np.ndarray:
-        """Find incorrect intents in the batch
-        """
+        """Find incorrect intents in the batch."""
 
         negs = []
         for b in range(batch_pos_b.shape[0]):
