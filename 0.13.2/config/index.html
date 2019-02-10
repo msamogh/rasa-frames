@@ -283,7 +283,7 @@ to load a specific project.</p>
                  [--pre_load PRE_LOAD [PRE_LOAD ...]] [-t TOKEN] [-w WRITE]
                  --path PATH [--cors [CORS [CORS ...]]]
                  [--max_training_processes MAX_TRAINING_PROCESSES]
-                 [--num_threads NUM_THREADS] [--endpoints ENDPOINTS]
+                 [--endpoints ENDPOINTS]
                  [--wait_time_between_pulls WAIT_TIME_BETWEEN_PULLS]
                  [--response_log RESPONSE_LOG] [--storage STORAGE] [-c CONFIG]
                  [--debug] [-v]
@@ -318,9 +318,6 @@ optional arguments:
                         Increasing this value will have a great impact on
                         memory usage. It is recommended to keep the default
                         value.
-  --num_threads NUM_THREADS
-                        Number of parallel threads to use for handling parse
-                        requests.
   --endpoints ENDPOINTS
                         Configuration file for the model server as a yaml file
   --wait_time_between_pulls WAIT_TIME_BETWEEN_PULLS
