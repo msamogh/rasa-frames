@@ -14,6 +14,7 @@ from rasa_nlu.components import Component, ComponentBuilder
 from rasa_nlu.config import RasaNLUModelConfig
 from rasa_nlu.persistor import Persistor
 from rasa_nlu.training_data import TrainingData, Message
+from rasa_nlu.training_data import load_data
 from rasa_nlu.utils import create_dir, write_json_to_file
 
 logger = logging.getLogger(__name__)
@@ -333,6 +334,7 @@ class Interpreter(object):
         self.pipeline = pipeline
         self.context = context if context is not None else {}
         self.model_metadata = model_metadata
+        self.test_data = load_data("data/test_100.md")
 
     def parse(self, text: Text, time: Optional[datetime.datetime] = None,
               only_output_properties: bool = True) -> Dict[Text, Any]:
@@ -350,9 +352,9 @@ class Interpreter(object):
             return output
 
         message = Message(text, self.default_output_attributes(), time=time)
-
+        test_data = self.test_data
         for component in self.pipeline:
-            component.process(message, **self.context)
+            test_data = component.process(message, test_data, **self.context)
 
         output = self.default_output_attributes()
         output.update(message.as_dict(
