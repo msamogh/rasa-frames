@@ -8,7 +8,8 @@ from rasa_nlu import utils
 from rasa_nlu.config import RasaNLUModelConfig
 from rasa_nlu.featurizers import Featurizer
 from rasa_nlu.model import Metadata
-from rasa_nlu.training_data import Message, TrainingData
+from rasa_nlu.training_data import Message, TrainingData, load_data
+from rasa_nlu.config import load as load_config
 
 logger = logging.getLogger(__name__)
 
@@ -163,6 +164,8 @@ class CountVectorsFeaturizer(Featurizer):
 
         # declare class instance for CountVectorizer
         self.vect = None
+
+        self.featurized_test_data = None
 
     def _tokenizer(self, text):
         """Override tokenizer in CountVectorizer."""
@@ -334,12 +337,34 @@ class CountVectorsFeaturizer(Featurizer):
 
             example.set("intent_features", Y[i])
 
-    def process(self, message: Message, **kwargs: Any) -> None:
+    def process(self, message: Message, test_data, **kwargs: Any) -> None:
         if self.vect is None:
             logger.error("There is no trained CountVectorizer: "
                          "component is either not trained or "
                          "didn't receive enough training data")
         else:
+            if not self.featurized_test_data:
+                lem_ints = [self._get_message_intent(example)
+                            for example in test_data.intent_examples]
+
+                self._check_OOV_present(lem_ints)
+
+                if not self.sequence:
+                    if self.use_shared_vocab:
+                        Y = self.vect.transform(lem_ints).toarray()
+                    else:
+                        Y = self.vect[1].transform(lem_ints).toarray()
+                else:
+                    if self.use_shared_vocab:
+                        seq_len = max([len(tokens) for tokens in lem_ints])
+                        Y = self._create_sequence(self.vect, lem_ints, seq_len)
+                    else:
+                        Y = self._create_sequence(self.vect[1], lem_ints)
+
+                for i, example in enumerate(test_data.intent_examples):
+                    example.set("intent_features", Y[i])
+                self.featurized_test_data = test_data
+
             message_text = self._get_message_text(message)
             if self.use_shared_vocab:
                 vect = self.vect
@@ -354,6 +379,8 @@ class CountVectorsFeaturizer(Featurizer):
             else:
                 seq = self._create_sequence(vect, [message_text]).squeeze()
                 message.set("text_features", seq)
+
+        return self.featurized_test_data
 
     def persist(self, model_dir: Text) -> Dict[Text, Any]:
         """Persist this model into the passed directory.
