@@ -6,9 +6,11 @@ import pickle
 import typing
 from tqdm import tqdm
 from typing import Any, Dict, List, Optional, Text, Tuple
+from scipy.sparse import csr_matrix
 
 from rasa_nlu.classifiers import INTENT_RANKING_LENGTH
 from rasa_nlu.components import Component
+from rasa_nlu.training_data import load_data
 
 logger = logging.getLogger(__name__)
 
@@ -151,7 +153,8 @@ class EmbeddingIntentClassifier(Component):
         # persisted embeddings
         self.word_embed = word_embed
         self.intent_embed = intent_embed
-
+        self.test_intent_dict = None
+        self.new_inv_intent_dict = None
         # init helpers
 
     def _load_nn_architecture_params(self, config: Dict[Text, Any]) -> None:
@@ -875,12 +878,11 @@ class EmbeddingIntentClassifier(Component):
 
         # noinspection PyPep8Naming
 
-    def process(self, message: 'Message', **kwargs: Any) -> None:
+    def process(self, message: 'Message', test_data, **kwargs: Any) -> None:
         """Return the most likely intent and its similarity to the input."""
 
         intent = {"name": None, "confidence": 0.0}
         intent_ranking = []
-
         if self.session is None:
             logger.error("There is no trained tf.session: "
                          "component is either not trained or "
@@ -892,6 +894,28 @@ class EmbeddingIntentClassifier(Component):
 
             # stack encoded_all_intents on top of each other
             # to create candidates for test examples
+            if not self.test_intent_dict:
+                test_intents = set([example.get("intent")
+                                        for example in test_data.intent_examples])
+                self.test_intent_dict = {intent: idx+len(self.inv_intent_dict.keys())
+                                        for idx, intent in enumerate(sorted(test_intents))}
+
+                if self.intent_tokenization_flag:
+                    encoded_new_intents = []
+                    # print(self.encoded_all_intents.shape)
+
+                    for key, idx in self.test_intent_dict.items():
+                        self.encoded_all_intents = np.append(self.encoded_all_intents,
+                                                             [self._find_example_for_intent(
+                                                                key,
+                                                                test_data.intent_examples
+                                                                ).get("intent_features")],
+                                                             axis=0
+                                                             )
+                    test_inv_intent_dict = {v: k for k, v in self.test_intent_dict.items()}
+                    self.inv_intent_dict = {**self.inv_intent_dict, **test_inv_intent_dict}
+
+
             all_Y = self._create_all_Y(X.shape[0])
 
             # load tf graph and session
