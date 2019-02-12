@@ -19,6 +19,7 @@ class WhitespaceTokenizer(Tokenizer, Component):
     def __init__(self, component_config=None):
         super(WhitespaceTokenizer, self).__init__(component_config)
         self.intent_split_symbol = self.component_config['intent_split_symbol']
+        self.token_test_data = None
 
     def train(self, training_data: TrainingData, config: RasaNLUModelConfig,
               **kwargs: Any) -> None:
@@ -30,9 +31,19 @@ class WhitespaceTokenizer(Tokenizer, Component):
                             self.tokenize(example.get("intent"),
                                           self.intent_split_symbol))
 
-    def process(self, message: Message, **kwargs: Any) -> None:
+    def process(self, message: Message, test_data, **kwargs: Any) -> None:
+
+        if not self.token_test_data:
+            for example in test_data.training_examples:
+                if example.get("intent"):
+                    example.set("intent_tokens",
+                                self.tokenize(example.get("intent"),
+                                              self.intent_split_symbol))
+            self.token_test_data = test_data
 
         message.set("tokens", self.tokenize(message.text))
+
+        return self.token_test_data
 
     @staticmethod
     def tokenize(text: Text, split=' ') -> List[Token]:
