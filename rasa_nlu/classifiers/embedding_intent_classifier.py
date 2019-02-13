@@ -918,8 +918,8 @@ class EmbeddingIntentClassifier(Component):
 
                         test_inv_intent_dict = {v: k for k, v in self.test_intent_dict.items()}
                         self.inv_intent_dict = {**self.inv_intent_dict, **test_inv_intent_dict}
-            print("X shape is: {}".format(X.shape[0]))
-            if self.all_Y is not None:
+
+            if self.all_Y is None:
                 self.all_Y = self._create_all_Y(X.shape[0])
 
             # load tf graph and session
