@@ -895,29 +895,30 @@ class EmbeddingIntentClassifier(Component):
 
             # stack encoded_all_intents on top of each other
             # to create candidates for test examples
-            if not self.test_intent_dict:
-                test_intents = set([example.get("intent")
-                                        for example in test_data.intent_examples])
-                self.test_intent_dict = {intent: idx+len(self.inv_intent_dict.keys())
-                                        for idx, intent in enumerate(sorted(test_intents))}
+            if test_data:
+                if not self.test_intent_dict:
+                    test_intents = set([example.get("intent")
+                                            for example in test_data.intent_examples])
+                    self.test_intent_dict = {intent: idx+len(self.inv_intent_dict.keys())
+                                            for idx, intent in enumerate(sorted(test_intents))}
 
-                if self.intent_tokenization_flag:
-                    encoded_new_intents = []
+                    if self.intent_tokenization_flag:
+                        encoded_new_intents = []
 
-                    for key, idx in self.test_intent_dict.items():
-                        encoded_new_intents.insert(
-                            idx,
-                            self._find_example_for_intent(
-                               key,
-                               test_data.intent_examples
-                               ).get("intent_features"))
-                    self.encoded_all_intents = np.append(self.encoded_all_intents,
-                                                         encoded_new_intents,
-                                                         axis=0)
+                        for key, idx in self.test_intent_dict.items():
+                            encoded_new_intents.insert(
+                                idx,
+                                self._find_example_for_intent(
+                                   key,
+                                   test_data.intent_examples
+                                   ).get("intent_features"))
+                        self.encoded_all_intents = np.append(self.encoded_all_intents,
+                                                             encoded_new_intents,
+                                                             axis=0)
 
-                    test_inv_intent_dict = {v: k for k, v in self.test_intent_dict.items()}
-                    self.inv_intent_dict = {**self.inv_intent_dict, **test_inv_intent_dict}
-
+                        test_inv_intent_dict = {v: k for k, v in self.test_intent_dict.items()}
+                        self.inv_intent_dict = {**self.inv_intent_dict, **test_inv_intent_dict}
+            if not self.all_Y:
                 self.all_Y = self._create_all_Y(X.shape[0])
 
             # load tf graph and session

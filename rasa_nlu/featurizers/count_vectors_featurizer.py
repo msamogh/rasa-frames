@@ -344,27 +344,28 @@ class CountVectorsFeaturizer(Featurizer):
                          "didn't receive enough training data")
         else:
             self.featurized_test_data = None
-            if not self.featurized_test_data:
-                lem_ints = [self._get_message_intent(example)
-                            for example in test_data.intent_examples]
+            if self.test_data:
+                if not self.featurized_test_data:
+                    lem_ints = [self._get_message_intent(example)
+                                for example in test_data.intent_examples]
 
-                self._check_OOV_present(lem_ints)
+                    self._check_OOV_present(lem_ints)
 
-                if not self.sequence:
-                    if self.use_shared_vocab:
-                        Y = self.vect.transform(lem_ints).toarray()
+                    if not self.sequence:
+                        if self.use_shared_vocab:
+                            Y = self.vect.transform(lem_ints).toarray()
+                        else:
+                            Y = self.vect[1].transform(lem_ints).toarray()
                     else:
-                        Y = self.vect[1].transform(lem_ints).toarray()
-                else:
-                    if self.use_shared_vocab:
-                        seq_len = max([len(tokens) for tokens in lem_ints])
-                        Y = self._create_sequence(self.vect, lem_ints, seq_len)
-                    else:
-                        Y = self._create_sequence(self.vect[1], lem_ints)
+                        if self.use_shared_vocab:
+                            seq_len = max([len(tokens) for tokens in lem_ints])
+                            Y = self._create_sequence(self.vect, lem_ints, seq_len)
+                        else:
+                            Y = self._create_sequence(self.vect[1], lem_ints)
 
-                for i, example in enumerate(test_data.intent_examples):
-                    example.set("intent_features", Y[i])
-                self.featurized_test_data = test_data
+                    for i, example in enumerate(test_data.intent_examples):
+                        example.set("intent_features", Y[i])
+                    self.featurized_test_data = test_data
 
             message_text = self._get_message_text(message)
             if self.use_shared_vocab:
