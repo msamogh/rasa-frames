@@ -449,7 +449,8 @@ class EmbeddingIntentClassifier(Component):
             def predict_cell():
                 return cell(x, training=False)
 
-            x = tf.cond(is_training, train_cell, predict_cell)
+            # x = tf.cond(is_training, train_cell, predict_cell)
+            x, _ = cell(x, training=True)
 
             x = tf.transpose(x, [1, 0, 2])
             x = tf.reduce_sum(x * last, 1)
