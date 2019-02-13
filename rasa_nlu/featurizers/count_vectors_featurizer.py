@@ -344,7 +344,7 @@ class CountVectorsFeaturizer(Featurizer):
                          "didn't receive enough training data")
         else:
             self.featurized_test_data = None
-            if self.test_data:
+            if test_data:
                 if not self.featurized_test_data:
                     lem_ints = [self._get_message_intent(example)
                                 for example in test_data.intent_examples]
