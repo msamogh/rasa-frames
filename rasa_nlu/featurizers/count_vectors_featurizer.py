@@ -343,6 +343,7 @@ class CountVectorsFeaturizer(Featurizer):
                          "component is either not trained or "
                          "didn't receive enough training data")
         else:
+            self.featurized_test_data = None
             if not self.featurized_test_data:
                 lem_ints = [self._get_message_intent(example)
                             for example in test_data.intent_examples]

@@ -611,7 +611,10 @@ def get_intent_predictions(targets, interpreter,
         Returns intent predictions, the original messages
         and the confidences of the predictions"""
     intent_results = []
+    num_done = 0
     for e, target in zip(test_data.training_examples, targets):
+        logger.debug("Predited {}/{} intents".format(num_done, len(test_data.training_examples)))
+        num_done += 1
         res = interpreter.parse(e.text, only_output_properties=False)
         intent_results.append(IntentEvaluationResult(
             target,

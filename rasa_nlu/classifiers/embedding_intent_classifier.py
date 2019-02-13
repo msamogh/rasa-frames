@@ -155,6 +155,7 @@ class EmbeddingIntentClassifier(Component):
         self.intent_embed = intent_embed
         self.test_intent_dict = None
         self.new_inv_intent_dict = None
+        self.all_Y = None
         # init helpers
 
     def _load_nn_architecture_params(self, config: Dict[Text, Any]) -> None:
@@ -902,24 +903,29 @@ class EmbeddingIntentClassifier(Component):
 
                 if self.intent_tokenization_flag:
                     encoded_new_intents = []
-                    # print(self.encoded_all_intents.shape)
 
                     for key, idx in self.test_intent_dict.items():
-                        self.encoded_all_intents = np.append(self.encoded_all_intents,
-                                                             [self._find_example_for_intent(
-                                                                key,
-                                                                test_data.intent_examples
-                                                                ).get("intent_features")],
-                                                             axis=0
-                                                             )
+                        encoded_new_intents.insert(
+                            idx,
+                            self._find_example_for_intent(
+                               key,
+                               test_data.intent_examples
+                               ).get("intent_features"))
+                    self.encoded_all_intents = np.append(self.encoded_all_intents,
+                                                         encoded_new_intents,
+                                                         axis=0)
+
                     test_inv_intent_dict = {v: k for k, v in self.test_intent_dict.items()}
                     self.inv_intent_dict = {**self.inv_intent_dict, **test_inv_intent_dict}
 
-
-            all_Y = self._create_all_Y(X.shape[0])
+                self.all_Y = self._create_all_Y(X.shape[0])
 
             # load tf graph and session
-            intent_ids, message_sim = self._calculate_message_sim(X, all_Y)
+            try:
+                intent_ids, message_sim = self._calculate_message_sim(X, self.all_Y)
+            except ValueError:
+                logger.debug("Couldn't make a prediction, skipping example")
+                intent_ids = np.array([])
 
             # if X contains all zeros do not predict some label
             if X.any() and intent_ids.size > 0:
