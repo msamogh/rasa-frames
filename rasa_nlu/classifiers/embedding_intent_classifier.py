@@ -631,11 +631,9 @@ class EmbeddingIntentClassifier(Component):
                                     range(batch_pos_b.shape[0])
                                     if self.iou[intent_ids[i], intent_ids[b]] < 0.33]
             else:
-                print(batch_pos_b)
                 negative_indexes = [i for i in
                                     range(batch_pos_b.shape[0])
                                     if not np.array_equal(batch_pos_b[i], batch_pos_b[b])]
-                print(negative_indexes)
 
             negs_ids = np.random.choice(negative_indexes, size=self.num_neg)
             negs.append(np.eye(batch_pos_b.shape[0])[negs_ids])
@@ -902,10 +900,8 @@ class EmbeddingIntentClassifier(Component):
                 if not self.test_intent_dict:
                     test_intents = set([example.get("intent")
                                             for example in test_data.intent_examples])
-                    # self.test_intent_dict = {intent: idx+len(self.inv_intent_dict.keys())
-                    #                         for idx, intent in enumerate(sorted(test_intents))}
-                    self.test_intent_dict = {intent: idx
-                                             for idx, intent in enumerate(sorted(test_intents))}
+                    self.test_intent_dict = {intent: idx+len(self.inv_intent_dict.keys())
+                                            for idx, intent in enumerate(sorted(test_intents))}
 
                     if self.intent_tokenization_flag:
                         encoded_new_intents = []
@@ -917,24 +913,17 @@ class EmbeddingIntentClassifier(Component):
                                    key,
                                    test_data.intent_examples
                                    ).get("intent_features"))
-                        # self.encoded_all_intents = np.append(self.encoded_all_intents,
-                        #                                      encoded_new_intents,
-                        #                                      axis=0)
-                        self.encoded_all_intents = np.array(encoded_new_intents)
+                        self.encoded_all_intents = np.append(self.encoded_all_intents,
+                                                             encoded_new_intents,
+                                                             axis=0)
 
                         test_inv_intent_dict = {v: k for k, v in self.test_intent_dict.items()}
-                        # self.inv_intent_dict = {**self.inv_intent_dict, **test_inv_intent_dict}
-                        self.inv_intent_dict = test_inv_intent_dict
-                        print(self.inv_intent_dict)
+                        self.inv_intent_dict = {**self.inv_intent_dict, **test_inv_intent_dict}
 
             if self.all_Y is None:
                 self.all_Y = self._create_all_Y(X.shape[0])
 
             # load tf graph and session
-            word_embed_values = self.session.run(self.word_embed,
-                                                 feed_dict={self.a_in: X,
-                                                            self.b_in: self.all_Y})
-            print(word_embed_values)
             try:
                 intent_ids, message_sim = self._calculate_message_sim(X, self.all_Y)
             except ValueError:
