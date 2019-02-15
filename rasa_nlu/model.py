@@ -334,7 +334,9 @@ class Interpreter(object):
         self.pipeline = pipeline
         self.context = context if context is not None else {}
         self.model_metadata = model_metadata
-        self.test_data = load_data("data/valid_personachat_other_original_nlu.md")
+        # self.test_data = load_data("data/valid_personachat_other_original_nlu.md")
+        # self.test_data = load_data("data/ami_test.json")
+        self.test_data = None
 
     def parse(self, text: Text, time: Optional[datetime.datetime] = None,
               only_output_properties: bool = True) -> Dict[Text, Any]:

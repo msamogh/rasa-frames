@@ -149,7 +149,7 @@ class SklearnIntentClassifier(Component):
                             scoring=self.component_config['scoring_function'],
                             verbose=1)
 
-    def process(self, message: Message, **kwargs: Any) -> None:
+    def process(self, message: Message, test_data=None, **kwargs: Any) -> None:
         """Return the most likely intent and its probability for a message."""
 
         if not self.clf:

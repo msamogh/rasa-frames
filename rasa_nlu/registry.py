@@ -26,6 +26,7 @@ from rasa_nlu.featurizers.mitie_featurizer import MitieFeaturizer
 from rasa_nlu.featurizers.ngram_featurizer import NGramFeaturizer
 from rasa_nlu.featurizers.regex_featurizer import RegexFeaturizer
 from rasa_nlu.featurizers.spacy_featurizer import SpacyFeaturizer
+from rasa_nlu.featurizers.tfembedding_featurizer import TfEmbeddingFeaturizer
 from rasa_nlu.model import Metadata
 from rasa_nlu.tokenizers.jieba_tokenizer import JiebaTokenizer
 from rasa_nlu.tokenizers.mitie_tokenizer import MitieTokenizer
@@ -46,7 +47,7 @@ component_classes = [
     CRFEntityExtractor, DucklingHTTPExtractor,
     EntitySynonymMapper,
     SpacyFeaturizer, MitieFeaturizer, NGramFeaturizer, RegexFeaturizer,
-    CountVectorsFeaturizer,
+    CountVectorsFeaturizer, TfEmbeddingFeaturizer,
     MitieTokenizer, SpacyTokenizer, WhitespaceTokenizer, JiebaTokenizer,
     SklearnIntentClassifier, MitieIntentClassifier, KeywordIntentClassifier,
     EmbeddingIntentClassifier

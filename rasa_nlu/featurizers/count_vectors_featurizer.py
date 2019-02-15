@@ -337,7 +337,7 @@ class CountVectorsFeaturizer(Featurizer):
 
             example.set("intent_features", Y[i])
 
-    def process(self, message: Message, test_data, **kwargs: Any) -> None:
+    def process(self, message: Message, test_data=None, **kwargs: Any) -> None:
         if self.vect is None:
             logger.error("There is no trained CountVectorizer: "
                          "component is either not trained or "
