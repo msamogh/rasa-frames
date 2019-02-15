@@ -900,8 +900,10 @@ class EmbeddingIntentClassifier(Component):
                 if not self.test_intent_dict:
                     test_intents = set([example.get("intent")
                                             for example in test_data.intent_examples])
-                    self.test_intent_dict = {intent: idx+len(self.inv_intent_dict.keys())
-                                            for idx, intent in enumerate(sorted(test_intents))}
+                    # self.test_intent_dict = {intent: idx+len(self.inv_intent_dict.keys())
+                    #                         for idx, intent in enumerate(sorted(test_intents))}
+                    self.test_intent_dict = {intent: idx
+                                             for idx, intent in enumerate(sorted(test_intents))}
 
                     if self.intent_tokenization_flag:
                         encoded_new_intents = []
@@ -913,12 +915,15 @@ class EmbeddingIntentClassifier(Component):
                                    key,
                                    test_data.intent_examples
                                    ).get("intent_features"))
-                        self.encoded_all_intents = np.append(self.encoded_all_intents,
-                                                             encoded_new_intents,
-                                                             axis=0)
+                        # self.encoded_all_intents = np.append(self.encoded_all_intents,
+                        #                                      encoded_new_intents,
+                        #                                      axis=0)
+                        self.encoded_all_intents = np.array(encoded_new_intents)
 
                         test_inv_intent_dict = {v: k for k, v in self.test_intent_dict.items()}
-                        self.inv_intent_dict = {**self.inv_intent_dict, **test_inv_intent_dict}
+                        # self.inv_intent_dict = {**self.inv_intent_dict, **test_inv_intent_dict}
+                        self.inv_intent_dict = test_inv_intent_dict
+                        print(self.inv_intent_dict)
 
             if self.all_Y is None:
                 self.all_Y = self._create_all_Y(X.shape[0])
