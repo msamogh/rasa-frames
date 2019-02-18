@@ -517,13 +517,14 @@ class EmbeddingIntentClassifier(Component):
 
         if self.use_neg_from_batch:
 
+            all_b = emb_b[tf.newaxis, :, 0, :]
+            all_b = tf.tile(all_b, [tf.shape(emb_b)[0], 1, 1])
+
             def sample_neg_b():
-                all_b = emb_b[tf.newaxis, :, 0, :]
-                all_b = tf.tile(all_b, [tf.shape(emb_b)[0], 1, 1])
                 neg_b = tf.matmul(negs_in, all_b)
                 return tf.concat([emb_b, neg_b], 1)
 
-            emb_b = tf.cond(is_training, sample_neg_b, lambda: emb_b)
+            emb_b = tf.cond(is_training, sample_neg_b, lambda: all_b)
 
         return emb_a, emb_b
 
@@ -602,14 +603,14 @@ class EmbeddingIntentClassifier(Component):
             if self.use_iou:
                 negative_indexes = [i for i in
                                     range(self.encoded_all_intents.shape[0])
-                                    if self.iou[i, intent_ids[b]] < 0.33]
+                                    if self.iou[i, intent_ids[b]] < 0.66]
             else:
                 negative_indexes = [i for i in
                                     range(self.encoded_all_intents.shape[0])
                                     if i != intent_ids[b]]
             negs = np.random.choice(negative_indexes, size=self.num_neg)
 
-            batch_neg_b[b] = self.encoded_all_intents[negs]
+            batch_neg_b[b] = self._toarray(self.encoded_all_intents[negs])
 
         return np.concatenate([batch_pos_b, batch_neg_b], 1)
 
@@ -624,7 +625,7 @@ class EmbeddingIntentClassifier(Component):
             if self.use_iou:
                 negative_indexes = [i for i in
                                     range(batch_pos_b.shape[0])
-                                    if self.iou[intent_ids[i], intent_ids[b]] < 0.33]
+                                    if self.iou[intent_ids[i], intent_ids[b]] < 0.66]
             else:
                 negative_indexes = [i for i in
                                     range(batch_pos_b.shape[0])
@@ -734,7 +735,7 @@ class EmbeddingIntentClassifier(Component):
                 if (ep == 0 or
                         (ep + 1) % self.evaluate_every_num_epochs == 0 or
                         (ep + 1) == self.epochs):
-                    train_acc = self._output_training_stat(X, intents_for_X,
+                    train_acc = self._output_training_stat(X, Y,
                                                            is_training)
                     last_loss = ep_loss
 
@@ -756,20 +757,23 @@ class EmbeddingIntentClassifier(Component):
 
     def _output_training_stat(self,
                               X: np.ndarray,
-                              intents_for_X: np.ndarray,
+                              Y: np.ndarray,
                               is_training: 'tf.Tensor') -> np.ndarray:
         """Output training statistics"""
 
         n = self.evaluate_on_num_examples
         ids = np.random.permutation(len(X))[:n]
-        all_Y = self._create_all_Y(X[ids].shape[0])
+        if self.use_neg_from_batch:
+            all_Y = np.expand_dims(self._toarray(Y[ids]), axis=1)
+        else:
+            all_Y = self._create_all_Y(X[ids].shape[0])
 
         train_sim = self.session.run(self.sim_op,
                                      feed_dict={self.a_in: self._toarray(X[ids]),
-                                                self.b_in: self._toarray(all_Y),
+                                                self.b_in: all_Y,
                                                 is_training: False})
 
-        train_acc = np.mean(np.argmax(train_sim, -1) == intents_for_X[ids])
+        train_acc = np.mean(np.argmax(train_sim, -1) == np.arange(n))
         return train_acc
 
     # noinspection PyPep8Naming
