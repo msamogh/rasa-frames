@@ -735,7 +735,7 @@ class EmbeddingIntentClassifier(Component):
                 if (ep == 0 or
                         (ep + 1) % self.evaluate_every_num_epochs == 0 or
                         (ep + 1) == self.epochs):
-                    train_acc = self._output_training_stat(X, Y,
+                    train_acc = self._output_training_stat(X, Y, intents_for_X,
                                                            is_training)
                     last_loss = ep_loss
 
@@ -758,6 +758,7 @@ class EmbeddingIntentClassifier(Component):
     def _output_training_stat(self,
                               X: np.ndarray,
                               Y: np.ndarray,
+                              intents_for_X: np.ndarray,
                               is_training: 'tf.Tensor') -> np.ndarray:
         """Output training statistics"""
 
@@ -772,8 +773,11 @@ class EmbeddingIntentClassifier(Component):
                                      feed_dict={self.a_in: self._toarray(X[ids]),
                                                 self.b_in: all_Y,
                                                 is_training: False})
+        if self.use_neg_from_batch:
+            train_acc = np.mean(np.argmax(train_sim, -1) == np.arange(n))
+        else:
+            train_acc = np.mean(np.argmax(train_sim, -1) == intents_for_X[ids])
 
-        train_acc = np.mean(np.argmax(train_sim, -1) == np.arange(n))
         return train_acc
 
     # noinspection PyPep8Naming
