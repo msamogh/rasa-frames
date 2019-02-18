@@ -6,6 +6,7 @@ import pickle
 import typing
 from tqdm import tqdm
 from typing import Any, Dict, List, Optional, Text, Tuple
+from scipy.sparse import issparse, find
 
 from rasa_nlu.classifiers import INTENT_RANKING_LENGTH
 from rasa_nlu.components import Component
@@ -59,6 +60,7 @@ class EmbeddingIntentClassifier(Component):
         # the number of hidden layers is thus equal to the length of this list
         "hidden_layers_sizes_b": [],
 
+        "sequence": False,
         "share_embedding": False,
         "bidirectional": False,
         "fused": False,
@@ -163,6 +165,7 @@ class EmbeddingIntentClassifier(Component):
             if self.hidden_layer_sizes['a'] != self.hidden_layer_sizes['b']:
                 raise ValueError("If embeddings are shared "
                                  "hidden_layer_sizes must coincide")
+        self.sequence = config['sequence']
         self.bidirectional = config['bidirectional']
         self.fused = config['fused']
         self.gpu = config['gpu']
@@ -276,21 +279,18 @@ class EmbeddingIntentClassifier(Component):
         import collections
         iou = []
         for intent_i in self.encoded_all_intents:
-            if len(intent_i.shape) == 2:
-                positive_i = np.sum([x for x in intent_i if -1 not in x], axis=0)
+            # ignore number of counts
+            if issparse(intent_i):
+                unique_i = find(intent_i)[1]
             else:
-                positive_i = intent_i
-
-            unique_i = np.nonzero(positive_i)[0]
+                unique_i = np.nonzero(intent_i.clip(min=0))[-1]
 
             iou_i = []
             for intent_j in self.encoded_all_intents:
-                if len(intent_j.shape) == 2:
-                    negative_j = np.sum([x for x in intent_j if -1 not in x], axis=0)
+                if issparse(intent_j):
+                    unique_j = find(intent_j)[1]
                 else:
-                    negative_j = intent_j
-
-                unique_j = np.nonzero(negative_j)[0]
+                    unique_j = np.nonzero(intent_j.clip(min=0))[-1]
 
                 merged_ij = np.concatenate((unique_i, unique_j), axis=0)
 
@@ -311,7 +311,7 @@ class EmbeddingIntentClassifier(Component):
         to calculate training accuracy
         """
 
-        return np.stack([self.encoded_all_intents] * size)
+        return np.stack([self._toarray(self.encoded_all_intents)] * size)
 
     # noinspection PyPep8Naming
     def _prepare_data_for_training(
@@ -654,8 +654,21 @@ class EmbeddingIntentClassifier(Component):
         else:
             return int(self.batch_size[0])
 
-    # noinspection PyPep8Naming
+    def _toarray(self, array_of_sparse):
+        if issparse(array_of_sparse[0]):
+            if not self.sequence:
+                return np.array([x.toarray() for x in array_of_sparse]).squeeze()
+            else:
+                seq_len = max([x.shape[0] for x in array_of_sparse])
+                X = np.ones([len(array_of_sparse), seq_len, array_of_sparse[0].shape[-1]], dtype=np.int32) * -1
+                for i, x in enumerate(array_of_sparse):
+                    X[i, :x.shape[0], :] = x.toarray()
 
+                return X
+        else:
+            return array_of_sparse
+
+    # noinspection PyPep8Naming
     def _train_tf(self,
                   X: np.ndarray,
                   Y: np.ndarray,
@@ -691,10 +704,10 @@ class EmbeddingIntentClassifier(Component):
                 batch_a = X[indices[start_idx:end_idx]]
                 if batch_a.shape[0] % 2 != 0:
                     start_idx -= 1
-                batch_a = X[indices[start_idx:end_idx]]
+                batch_a = self._toarray(X[indices[start_idx:end_idx]])
 
-                batch_pos_b = Y[indices[start_idx:end_idx]]
-                intents_for_b = intents_for_X[indices[start_idx:end_idx]]
+                batch_pos_b = self._toarray(Y[indices[start_idx:end_idx]])
+                intents_for_b = self._toarray(intents_for_X[indices[start_idx:end_idx]])
                 # add negatives
                 if self.use_neg_from_batch:
                     negs = self._negs_from_batch(batch_pos_b, intents_for_b)
@@ -752,8 +765,8 @@ class EmbeddingIntentClassifier(Component):
         all_Y = self._create_all_Y(X[ids].shape[0])
 
         train_sim = self.session.run(self.sim_op,
-                                     feed_dict={self.a_in: X[ids],
-                                                self.b_in: all_Y,
+                                     feed_dict={self.a_in: self._toarray(X[ids]),
+                                                self.b_in: self._toarray(all_Y),
                                                 is_training: False})
 
         train_acc = np.mean(np.argmax(train_sim, -1) == intents_for_X[ids])
@@ -776,6 +789,7 @@ class EmbeddingIntentClassifier(Component):
         self.inv_intent_dict = {v: k for k, v in intent_dict.items()}
         self.encoded_all_intents = self._create_encoded_intents(
             intent_dict, training_data)
+
         if self.use_iou:
             self.iou = self._create_iou_for_intents()
 
@@ -783,7 +797,7 @@ class EmbeddingIntentClassifier(Component):
             training_data, intent_dict)
 
         if self.share_embedding:
-            if X.shape != Y.shape:
+            if X[0].shape[-1] != Y[0].shape[-1]:
                 raise ValueError("If embeddings are shared "
                                  "text features and intent features "
                                  "must coincide")
@@ -803,24 +817,29 @@ class EmbeddingIntentClassifier(Component):
             np.random.seed(self.random_seed)
             tf.set_random_seed(self.random_seed)
 
-            if len(X.shape) == 2:
-                self.a_in = tf.placeholder(tf.float32, (None, X.shape[-1]),
+            # if issparse(X[0]):
+            #     placeholder = tf.sparse.placeholder
+            # else:
+            #     placeholder = tf.placeholder
+
+            if not self.sequence:
+                self.a_in = tf.placeholder(tf.float32, (None, X[0].shape[-1]),
                                            name='a')
             else:
                 if not self.hidden_layer_sizes['a']:
                     raise ValueError("If X is a sequence, hidden_layer_sizes_a "
                                      "should be specified")
-                self.a_in = tf.placeholder(tf.float32, (None, None, X.shape[-1]),
+                self.a_in = tf.placeholder(tf.float32, (None, None, X[0].shape[-1]),
                                            name='a')
 
-            if len(Y.shape) == 2:
-                self.b_in = tf.placeholder(tf.float32, (None, None, Y.shape[-1]),
+            if not self.sequence:
+                self.b_in = tf.placeholder(tf.float32, (None, None, Y[0].shape[-1]),
                                            name='b')
             else:
                 if not self.hidden_layer_sizes['b']:
                     raise ValueError("If Y is a sequence, hidden_layer_sizes_b "
                                      "should be specified")
-                self.b_in = tf.placeholder(tf.float32, (None, None, None, Y.shape[-1]),
+                self.b_in = tf.placeholder(tf.float32, (None, None, None, Y[0].shape[-1]),
                                            name='b')
             if self.use_neg_from_batch:
                 negs_in = tf.placeholder_with_default(np.zeros((1, self.num_neg, 1), dtype=np.float32),

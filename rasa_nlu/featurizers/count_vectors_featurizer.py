@@ -38,6 +38,7 @@ class CountVectorsFeaturizer(Featurizer):
         "sequence": False,
 
         "use_shared_vocab": False,
+        "sparse": False,
 
         # whether to use word or character n-grams
         # 'char_wb' creates character n-grams inside word boundaries
@@ -87,6 +88,7 @@ class CountVectorsFeaturizer(Featurizer):
     def _load_count_vect_params(self):
         self.sequence = self.component_config['sequence']
         self.use_shared_vocab = self.component_config['use_shared_vocab']
+        self.sparse = self.component_config['sparse']
         # set analyzer
         self.analyzer = self.component_config['analyzer']
 
@@ -222,15 +224,21 @@ class CountVectorsFeaturizer(Featurizer):
         feature_len = len(vect.vocabulary_.keys())
 
         texts = [self._get_text_sequence(text) for text in texts]
-        if seq_len is None:
-            seq_len = max([len(tokens) for tokens in texts])
-        num_exs = len(texts)
 
-        X = np.ones([num_exs, seq_len, feature_len], dtype=np.int32) * -1
+        if self.sparse:
+            X = []
+        else:
+            if seq_len is None:
+                seq_len = max([len(tokens) for tokens in texts])
+            num_exs = len(texts)
+            X = np.ones([num_exs, seq_len, feature_len], dtype=np.int32) * -1
 
         for i, tokens in enumerate(texts):
-            x = vect.transform(tokens).toarray()
-            X[i, :x.shape[0], :] = x
+            x = vect.transform(tokens)
+            if self.sparse:
+                X.append(x)
+            else:
+                X[i, :x.shape[0], :] = x.toarray()
         return X
 
     def train(self,
@@ -302,11 +310,16 @@ class CountVectorsFeaturizer(Featurizer):
             if not self.sequence:
                 if self.use_shared_vocab:
                     self.vect.fit(lem_exs + lem_ints)
-                    X = self.vect.transform(lem_exs).toarray()
-                    Y = self.vect.transform(lem_ints).toarray()
+                    X = self.vect.transform(lem_exs)
+                    Y = self.vect.transform(lem_ints)
                 else:
-                    X = self.vect[0].fit_transform(lem_exs).toarray()
-                    Y = self.vect[1].fit_transform(lem_ints).toarray()
+                    X = self.vect[0].fit_transform(lem_exs)
+                    Y = self.vect[1].fit_transform(lem_ints)
+
+                if not self.sparse:
+                    X = X.toarray()
+                    Y = Y.toarray()
+
             else:
                 if self.use_shared_vocab:
                     self.vect.fit(lem_exs + lem_ints)
@@ -325,7 +338,7 @@ class CountVectorsFeaturizer(Featurizer):
 
         for i, example in enumerate(training_data.intent_examples):
             # create bag for each example
-            if not self.sequence:
+            if not self.sequence and not self.sparse:
                 example.set("text_features",
                             self._combine_with_existing_text_features(example,
                                                                       X[i]))
@@ -352,6 +365,7 @@ class CountVectorsFeaturizer(Featurizer):
                             self._combine_with_existing_text_features(message,
                                                                       bag))
             else:
+                self.sparse = False
                 seq = self._create_sequence(vect, [message_text]).squeeze()
                 message.set("text_features", seq)
 
