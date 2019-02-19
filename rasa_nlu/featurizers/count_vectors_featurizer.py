@@ -8,8 +8,7 @@ from rasa_nlu import utils
 from rasa_nlu.config import RasaNLUModelConfig
 from rasa_nlu.featurizers import Featurizer
 from rasa_nlu.model import Metadata
-from rasa_nlu.training_data import Message, TrainingData, load_data
-from rasa_nlu.config import load as load_config
+from rasa_nlu.training_data import Message, TrainingData
 
 logger = logging.getLogger(__name__)
 
@@ -348,13 +347,12 @@ class CountVectorsFeaturizer(Featurizer):
 
             example.set("intent_features", Y[i])
 
-    def process(self, message: Message, test_data, **kwargs: Any) -> None:
+    def process(self, message: Message, test_data=None, **kwargs: Any) -> None:
         if self.vect is None:
             logger.error("There is no trained CountVectorizer: "
                          "component is either not trained or "
                          "didn't receive enough training data")
         else:
-            self.featurized_test_data = None
             if test_data:
                 if not self.featurized_test_data:
                     lem_ints = [self._get_message_intent(example)

@@ -999,7 +999,6 @@ class EmbeddingIntentClassifier(Component):
 
             if test_data:
                 if not self.new_test_intent_dict:
-
                     new_test_intents = set([example.get("intent")
                                             for example in test_data.intent_examples
                                             if example.get("intent") not in self.inv_intent_dict.values()])
@@ -1018,7 +1017,6 @@ class EmbeddingIntentClassifier(Component):
 
             # load tf graph and session
             try:
-
                 intent_ids, message_sim = self._calculate_message_sim_all(X)
                 # if X contains all zeros do not predict some label
                 if X.any() and intent_ids.size > 0:
