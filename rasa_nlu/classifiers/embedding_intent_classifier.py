@@ -122,11 +122,14 @@ class EmbeddingIntentClassifier(Component):
                  component_config: Optional[Dict[Text, Any]] = None,
                  inv_intent_dict: Optional[Dict[int, Text]] = None,
                  encoded_all_intents: Optional[np.ndarray] = None,
+                 all_intents_embed_values: Optional[np.ndarray] = None,
                  session: Optional['tf.Session'] = None,
                  graph: Optional['tf.Graph'] = None,
                  message_placeholder: Optional['tf.Tensor'] = None,
                  intent_placeholder: Optional['tf.Tensor'] = None,
                  similarity_op: Optional['tf.Tensor'] = None,
+                 all_intents_embed_in: Optional['tf.Tensor'] = None,
+                 sim_all: Optional['tf.Tensor'] = None,
                  word_embed: Optional['tf.Tensor'] = None,
                  intent_embed: Optional['tf.Tensor'] = None
                  ) -> None:
@@ -141,6 +144,7 @@ class EmbeddingIntentClassifier(Component):
         self.inv_intent_dict = inv_intent_dict
         # encode all intents with numbers
         self.encoded_all_intents = encoded_all_intents
+        self.all_intents_embed_values = all_intents_embed_values
         self.iou = None
 
         # tf related instances
@@ -150,12 +154,14 @@ class EmbeddingIntentClassifier(Component):
         self.b_in = intent_placeholder
         self.sim_op = similarity_op
 
+        self.all_intents_embed_in = all_intents_embed_in
+        self.sim_all = sim_all
+
         # persisted embeddings
         self.word_embed = word_embed
         self.intent_embed = intent_embed
 
-        # init helpers
-
+    # init helpers
     def _load_nn_architecture_params(self, config: Dict[Text, Any]) -> None:
         self.hidden_layer_sizes = {'a': config['hidden_layers_sizes_a'],
                                    'b': config['hidden_layers_sizes_b']}
@@ -483,12 +489,10 @@ class EmbeddingIntentClassifier(Component):
                                name='embed_layer_{}'.format(name),
                                reuse=tf.AUTO_REUSE)
 
-    def _create_tf_embed(self,
-                         a_in: 'tf.Tensor',
-                         b_in: 'tf.Tensor',
-                         is_training: 'tf.Tensor',
-                         negs_in,
-                         ) -> Tuple['tf.Tensor', 'tf.Tensor']:
+    def _create_tf_embed_a(self,
+                           a_in: 'tf.Tensor',
+                           is_training: 'tf.Tensor',
+                           ) -> 'tf.Tensor':
         """Create tf graph for training"""
 
         if len(a_in.shape) == 2:
@@ -499,6 +503,14 @@ class EmbeddingIntentClassifier(Component):
             emb_a = self._create_tf_rnn_embed(a_in, is_training,
                                               self.hidden_layer_sizes['a'],
                                               name='a_and_b' if self.share_embedding else 'a')
+
+        return emb_a
+
+    def _create_tf_embed_b(self,
+                           b_in: 'tf.Tensor',
+                           is_training: 'tf.Tensor',
+                           ) -> 'tf.Tensor':
+        """Create tf graph for training"""
 
         if len(b_in.shape) == 3:
             emb_b = self._create_tf_embed_nn(b_in, is_training,
@@ -515,18 +527,24 @@ class EmbeddingIntentClassifier(Component):
             # reshape back
             emb_b = tf.reshape(emb_b, [shape[0], shape[1], self.embed_dim])
 
-        if self.use_neg_from_batch:
+        return emb_b
 
-            all_b = emb_b[tf.newaxis, :, 0, :]
-            all_b = tf.tile(all_b, [tf.shape(emb_b)[0], 1, 1])
+    @staticmethod
+    def _tile_tf_embed_b(emb_b,
+                         is_training: 'tf.Tensor',
+                         negs_in,
+                         ) -> 'tf.Tensor':
 
-            def sample_neg_b():
-                neg_b = tf.matmul(negs_in, all_b)
-                return tf.concat([emb_b, neg_b], 1)
+        all_b = emb_b[tf.newaxis, :, 0, :]
+        all_b = tf.tile(all_b, [tf.shape(emb_b)[0], 1, 1])
 
-            emb_b = tf.cond(is_training, sample_neg_b, lambda: all_b)
+        def sample_neg_b():
+            neg_b = tf.matmul(negs_in, all_b)
+            return tf.concat([emb_b, neg_b], 1)
 
-        return emb_a, emb_b
+        emb_b = tf.cond(is_training, sample_neg_b, lambda: all_b)
+
+        return emb_b
 
     def _tf_sim(self,
                 a: 'tf.Tensor',
@@ -656,7 +674,9 @@ class EmbeddingIntentClassifier(Component):
             return int(self.batch_size[0])
 
     def _toarray(self, array_of_sparse):
-        if issparse(array_of_sparse[0]):
+        if issparse(array_of_sparse):
+            return array_of_sparse.toarray()
+        elif issparse(array_of_sparse[0]):
             if not self.sequence:
                 return np.array([x.toarray() for x in array_of_sparse]).squeeze()
             else:
@@ -857,12 +877,15 @@ class EmbeddingIntentClassifier(Component):
 
             is_training = tf.placeholder_with_default(False, shape=())
 
-            (self.word_embed,
-             self.intent_embed) = self._create_tf_embed(self.a_in, self.b_in,
-                                                        is_training, negs_in)
+            self.word_embed = self._create_tf_embed_a(self.a_in, is_training)
+            self.intent_embed = self._create_tf_embed_b(self.b_in, is_training)
+            if self.use_neg_from_batch:
+                tiled_intent_embed = self._tile_tf_embed_b(self.intent_embed, is_training, negs_in)
+            else:
+                tiled_intent_embed = self.intent_embed
 
             self.sim_op, sim_emb = self._tf_sim(self.word_embed,
-                                                self.intent_embed)
+                                                tiled_intent_embed)
             loss = self._tf_loss(self.sim_op, sim_emb)
 
             train_op = tf.train.AdamOptimizer().minimize(loss)
@@ -872,6 +895,31 @@ class EmbeddingIntentClassifier(Component):
 
             self._train_tf(X, Y, intents_for_X, negs_in,
                            loss, is_training, train_op)
+
+            self.all_intents_embed_values = self._create_all_intents_embed(self.encoded_all_intents)
+            self.all_intents_embed_in = tf.placeholder(tf.float32, (None, None, self.embed_dim),
+                                                       name='all_intents_embed')
+
+            self.sim_all, _ = self._tf_sim(self.word_embed, self.all_intents_embed_in)
+
+    def _create_all_intents_embed(self, encoded_all_intents):
+        batch_size = self._linearly_increasing_batch_size(0)
+        batches_per_epoch = (len(encoded_all_intents) // batch_size +
+                             int(len(encoded_all_intents) % batch_size > 0))
+
+        all_intents_embed = np.empty((1, len(encoded_all_intents), self.embed_dim))
+        for i in range(batches_per_epoch):
+            end_idx = (i + 1) * batch_size
+            start_idx = i * batch_size
+
+            batch_b = self._toarray(encoded_all_intents[start_idx:end_idx])
+            batch_b = np.expand_dims(batch_b, axis=0)
+
+            all_intents_embed[
+                0, start_idx:end_idx, :
+            ] = self.session.run(self.intent_embed, feed_dict={self.b_in: batch_b})
+
+        return all_intents_embed
 
     # process helpers
     # noinspection PyPep8Naming
@@ -900,8 +948,34 @@ class EmbeddingIntentClassifier(Component):
         # transform sim to python list for JSON serializing
         return intent_ids, message_sim.tolist()
 
-        # noinspection PyPep8Naming
+    # noinspection PyPep8Naming
+    def _calculate_message_sim_all(self,
+                                   X: np.ndarray
+                                   ) -> Tuple[np.ndarray, List[float]]:
+        """Load tf graph and calculate message similarities"""
 
+        message_sim = self.session.run(
+            self.sim_all,
+            feed_dict={self.a_in: X,
+                       self.all_intents_embed_in: self.all_intents_embed_values}
+        )
+        message_sim = message_sim.flatten()  # sim is a matrix
+
+        intent_ids = message_sim.argsort()[::-1]
+        message_sim[::-1].sort()
+
+        if self.similarity_type == 'cosine':
+            # clip negative values to zero
+            message_sim[message_sim < 0] = 0
+        elif self.similarity_type == 'inner':
+            # normalize result to [0, 1] with softmax
+            message_sim = np.exp(message_sim)
+            message_sim /= np.sum(message_sim)
+
+        # transform sim to python list for JSON serializing
+        return intent_ids, message_sim.tolist()
+
+    # noinspection PyPep8Naming
     def process(self, message: 'Message', **kwargs: Any) -> None:
         """Return the most likely intent and its similarity to the input."""
 
@@ -915,14 +989,20 @@ class EmbeddingIntentClassifier(Component):
 
         else:
             # get features (bag of words) for a message
-            X = np.expand_dims(message.get("text_features"), axis=0)
+            X = message.get("text_features")
+            if issparse(X[0]):
+                X = self._toarray(X)
+            else:
+                X = np.expand_dims(message.get("text_features"), axis=0)
 
             # stack encoded_all_intents on top of each other
             # to create candidates for test examples
-            all_Y = self._create_all_Y(X.shape[0])
+            # all_Y = self._create_all_Y(X.shape[0])
 
             # load tf graph and session
-            intent_ids, message_sim = self._calculate_message_sim(X, all_Y)
+            # intent_ids, message_sim = self._calculate_message_sim(X, all_Y)
+
+            intent_ids, message_sim = self._calculate_message_sim_all(X)
 
             # if X contains all zeros do not predict some label
             if X.any() and intent_ids.size > 0:
@@ -969,6 +1049,13 @@ class EmbeddingIntentClassifier(Component):
             self.graph.add_to_collection('similarity_op',
                                          self.sim_op)
 
+            self.graph.clear_collection('all_intents_embed_in')
+            self.graph.add_to_collection('all_intents_embed_in',
+                                         self.all_intents_embed_in)
+            self.graph.clear_collection('sim_all')
+            self.graph.add_to_collection('sim_all',
+                                         self.sim_all)
+
             self.graph.clear_collection('word_embed')
             self.graph.add_to_collection('word_embed',
                                          self.word_embed)
@@ -987,6 +1074,10 @@ class EmbeddingIntentClassifier(Component):
                 model_dir,
                 self.name + "_encoded_all_intents.pkl"), 'wb') as f:
             pickle.dump(self.encoded_all_intents, f)
+        with io.open(os.path.join(
+                model_dir,
+                self.name + "_all_intents_embed_values.pkl"), 'wb') as f:
+            pickle.dump(self.all_intents_embed_values, f)
 
         return {"classifier_file": self.name + ".ckpt"}
 
@@ -1015,6 +1106,9 @@ class EmbeddingIntentClassifier(Component):
 
                 sim_op = tf.get_collection('similarity_op')[0]
 
+                all_intents_embed_in = tf.get_collection('all_intents_embed_in')[0]
+                sim_all = tf.get_collection('sim_all')[0]
+
                 word_embed = tf.get_collection('word_embed')[0]
                 intent_embed = tf.get_collection('intent_embed')[0]
 
@@ -1026,18 +1120,25 @@ class EmbeddingIntentClassifier(Component):
                     model_dir,
                     cls.name + "_encoded_all_intents.pkl"), 'rb') as f:
                 encoded_all_intents = pickle.load(f)
+            with io.open(os.path.join(
+                    model_dir,
+                    cls.name + "_all_intents_embed_values.pkl"), 'rb') as f:
+                all_intents_embed_values = pickle.load(f)
 
             return cls(
                 component_config=meta,
                 inv_intent_dict=inv_intent_dict,
                 encoded_all_intents=encoded_all_intents,
+                all_intents_embed_values=all_intents_embed_values,
                 session=sess,
                 graph=graph,
                 message_placeholder=a_in,
                 intent_placeholder=b_in,
                 similarity_op=sim_op,
+                all_intents_embed_in=all_intents_embed_in,
+                sim_all=sim_all,
                 word_embed=word_embed,
-                intent_embed=intent_embed
+                intent_embed=intent_embed,
             )
 
         else:

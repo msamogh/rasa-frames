@@ -220,7 +220,7 @@ class CountVectorsFeaturizer(Featurizer):
                            "will be ignored during prediction."
                            "".format(self.OOV_token))
 
-    def _create_sequence(self, vect, texts, seq_len=None):
+    def _create_sequence(self, vect, texts):
         feature_len = len(vect.vocabulary_.keys())
 
         texts = [self._get_text_sequence(text) for text in texts]
@@ -228,8 +228,7 @@ class CountVectorsFeaturizer(Featurizer):
         if self.sparse:
             X = []
         else:
-            if seq_len is None:
-                seq_len = max([len(tokens) for tokens in texts])
+            seq_len = max([len(tokens) for tokens in texts])
             num_exs = len(texts)
             X = np.ones([num_exs, seq_len, feature_len], dtype=np.int32) * -1
 
@@ -323,9 +322,8 @@ class CountVectorsFeaturizer(Featurizer):
             else:
                 if self.use_shared_vocab:
                     self.vect.fit(lem_exs + lem_ints)
-                    seq_len = max([len(tokens) for tokens in lem_exs + lem_ints])
-                    X = self._create_sequence(self.vect, lem_exs, seq_len)
-                    Y = self._create_sequence(self.vect, lem_ints, seq_len)
+                    X = self._create_sequence(self.vect, lem_exs)
+                    Y = self._create_sequence(self.vect, lem_ints)
                 else:
                     self.vect[0].fit(lem_exs)
                     X = self._create_sequence(self.vect[0], lem_exs)
@@ -359,15 +357,22 @@ class CountVectorsFeaturizer(Featurizer):
             else:
                 vect = self.vect[0]
 
-            if not self.sequence:
-                bag = vect.transform([message_text]).toarray().squeeze()
-                message.set("text_features",
-                            self._combine_with_existing_text_features(message,
-                                                                      bag))
+            if not self.sparse:
+                if not self.sequence:
+                    bag = vect.transform([message_text]).toarray().squeeze()
+                    message.set("text_features",
+                                self._combine_with_existing_text_features(message,
+                                                                          bag))
+                else:
+                    seq = self._create_sequence(vect, [message_text]).squeeze()
+                    message.set("text_features", seq)
             else:
-                self.sparse = False
-                seq = self._create_sequence(vect, [message_text]).squeeze()
-                message.set("text_features", seq)
+                if not self.sequence:
+                    bag = vect.transform([message_text])
+                    message.set("text_features", bag)
+                else:
+                    seq = self._create_sequence(vect, [message_text])
+                    message.set("text_features", seq)
 
     def persist(self, model_dir: Text) -> Dict[Text, Any]:
         """Persist this model into the passed directory.
