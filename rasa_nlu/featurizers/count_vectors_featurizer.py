@@ -39,6 +39,7 @@ class CountVectorsFeaturizer(Featurizer):
         "sequence": False,
 
         "use_shared_vocab": False,
+        "sparse": False,
 
         # whether to use word or character n-grams
         # 'char_wb' creates character n-grams inside word boundaries
@@ -88,6 +89,7 @@ class CountVectorsFeaturizer(Featurizer):
     def _load_count_vect_params(self):
         self.sequence = self.component_config['sequence']
         self.use_shared_vocab = self.component_config['use_shared_vocab']
+        self.sparse = self.component_config['sparse']
         # set analyzer
         self.analyzer = self.component_config['analyzer']
 
@@ -221,19 +223,24 @@ class CountVectorsFeaturizer(Featurizer):
                            "will be ignored during prediction."
                            "".format(self.OOV_token))
 
-    def _create_sequence(self, vect, texts, seq_len=None):
+    def _create_sequence(self, vect, texts):
         feature_len = len(vect.vocabulary_.keys())
 
         texts = [self._get_text_sequence(text) for text in texts]
-        if seq_len is None:
-            seq_len = max([len(tokens) for tokens in texts])
-        num_exs = len(texts)
 
-        X = np.ones([num_exs, seq_len, feature_len], dtype=np.int32) * -1
+        if self.sparse:
+            X = []
+        else:
+            seq_len = max([len(tokens) for tokens in texts])
+            num_exs = len(texts)
+            X = np.ones([num_exs, seq_len, feature_len], dtype=np.int32) * -1
 
         for i, tokens in enumerate(texts):
-            x = vect.transform(tokens).toarray()
-            X[i, :x.shape[0], :] = x
+            x = vect.transform(tokens)
+            if self.sparse:
+                X.append(x)
+            else:
+                X[i, :x.shape[0], :] = x.toarray()
         return X
 
     def train(self,
@@ -305,17 +312,21 @@ class CountVectorsFeaturizer(Featurizer):
             if not self.sequence:
                 if self.use_shared_vocab:
                     self.vect.fit(lem_exs + lem_ints)
-                    X = self.vect.transform(lem_exs).toarray()
-                    Y = self.vect.transform(lem_ints).toarray()
+                    X = self.vect.transform(lem_exs)
+                    Y = self.vect.transform(lem_ints)
                 else:
-                    X = self.vect[0].fit_transform(lem_exs).toarray()
-                    Y = self.vect[1].fit_transform(lem_ints).toarray()
+                    X = self.vect[0].fit_transform(lem_exs)
+                    Y = self.vect[1].fit_transform(lem_ints)
+
+                if not self.sparse:
+                    X = X.toarray()
+                    Y = Y.toarray()
+
             else:
                 if self.use_shared_vocab:
                     self.vect.fit(lem_exs + lem_ints)
-                    seq_len = max([len(tokens) for tokens in lem_exs + lem_ints])
-                    X = self._create_sequence(self.vect, lem_exs, seq_len)
-                    Y = self._create_sequence(self.vect, lem_ints, seq_len)
+                    X = self._create_sequence(self.vect, lem_exs)
+                    Y = self._create_sequence(self.vect, lem_ints)
                 else:
                     self.vect[0].fit(lem_exs)
                     X = self._create_sequence(self.vect[0], lem_exs)
@@ -328,7 +339,7 @@ class CountVectorsFeaturizer(Featurizer):
 
         for i, example in enumerate(training_data.intent_examples):
             # create bag for each example
-            if not self.sequence:
+            if not self.sequence and not self.sparse:
                 example.set("text_features",
                             self._combine_with_existing_text_features(example,
                                                                       X[i]))
@@ -351,17 +362,17 @@ class CountVectorsFeaturizer(Featurizer):
 
                     self._check_OOV_present(lem_ints)
 
-                    if not self.sequence:
-                        if self.use_shared_vocab:
-                            Y = self.vect.transform(lem_ints).toarray()
-                        else:
-                            Y = self.vect[1].transform(lem_ints).toarray()
+                    if self.use_shared_vocab:
+                        vect = self.vect
                     else:
-                        if self.use_shared_vocab:
-                            seq_len = max([len(tokens) for tokens in lem_ints])
-                            Y = self._create_sequence(self.vect, lem_ints, seq_len)
-                        else:
-                            Y = self._create_sequence(self.vect[1], lem_ints)
+                        vect = self.vect[1]
+
+                    if not self.sequence:
+                        Y = vect.transform(lem_ints)
+                        if not self.sparse:
+                            Y = Y.toarray()
+                    else:
+                        Y = self._create_sequence(vect, lem_ints)
 
                     for i, example in enumerate(test_data.intent_examples):
                         example.set("intent_features", Y[i])
@@ -373,14 +384,22 @@ class CountVectorsFeaturizer(Featurizer):
             else:
                 vect = self.vect[0]
 
-            if not self.sequence:
-                bag = vect.transform([message_text]).toarray().squeeze()
-                message.set("text_features",
-                            self._combine_with_existing_text_features(message,
-                                                                      bag))
+            if not self.sparse:
+                if not self.sequence:
+                    bag = vect.transform([message_text]).toarray().squeeze()
+                    message.set("text_features",
+                                self._combine_with_existing_text_features(message,
+                                                                          bag))
+                else:
+                    seq = self._create_sequence(vect, [message_text]).squeeze()
+                    message.set("text_features", seq)
             else:
-                seq = self._create_sequence(vect, [message_text]).squeeze()
-                message.set("text_features", seq)
+                if not self.sequence:
+                    bag = vect.transform([message_text])
+                    message.set("text_features", bag)
+                else:
+                    seq = self._create_sequence(vect, [message_text])
+                    message.set("text_features", seq)
 
         return self.featurized_test_data
 
