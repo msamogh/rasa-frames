@@ -60,7 +60,6 @@ class EmbeddingIntentClassifier(Component):
         # the number of hidden layers is thus equal to the length of this list
         "hidden_layers_sizes_b": [],
 
-        "sequence": False,
         "share_embedding": False,
         "bidirectional": False,
         "fused": False,
@@ -157,6 +156,8 @@ class EmbeddingIntentClassifier(Component):
         self.all_intents_embed_in = all_intents_embed_in
         self.sim_all = sim_all
 
+        self.sequence = len(self.a_in.shape) == 3 if self.a_in is not None else None
+
         # persisted embeddings
         self.word_embed = word_embed
         self.intent_embed = intent_embed
@@ -171,7 +172,7 @@ class EmbeddingIntentClassifier(Component):
             if self.hidden_layer_sizes['a'] != self.hidden_layer_sizes['b']:
                 raise ValueError("If embeddings are shared "
                                  "hidden_layer_sizes must coincide")
-        self.sequence = config['sequence']
+
         self.bidirectional = config['bidirectional']
         self.fused = config['fused']
         self.gpu = config['gpu']
@@ -823,6 +824,8 @@ class EmbeddingIntentClassifier(Component):
 
         X, Y, intents_for_X = self._prepare_data_for_training(
             training_data, intent_dict)
+
+        self.sequence = len(X.shape) != 2 and any(x.shape[0] != 1 for x in X)
 
         if self.share_embedding:
             if X[0].shape[-1] != Y[0].shape[-1]:
