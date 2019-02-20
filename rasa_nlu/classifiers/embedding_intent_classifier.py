@@ -448,14 +448,10 @@ class EmbeddingIntentClassifier(Component):
                                                   direction=direction,
                                                   name='rnn_encoder_{}'.format(name))
 
-            def train_cell():
-                return cell(x, training=True)
-
-            def predict_cell():
-                return cell(x, training=False)
-
-            # x = tf.cond(is_training, train_cell, predict_cell)
             x, _ = cell(x, training=True)
+            # TODO prediction should be done according to guide:
+            #  https://gist.github.com/melgor/41e7d9367410b71dfddc33db34cba85f
+            #  https://github.com/tensorflow/tensorflow/blob/r1.12/tensorflow/contrib/cudnn_rnn/python/layers/cudnn_rnn.py
 
             x = tf.transpose(x, [1, 0, 2])
             x = tf.reduce_sum(x * last, 1)
