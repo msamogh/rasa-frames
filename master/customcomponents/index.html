@@ -157,6 +157,7 @@ analysis to integrate with open source bot framework Rasa Stack." />
       <div class="other-versions">
           <p>tags</p>
           <div class="dropdown-content">
+              <a href="../../0.14.4/customcomponents/">0.14.4</a>
               <a href="../../0.14.3/customcomponents/">0.14.3</a>
               <a href="../../0.14.2/customcomponents/">0.14.2</a>
               <a href="../../0.14.1/customcomponents/">0.14.1</a>
@@ -205,7 +206,7 @@ analysis to integrate with open source bot framework Rasa Stack." />
 
 
 
-    <p class="scv-banner"><a href="../../0.14.3/customcomponents/"><b>Warning:</b> This document is for the development version of Rasa NLU. The latest version is 0.14.3.</a></p>
+    <p class="scv-banner"><a href="../../0.14.4/customcomponents/"><b>Warning:</b> This document is for the development version of Rasa NLU. The latest version is 0.14.4.</a></p>
 <p>.._section_customcomponents:</p>
 <div class="section" id="custom-components">
 <h1>Custom Components<a class="headerlink" href="#custom-components" title="Permalink to this headline">¶</a></h1>
@@ -419,7 +420,7 @@ if a required package is not installed.</p>
 
 <dl class="classmethod">
 <dt id="rasa_nlu.components.Component.create">
-<em class="property">classmethod </em><code class="descname">create</code><span class="sig-paren">(</span><em>cfg: rasa_nlu.config.RasaNLUModelConfig</em><span class="sig-paren">)</span> &#x2192; rasa_nlu.components.Component<a class="headerlink" href="#rasa_nlu.components.Component.create" title="Permalink to this definition">¶</a></dt>
+<em class="property">classmethod </em><code class="descname">create</code><span class="sig-paren">(</span><em>component_config: Dict[str, Any], config: rasa_nlu.config.RasaNLUModelConfig</em><span class="sig-paren">)</span> &#x2192; rasa_nlu.components.Component<a class="headerlink" href="#rasa_nlu.components.Component.create" title="Permalink to this definition">¶</a></dt>
 <dd><p>Creates this component (e.g. before a training is started).</p>
 <p>Method can access all configuration parameters.</p>
 </dd></dl>
@@ -469,7 +470,7 @@ of components previous to this one.</p>
 
 <dl class="method">
 <dt id="rasa_nlu.components.Component.persist">
-<code class="descname">persist</code><span class="sig-paren">(</span><em>model_dir: str</em><span class="sig-paren">)</span> &#x2192; Union[typing.Dict[str, typing.Any], NoneType]<a class="headerlink" href="#rasa_nlu.components.Component.persist" title="Permalink to this definition">¶</a></dt>
+<code class="descname">persist</code><span class="sig-paren">(</span><em>file_name: str</em>, <em>model_dir: str</em><span class="sig-paren">)</span> &#x2192; Union[typing.Dict[str, typing.Any], NoneType]<a class="headerlink" href="#rasa_nlu.components.Component.persist" title="Permalink to this definition">¶</a></dt>
 <dd><p>Persist this component to disk for future loading.</p>
 </dd></dl>
 
