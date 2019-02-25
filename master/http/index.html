@@ -249,7 +249,8 @@ You can also query against a specific model for a project :</p>
 <h3><a class="toc-backref" href="#id4"><code class="docutils literal notranslate"><span class="pre">POST</span> <span class="pre">/train</span></code></a><a class="headerlink" href="#post-train" title="Permalink to this headline">¶</a></h3>
 <p>You can post your training data to this endpoint to train a new model for a project.
 This request will wait for the server answer: either the model
-was trained successfully or the training exited with an error.
+was trained successfully or the training exited with an error. If the model
+is trained successfully a zip file is returned with the trained model.
 Using the HTTP server, you must specify the project you want to train a
 new model for to be able to use it during parse requests later on :
 <code class="docutils literal notranslate"><span class="pre">/train?project=my_project</span></code>. The configuration of the model should be
