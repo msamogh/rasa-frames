@@ -351,7 +351,7 @@ optional arguments:
 <span id="section-auth"></span><h2>Authentication<a class="headerlink" href="#authentication" title="Permalink to this headline">¶</a></h2>
 <p>To protect your server, you can specify a token in your Rasa NLU configuration,
 by passing the <code class="docutils literal notranslate"><span class="pre">--token</span></code> argument when starting the server,
-or by setting the <code class="docutils literal notranslate"><span class="pre">RASA_TOKEN</span></code> environment variable.
+or by setting the <code class="docutils literal notranslate"><span class="pre">RASA_NLU_TOKEN</span></code> environment variable.
 If set, this token must be passed as a query parameter in all requests, e.g. :</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>$ curl localhost:5000/status?token<span class="o">=</span><span class="m">12345</span>
 </pre></div>
