@@ -217,7 +217,7 @@ Or, you can train directly in python with a script like the following (using spa
 <span class="kn">from</span> <span class="nn">rasa_nlu</span> <span class="kn">import</span> <span class="n">config</span>
 
 <span class="n">training_data</span> <span class="o">=</span> <span class="n">load_data</span><span class="p">(</span><span class="s1">&#39;data/examples/rasa/demo-rasa.json&#39;</span><span class="p">)</span>
-<span class="n">trainer</span> <span class="o">=</span> <span class="n">Trainer</span><span class="p">(</span><span class="n">config</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="s2">&quot;sample_configs/config_spacy.yml&quot;</span><span class="p">))</span>
+<span class="n">trainer</span> <span class="o">=</span> <span class="n">Trainer</span><span class="p">(</span><span class="n">config</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="s2">&quot;sample_configs/config_pretrained_embeddings_spacy.yml&quot;</span><span class="p">))</span>
 <span class="n">trainer</span><span class="o">.</span><span class="n">train</span><span class="p">(</span><span class="n">training_data</span><span class="p">)</span>
 <span class="n">model_directory</span> <span class="o">=</span> <span class="n">trainer</span><span class="o">.</span><span class="n">persist</span><span class="p">(</span><span class="s1">&#39;./projects/default/&#39;</span><span class="p">)</span>  <span class="c1"># Returns the directory the model is stored in</span>
 </pre></div>
@@ -257,7 +257,7 @@ To train a model:</p>
 <span class="n">builder</span> <span class="o">=</span> <span class="n">ComponentBuilder</span><span class="p">(</span><span class="n">use_cache</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>      <span class="c1"># will cache components between pipelines (where possible)</span>
 
 <span class="n">training_data</span> <span class="o">=</span> <span class="n">load_data</span><span class="p">(</span><span class="s1">&#39;data/examples/rasa/demo-rasa.json&#39;</span><span class="p">)</span>
-<span class="n">trainer</span> <span class="o">=</span> <span class="n">Trainer</span><span class="p">(</span><span class="n">config</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="s2">&quot;sample_configs/config_spacy.yml&quot;</span><span class="p">),</span> <span class="n">builder</span><span class="p">)</span>
+<span class="n">trainer</span> <span class="o">=</span> <span class="n">Trainer</span><span class="p">(</span><span class="n">config</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="s2">&quot;sample_configs/config_pretrained_embeddings_spacy.yml&quot;</span><span class="p">),</span> <span class="n">builder</span><span class="p">)</span>
 <span class="n">trainer</span><span class="o">.</span><span class="n">train</span><span class="p">(</span><span class="n">training_data</span><span class="p">)</span>
 <span class="n">model_directory</span> <span class="o">=</span> <span class="n">trainer</span><span class="o">.</span><span class="n">persist</span><span class="p">(</span><span class="s1">&#39;./projects/default/&#39;</span><span class="p">)</span>  <span class="c1"># Returns the directory the model is stored in</span>
 </pre></div>

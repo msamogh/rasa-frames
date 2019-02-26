@@ -206,8 +206,17 @@ processes performed on the user input of your contextual assistant." />
     <p class="scv-banner"><a href="../../0.14.4/components/"><b>Warning:</b> This document is for the development version of Rasa NLU. The latest version is 0.14.4.</a></p>
 <div class="section" id="component-configuration">
 <span id="section-pipeline"></span><h1><a class="toc-backref" href="#id3">Component Configuration</a><a class="headerlink" href="#component-configuration" title="Permalink to this headline">¶</a></h1>
-<p>This is a reference of the configuration options for every built-in component in
-Rasa NLU. If you want to build a custom component, check out <span class="xref std std-ref">section_customcomponents</span>.</p>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">For clarity, we have renamed the pre-defined pipelines to reflect
+what they <em>do</em> rather than which libraries they use as of Rasa NLU
+0.15. The <code class="docutils literal notranslate"><span class="pre">tensorflow_embedding</span></code> pipeline is now called
+<code class="docutils literal notranslate"><span class="pre">supervised_embeddings</span></code>, and <code class="docutils literal notranslate"><span class="pre">spacy_sklearn</span></code> is now known as
+<code class="docutils literal notranslate"><span class="pre">pretrained_embeddings_spacy</span></code>. Please update your code if you are using these.</p>
+</div>
+<p>This is a reference of the configuration options for every built-in
+component in Rasa NLU. If you want to build a custom component, check
+out <span class="xref std std-ref">section_customcomponents</span>.</p>
 <div class="contents topic" id="contents">
 <p class="topic-title first">Contents</p>
 <ul class="simple">
@@ -251,7 +260,8 @@ Rasa NLU. If you want to build a custom component, check out <span class="xref s
 <tr class="field-even field"><th class="field-name">Outputs:</th><td class="field-body"><p class="first">nothing</p>
 </td>
 </tr>
-<tr class="field-odd field"><th class="field-name">Description:</th><td class="field-body"><p class="first">Initializes mitie structures. Every mitie component relies on this, hence this should be put at the beginning
+<tr class="field-odd field"><th class="field-name">Description:</th><td class="field-body"><p class="first">Initializes mitie structures. Every mitie component relies on this,
+hence this should be put at the beginning
 of every pipeline that uses any mitie components.</p>
 </td>
 </tr>
