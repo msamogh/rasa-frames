@@ -461,14 +461,65 @@ under the <code class="docutils literal notranslate"><span class="pre">path</spa
 </pre></div>
 </div>
 <p>Here is a quick overview:</p>
-<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>Traceback (most recent call last):
-  File &quot;/opt/python/3.5.6/lib/python3.5/runpy.py&quot;, line 193, in _run_module_as_main
-    &quot;__main__&quot;, mod_spec)
-  File &quot;/opt/python/3.5.6/lib/python3.5/runpy.py&quot;, line 85, in _run_code
-    exec(code, run_globals)
-  File &quot;/home/travis/build/RasaHQ/rasa_nlu/rasa_nlu/server.py&quot;, line 413, in &lt;module&gt;
-    def get_token(_clitoken: Optional[Text]) -&gt; Text:
-NameError: name &#39;Optional&#39; is not defined
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>usage: server.py [-h] [-e {wit,luis,dialogflow}] [-P PORT]
+                 [--pre_load PRE_LOAD [PRE_LOAD ...]] [-t TOKEN] [-w WRITE]
+                 --path PATH [--cors [CORS [CORS ...]]]
+                 [--max_training_processes MAX_TRAINING_PROCESSES]
+                 [--num_threads NUM_THREADS] [--endpoints ENDPOINTS]
+                 [--wait_time_between_pulls WAIT_TIME_BETWEEN_PULLS]
+                 [--response_log RESPONSE_LOG] [--storage STORAGE] [-c CONFIG]
+                 [--debug] [-v]
+
+parse incoming text
+
+optional arguments:
+  -h, --help            show this help message and exit
+  -e {wit,luis,dialogflow}, --emulate {wit,luis,dialogflow}
+                        which service to emulate (default: None i.e. use
+                        simple built in format)
+  -P PORT, --port PORT  port on which to run server
+  --pre_load PRE_LOAD [PRE_LOAD ...]
+                        Preload models into memory before starting the server.
+                        If given `all` as input all the models will be loaded.
+                        Else you can specify a list of specific project names.
+                        Eg: python -m rasa_nlu.server --pre_load project1
+                        --path projects -c config.yaml
+  -t TOKEN, --token TOKEN
+                        auth token. If set, reject requests which don&#39;t
+                        provide this token as a query parameter
+  -w WRITE, --write WRITE
+                        file where logs will be saved
+  --path PATH           working directory of the server. Models areloaded from
+                        this directory and trained models will be saved here.
+  --cors [CORS [CORS ...]]
+                        List of domain patterns from where CORS (cross-origin
+                        resource sharing) calls are allowed. The default value
+                        is `[]` which forbids all CORS requests.
+  --max_training_processes MAX_TRAINING_PROCESSES
+                        Number of processes used to handle training requests.
+                        Increasing this value will have a great impact on
+                        memory usage. It is recommended to keep the default
+                        value.
+  --num_threads NUM_THREADS
+                        Number of parallel threads to use for handling parse
+                        requests.
+  --endpoints ENDPOINTS
+                        Configuration file for the model server as a yaml file
+  --wait_time_between_pulls WAIT_TIME_BETWEEN_PULLS
+                        Wait time in seconds between NLU model serverqueries.
+  --response_log RESPONSE_LOG
+                        Directory where logs will be saved (containing queries
+                        and responses).If set to ``null`` logging will be
+                        disabled.
+  --storage STORAGE     Set the remote location where models are stored. E.g.
+                        on AWS. If nothing is configured, the server will only
+                        serve the models that are on disk in the configured
+                        `path`.
+  -c CONFIG, --config CONFIG
+                        Default model configuration file used for training.
+  --debug               Print lots of debugging statements. Sets logging level
+                        to DEBUG
+  -v, --verbose         Be verbose. Sets logging level to INFO
 </pre></div>
 </div>
 </div>
