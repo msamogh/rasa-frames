@@ -423,7 +423,7 @@ if a required package is not installed.</p>
 
 <dl class="classmethod">
 <dt id="rasa_nlu.components.Component.create">
-<em class="property">classmethod </em><code class="descname">create</code><span class="sig-paren">(</span><em>component_config: Dict[str, Any], config: rasa_nlu.config.RasaNLUModelConfig</em><span class="sig-paren">)</span> &#x2192; rasa_nlu.components.Component<a class="headerlink" href="#rasa_nlu.components.Component.create" title="Permalink to this definition">¶</a></dt>
+<em class="property">classmethod </em><code class="descname">create</code><span class="sig-paren">(</span><em>cfg: rasa_nlu.config.RasaNLUModelConfig</em><span class="sig-paren">)</span> &#x2192; rasa_nlu.components.Component<a class="headerlink" href="#rasa_nlu.components.Component.create" title="Permalink to this definition">¶</a></dt>
 <dd><p>Creates this component (e.g. before a training is started).</p>
 <p>Method can access all configuration parameters.</p>
 </dd></dl>
@@ -473,7 +473,7 @@ of components previous to this one.</p>
 
 <dl class="method">
 <dt id="rasa_nlu.components.Component.persist">
-<code class="descname">persist</code><span class="sig-paren">(</span><em>file_name: str</em>, <em>model_dir: str</em><span class="sig-paren">)</span> &#x2192; Union[typing.Dict[str, typing.Any], NoneType]<a class="headerlink" href="#rasa_nlu.components.Component.persist" title="Permalink to this definition">¶</a></dt>
+<code class="descname">persist</code><span class="sig-paren">(</span><em>model_dir: str</em><span class="sig-paren">)</span> &#x2192; Union[typing.Dict[str, typing.Any], NoneType]<a class="headerlink" href="#rasa_nlu.components.Component.persist" title="Permalink to this definition">¶</a></dt>
 <dd><p>Persist this component to disk for future loading.</p>
 </dd></dl>
 
