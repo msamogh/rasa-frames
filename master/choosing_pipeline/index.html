@@ -271,8 +271,8 @@ To do this, use these flags:</p>
 <div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">language</span><span class="p">:</span> <span class="s">&quot;en&quot;</span>
 
 <span class="nt">pipeline</span><span class="p">:</span>
-<span class="p p-Indicator">-</span> <span class="nt">name</span><span class="p">:</span> <span class="s">&quot;intent_featurizer_count_vectors&quot;</span>
-<span class="p p-Indicator">-</span> <span class="nt">name</span><span class="p">:</span> <span class="s">&quot;intent_classifier_tensorflow_embedding&quot;</span>
+<span class="p p-Indicator">-</span> <span class="nt">name</span><span class="p">:</span> <span class="s">&quot;CountVectorsFeaturizer&quot;</span>
+<span class="p p-Indicator">-</span> <span class="nt">name</span><span class="p">:</span> <span class="s">&quot;EmbeddingIntentClassifier&quot;</span>
   <span class="nt">intent_tokenization_flag</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">true</span>
   <span class="nt">intent_split_symbol</span><span class="p">:</span> <span class="s">&quot;+&quot;</span>
 </pre></div>
@@ -292,7 +292,7 @@ the processing has finished. For example, for the sentence <code class="docutils
 <div class="highlight-json notranslate"><div class="highlight"><pre><span></span><span class="p">{</span>
     <span class="nt">&quot;text&quot;</span><span class="p">:</span> <span class="s2">&quot;I am looking for Chinese food&quot;</span><span class="p">,</span>
     <span class="nt">&quot;entities&quot;</span><span class="p">:</span> <span class="p">[</span>
-        <span class="p">{</span><span class="nt">&quot;start&quot;</span><span class="p">:</span> <span class="mi">8</span><span class="p">,</span> <span class="nt">&quot;end&quot;</span><span class="p">:</span> <span class="mi">15</span><span class="p">,</span> <span class="nt">&quot;value&quot;</span><span class="p">:</span> <span class="s2">&quot;chinese&quot;</span><span class="p">,</span> <span class="nt">&quot;entity&quot;</span><span class="p">:</span> <span class="s2">&quot;cuisine&quot;</span><span class="p">,</span> <span class="nt">&quot;extractor&quot;</span><span class="p">:</span> <span class="s2">&quot;ner_crf&quot;</span><span class="p">,</span> <span class="nt">&quot;confidence&quot;</span><span class="p">:</span> <span class="mf">0.864</span><span class="p">}</span>
+        <span class="p">{</span><span class="nt">&quot;start&quot;</span><span class="p">:</span> <span class="mi">8</span><span class="p">,</span> <span class="nt">&quot;end&quot;</span><span class="p">:</span> <span class="mi">15</span><span class="p">,</span> <span class="nt">&quot;value&quot;</span><span class="p">:</span> <span class="s2">&quot;chinese&quot;</span><span class="p">,</span> <span class="nt">&quot;entity&quot;</span><span class="p">:</span> <span class="s2">&quot;cuisine&quot;</span><span class="p">,</span> <span class="nt">&quot;extractor&quot;</span><span class="p">:</span> <span class="s2">&quot;CRFEntityExtractor&quot;</span><span class="p">,</span> <span class="nt">&quot;confidence&quot;</span><span class="p">:</span> <span class="mf">0.864</span><span class="p">}</span>
     <span class="p">],</span>
     <span class="nt">&quot;intent&quot;</span><span class="p">:</span> <span class="p">{</span><span class="nt">&quot;confidence&quot;</span><span class="p">:</span> <span class="mf">0.6485910906220309</span><span class="p">,</span> <span class="nt">&quot;name&quot;</span><span class="p">:</span> <span class="s2">&quot;restaurant_search&quot;</span><span class="p">},</span>
     <span class="nt">&quot;intent_ranking&quot;</span><span class="p">:</span> <span class="p">[</span>
@@ -303,7 +303,7 @@ the processing has finished. For example, for the sentence <code class="docutils
 </pre></div>
 </div>
 <p>This is created as a combination of the results of the different components in the pre-configured pipeline <code class="docutils literal notranslate"><span class="pre">pretrained_embeddings_spacy</span></code>.
-For example, the <code class="docutils literal notranslate"><span class="pre">entities</span></code> attribute is created by the <code class="docutils literal notranslate"><span class="pre">ner_crf</span></code> component.</p>
+For example, the <code class="docutils literal notranslate"><span class="pre">entities</span></code> attribute is created by the <code class="docutils literal notranslate"><span class="pre">CRFEntityExtractor</span></code> component.</p>
 </div>
 <div class="section" id="component-lifecycle">
 <span id="section-component-lifecycle"></span><h2>Component Lifecycle<a class="headerlink" href="#component-lifecycle" title="Permalink to this headline">¶</a></h2>
@@ -338,7 +338,7 @@ exactly. Instead it will return the trained synonym.</p>
       <span class="nt">&quot;end&quot;</span><span class="p">:</span> <span class="mi">15</span><span class="p">,</span>
       <span class="nt">&quot;value&quot;</span><span class="p">:</span> <span class="s2">&quot;chinese&quot;</span><span class="p">,</span>
       <span class="nt">&quot;entity&quot;</span><span class="p">:</span> <span class="s2">&quot;cuisine&quot;</span><span class="p">,</span>
-      <span class="nt">&quot;extractor&quot;</span><span class="p">:</span> <span class="s2">&quot;ner_crf&quot;</span><span class="p">,</span>
+      <span class="nt">&quot;extractor&quot;</span><span class="p">:</span> <span class="s2">&quot;CRFEntityExtractor&quot;</span><span class="p">,</span>
       <span class="nt">&quot;confidence&quot;</span><span class="p">:</span> <span class="mf">0.854</span><span class="p">,</span>
       <span class="nt">&quot;processors&quot;</span><span class="p">:</span> <span class="p">[]</span>
     <span class="p">}</span>
@@ -349,8 +349,8 @@ exactly. Instead it will return the trained synonym.</p>
 <div class="admonition note">
 <p class="first admonition-title">Note</p>
 <p class="last">The <code class="docutils literal notranslate"><span class="pre">confidence</span></code> will be set by the CRF entity extractor
-(<code class="docutils literal notranslate"><span class="pre">ner_crf</span></code> component). The duckling entity extractor will always return
-<code class="docutils literal notranslate"><span class="pre">1</span></code>. The <code class="docutils literal notranslate"><span class="pre">ner_spacy</span></code> extractor does not provide this information and
+(<code class="docutils literal notranslate"><span class="pre">CRFEntityExtractor</span></code> component). The duckling entity extractor will always return
+<code class="docutils literal notranslate"><span class="pre">1</span></code>. The <code class="docutils literal notranslate"><span class="pre">SpacyEntityExtractor</span></code> extractor does not provide this information and
 returns <code class="docutils literal notranslate"><span class="pre">null</span></code>.</p>
 </div>
 </div>
@@ -366,13 +366,13 @@ a full list of components. For example, these two configurations are equivalent:
 <div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">language</span><span class="p">:</span> <span class="s">&quot;en&quot;</span>
 
 <span class="nt">pipeline</span><span class="p">:</span>
-<span class="p p-Indicator">-</span> <span class="nt">name</span><span class="p">:</span> <span class="s">&quot;nlp_spacy&quot;</span>
-<span class="p p-Indicator">-</span> <span class="nt">name</span><span class="p">:</span> <span class="s">&quot;tokenizer_spacy&quot;</span>
-<span class="p p-Indicator">-</span> <span class="nt">name</span><span class="p">:</span> <span class="s">&quot;intent_entity_featurizer_regex&quot;</span>
-<span class="p p-Indicator">-</span> <span class="nt">name</span><span class="p">:</span> <span class="s">&quot;intent_featurizer_spacy&quot;</span>
-<span class="p p-Indicator">-</span> <span class="nt">name</span><span class="p">:</span> <span class="s">&quot;ner_crf&quot;</span>
-<span class="p p-Indicator">-</span> <span class="nt">name</span><span class="p">:</span> <span class="s">&quot;ner_synonyms&quot;</span>
-<span class="p p-Indicator">-</span> <span class="nt">name</span><span class="p">:</span> <span class="s">&quot;intent_classifier_sklearn&quot;</span>
+<span class="p p-Indicator">-</span> <span class="nt">name</span><span class="p">:</span> <span class="s">&quot;SpacyNLP&quot;</span>
+<span class="p p-Indicator">-</span> <span class="nt">name</span><span class="p">:</span> <span class="s">&quot;SpacyTokenizer&quot;</span>
+<span class="p p-Indicator">-</span> <span class="nt">name</span><span class="p">:</span> <span class="s">&quot;RegexFeaturizer&quot;</span>
+<span class="p p-Indicator">-</span> <span class="nt">name</span><span class="p">:</span> <span class="s">&quot;SpacyFeaturizer&quot;</span>
+<span class="p p-Indicator">-</span> <span class="nt">name</span><span class="p">:</span> <span class="s">&quot;CRFEntityExtractor&quot;</span>
+<span class="p p-Indicator">-</span> <span class="nt">name</span><span class="p">:</span> <span class="s">&quot;EntitySynonymMapper&quot;</span>
+<span class="p p-Indicator">-</span> <span class="nt">name</span><span class="p">:</span> <span class="s">&quot;SklearnIntentClassifier&quot;</span>
 </pre></div>
 </div>
 <p>Below is a list of all the pre-configured pipeline templates.</p>
@@ -389,13 +389,13 @@ the components and configure them separately:</p>
 <div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">language</span><span class="p">:</span> <span class="s">&quot;en&quot;</span>
 
 <span class="nt">pipeline</span><span class="p">:</span>
-<span class="p p-Indicator">-</span> <span class="nt">name</span><span class="p">:</span> <span class="s">&quot;nlp_spacy&quot;</span>
-<span class="p p-Indicator">-</span> <span class="nt">name</span><span class="p">:</span> <span class="s">&quot;tokenizer_spacy&quot;</span>
-<span class="p p-Indicator">-</span> <span class="nt">name</span><span class="p">:</span> <span class="s">&quot;intent_entity_featurizer_regex&quot;</span>
-<span class="p p-Indicator">-</span> <span class="nt">name</span><span class="p">:</span> <span class="s">&quot;intent_featurizer_spacy&quot;</span>
-<span class="p p-Indicator">-</span> <span class="nt">name</span><span class="p">:</span> <span class="s">&quot;ner_crf&quot;</span>
-<span class="p p-Indicator">-</span> <span class="nt">name</span><span class="p">:</span> <span class="s">&quot;ner_synonyms&quot;</span>
-<span class="p p-Indicator">-</span> <span class="nt">name</span><span class="p">:</span> <span class="s">&quot;intent_classifier_sklearn&quot;</span>
+<span class="p p-Indicator">-</span> <span class="nt">name</span><span class="p">:</span> <span class="s">&quot;SpacyNLP&quot;</span>
+<span class="p p-Indicator">-</span> <span class="nt">name</span><span class="p">:</span> <span class="s">&quot;SpacyTokenizer&quot;</span>
+<span class="p p-Indicator">-</span> <span class="nt">name</span><span class="p">:</span> <span class="s">&quot;RegexFeaturizer&quot;</span>
+<span class="p p-Indicator">-</span> <span class="nt">name</span><span class="p">:</span> <span class="s">&quot;SpacyFeaturizer&quot;</span>
+<span class="p p-Indicator">-</span> <span class="nt">name</span><span class="p">:</span> <span class="s">&quot;CRFEntityExtractor&quot;</span>
+<span class="p p-Indicator">-</span> <span class="nt">name</span><span class="p">:</span> <span class="s">&quot;EntitySynonymMapper&quot;</span>
+<span class="p p-Indicator">-</span> <span class="nt">name</span><span class="p">:</span> <span class="s">&quot;SklearnIntentClassifier&quot;</span>
 </pre></div>
 </div>
 </div>
@@ -412,11 +412,11 @@ default is to use a simple whitespace tokenizer:</p>
 <div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">language</span><span class="p">:</span> <span class="s">&quot;en&quot;</span>
 
 <span class="nt">pipeline</span><span class="p">:</span>
-<span class="p p-Indicator">-</span> <span class="nt">name</span><span class="p">:</span> <span class="s">&quot;tokenizer_whitespace&quot;</span>
-<span class="p p-Indicator">-</span> <span class="nt">name</span><span class="p">:</span> <span class="s">&quot;ner_crf&quot;</span>
-<span class="p p-Indicator">-</span> <span class="nt">name</span><span class="p">:</span> <span class="s">&quot;ner_synonyms&quot;</span>
-<span class="p p-Indicator">-</span> <span class="nt">name</span><span class="p">:</span> <span class="s">&quot;intent_featurizer_count_vectors&quot;</span>
-<span class="p p-Indicator">-</span> <span class="nt">name</span><span class="p">:</span> <span class="s">&quot;intent_classifier_tensorflow_embedding&quot;</span>
+<span class="p p-Indicator">-</span> <span class="nt">name</span><span class="p">:</span> <span class="s">&quot;WhitespaceTokenizer&quot;</span>
+<span class="p p-Indicator">-</span> <span class="nt">name</span><span class="p">:</span> <span class="s">&quot;CRFEntityExtractor&quot;</span>
+<span class="p p-Indicator">-</span> <span class="nt">name</span><span class="p">:</span> <span class="s">&quot;EntitySynonymMapper&quot;</span>
+<span class="p p-Indicator">-</span> <span class="nt">name</span><span class="p">:</span> <span class="s">&quot;CountVectorsFeaturizer&quot;</span>
+<span class="p p-Indicator">-</span> <span class="nt">name</span><span class="p">:</span> <span class="s">&quot;EmbeddingIntentClassifier&quot;</span>
 </pre></div>
 </div>
 <p>If you have a custom tokenizer for your language, you can replace the whitespace
@@ -429,14 +429,14 @@ of MITIE’s featurizer. To use the components and configure them separately:</p
 <div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">language</span><span class="p">:</span> <span class="s">&quot;en&quot;</span>
 
 <span class="nt">pipeline</span><span class="p">:</span>
-<span class="p p-Indicator">-</span> <span class="nt">name</span><span class="p">:</span> <span class="s">&quot;nlp_mitie&quot;</span>
+<span class="p p-Indicator">-</span> <span class="nt">name</span><span class="p">:</span> <span class="s">&quot;MitieNLP&quot;</span>
   <span class="nt">model</span><span class="p">:</span> <span class="s">&quot;data/total_word_feature_extractor.dat&quot;</span>
-<span class="p p-Indicator">-</span> <span class="nt">name</span><span class="p">:</span> <span class="s">&quot;tokenizer_mitie&quot;</span>
-<span class="p p-Indicator">-</span> <span class="nt">name</span><span class="p">:</span> <span class="s">&quot;ner_mitie&quot;</span>
-<span class="p p-Indicator">-</span> <span class="nt">name</span><span class="p">:</span> <span class="s">&quot;ner_synonyms&quot;</span>
-<span class="p p-Indicator">-</span> <span class="nt">name</span><span class="p">:</span> <span class="s">&quot;intent_entity_featurizer_regex&quot;</span>
-<span class="p p-Indicator">-</span> <span class="nt">name</span><span class="p">:</span> <span class="s">&quot;intent_featurizer_mitie&quot;</span>
-<span class="p p-Indicator">-</span> <span class="nt">name</span><span class="p">:</span> <span class="s">&quot;intent_classifier_sklearn&quot;</span>
+<span class="p p-Indicator">-</span> <span class="nt">name</span><span class="p">:</span> <span class="s">&quot;MitieTokenizer&quot;</span>
+<span class="p p-Indicator">-</span> <span class="nt">name</span><span class="p">:</span> <span class="s">&quot;MitieEntityExtractor&quot;</span>
+<span class="p p-Indicator">-</span> <span class="nt">name</span><span class="p">:</span> <span class="s">&quot;EntitySynonymMapper&quot;</span>
+<span class="p p-Indicator">-</span> <span class="nt">name</span><span class="p">:</span> <span class="s">&quot;RegexFeaturizer&quot;</span>
+<span class="p p-Indicator">-</span> <span class="nt">name</span><span class="p">:</span> <span class="s">&quot;MitieFeaturizer&quot;</span>
+<span class="p p-Indicator">-</span> <span class="nt">name</span><span class="p">:</span> <span class="s">&quot;SklearnIntentClassifier&quot;</span>
 </pre></div>
 </div>
 </div>
@@ -449,13 +449,13 @@ of MITIE’s featurizer. To use the components and configure them separately:</p
 <div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">language</span><span class="p">:</span> <span class="s">&quot;en&quot;</span>
 
 <span class="nt">pipeline</span><span class="p">:</span>
-<span class="p p-Indicator">-</span> <span class="nt">name</span><span class="p">:</span> <span class="s">&quot;nlp_mitie&quot;</span>
+<span class="p p-Indicator">-</span> <span class="nt">name</span><span class="p">:</span> <span class="s">&quot;MitieNLP&quot;</span>
   <span class="nt">model</span><span class="p">:</span> <span class="s">&quot;data/total_word_feature_extractor.dat&quot;</span>
-<span class="p p-Indicator">-</span> <span class="nt">name</span><span class="p">:</span> <span class="s">&quot;tokenizer_mitie&quot;</span>
-<span class="p p-Indicator">-</span> <span class="nt">name</span><span class="p">:</span> <span class="s">&quot;ner_mitie&quot;</span>
-<span class="p p-Indicator">-</span> <span class="nt">name</span><span class="p">:</span> <span class="s">&quot;ner_synonyms&quot;</span>
-<span class="p p-Indicator">-</span> <span class="nt">name</span><span class="p">:</span> <span class="s">&quot;intent_entity_featurizer_regex&quot;</span>
-<span class="p p-Indicator">-</span> <span class="nt">name</span><span class="p">:</span> <span class="s">&quot;intent_classifier_mitie&quot;</span>
+<span class="p p-Indicator">-</span> <span class="nt">name</span><span class="p">:</span> <span class="s">&quot;MitieTokenizer&quot;</span>
+<span class="p p-Indicator">-</span> <span class="nt">name</span><span class="p">:</span> <span class="s">&quot;MitieEntityExtractor&quot;</span>
+<span class="p p-Indicator">-</span> <span class="nt">name</span><span class="p">:</span> <span class="s">&quot;EntitySynonymMapper&quot;</span>
+<span class="p p-Indicator">-</span> <span class="nt">name</span><span class="p">:</span> <span class="s">&quot;RegexFeaturizer&quot;</span>
+<span class="p p-Indicator">-</span> <span class="nt">name</span><span class="p">:</span> <span class="s">&quot;MitieIntentClassifier&quot;</span>
 </pre></div>
 </div>
 </div>
@@ -471,7 +471,7 @@ of MITIE’s featurizer. To use the components and configure them separately:</p
 <div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">language</span><span class="p">:</span> <span class="s">&quot;en&quot;</span>
 
 <span class="nt">pipeline</span><span class="p">:</span>
-<span class="p p-Indicator">-</span> <span class="nt">name</span><span class="p">:</span> <span class="s">&quot;intent_classifier_keyword&quot;</span>
+<span class="p p-Indicator">-</span> <span class="nt">name</span><span class="p">:</span> <span class="s">&quot;KeywordIntentClassifier&quot;</span>
 </pre></div>
 </div>
 </div>
@@ -481,9 +481,9 @@ of MITIE’s featurizer. To use the components and configure them separately:</p
 <p>You don’t have to use a template, you can run a fully custom pipeline
 by listing the names of the components you want to use:</p>
 <div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">pipeline</span><span class="p">:</span>
-<span class="p p-Indicator">-</span> <span class="nt">name</span><span class="p">:</span> <span class="s">&quot;nlp_spacy&quot;</span>
-<span class="p p-Indicator">-</span> <span class="nt">name</span><span class="p">:</span> <span class="s">&quot;ner_crf&quot;</span>
-<span class="p p-Indicator">-</span> <span class="nt">name</span><span class="p">:</span> <span class="s">&quot;ner_synonyms&quot;</span>
+<span class="p p-Indicator">-</span> <span class="nt">name</span><span class="p">:</span> <span class="s">&quot;SpacyNLP&quot;</span>
+<span class="p p-Indicator">-</span> <span class="nt">name</span><span class="p">:</span> <span class="s">&quot;CRFEntityExtractor&quot;</span>
+<span class="p p-Indicator">-</span> <span class="nt">name</span><span class="p">:</span> <span class="s">&quot;EntitySynonymMapper&quot;</span>
 </pre></div>
 </div>
 <p>This creates a pipeline that only does entity recognition, but no

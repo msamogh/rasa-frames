@@ -207,7 +207,7 @@ performance of your bot responses using Rasa NLU for conversational bots." />
 <div class="section" id="confidence-and-fallback-intents">
 <span id="section-fallback"></span><h1>Confidence and Fallback Intents<a class="headerlink" href="#confidence-and-fallback-intents" title="Permalink to this headline">¶</a></h1>
 <p>Each of the pipelines will report a <code class="docutils literal notranslate"><span class="pre">confidence</span></code> score along with the predicted intent,
-and the <code class="docutils literal notranslate"><span class="pre">ner_crf</span></code> component will do the same for the extracted entities.</p>
+and the <code class="docutils literal notranslate"><span class="pre">CRFEntityExtractor</span></code> component will do the same for the extracted entities.</p>
 <p>You can use the confidence score to choose when to ignore Rasa NLU’s prediction and trigger
 fallback behaviour, for example asking the user to rephrase. If you are using Rasa Core,
 you can do this using a <a class="reference external" href="/docs/core/fallbacks/">Fallback Policy</a>.</p>

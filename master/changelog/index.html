@@ -276,8 +276,15 @@ This project adheres to <a class="reference external" href="http://semver.org/">
 - <code class="docutils literal notranslate"><span class="pre">tensorflow_embedding</span></code> pipeline template renamed to <code class="docutils literal notranslate"><span class="pre">supervised_embeddings</span></code>
 - <code class="docutils literal notranslate"><span class="pre">spacy_sklearn</span></code> pipeline template renamed to <code class="docutils literal notranslate"><span class="pre">pretrained_embeddings_spacy</span></code>
 - requirements files, sample configs, and dockerfiles renamed accordingly</li>
-<li><cite>/train</cite> endpoint now returns a zipfile of the trained model.</li>
+<li><code class="docutils literal notranslate"><span class="pre">/train</span></code> endpoint now returns a zipfile of the trained model.</li>
+<li>pipeline components in the config file should be provided
+with their class name</li>
+<li>persisted components file name changed</li>
 <li>replace pep8 with pycodestyle</li>
+<li><code class="docutils literal notranslate"><span class="pre">Component.name</span></code> property returns component’s class name</li>
+<li>Components <code class="docutils literal notranslate"><span class="pre">load(...)</span></code>, <code class="docutils literal notranslate"><span class="pre">create(...)</span></code> and <code class="docutils literal notranslate"><span class="pre">cache_key(...)</span></code> methods
+additionally take component’s meta/config dicts</li>
+<li>Components <code class="docutils literal notranslate"><span class="pre">persist(...)</span></code> method additionally takes file name prefix</li>
 </ul>
 </div>
 <div class="section" id="removed">

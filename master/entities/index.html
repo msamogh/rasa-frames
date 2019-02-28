@@ -206,48 +206,11 @@ for building contextual AI Assistants." />
     <p class="scv-banner"><a href="../../0.14.4/entities/"><b>Warning:</b> This document is for the development version of Rasa NLU. The latest version is 0.14.4.</a></p>
 <div class="section" id="entity-extraction">
 <span id="section-entities"></span><h1>Entity Extraction<a class="headerlink" href="#entity-extraction" title="Permalink to this headline">¶</a></h1>
-<table border="1" class="docutils">
-<colgroup>
-<col width="23%" />
-<col width="16%" />
-<col width="24%" />
-<col width="36%" />
-</colgroup>
-<thead valign="bottom">
-<tr class="row-odd"><th class="head">Component</th>
-<th class="head">Requires</th>
-<th class="head">Model</th>
-<th class="head">notes</th>
-</tr>
-</thead>
-<tbody valign="top">
-<tr class="row-even"><td><code class="docutils literal notranslate"><span class="pre">ner_crf</span></code></td>
-<td>sklearn-crfsuite</td>
-<td>conditional random field</td>
-<td>good for training custom entities</td>
-</tr>
-<tr class="row-odd"><td><code class="docutils literal notranslate"><span class="pre">ner_spacy</span></code></td>
-<td>spaCy</td>
-<td>averaged perceptron</td>
-<td>provides pre-trained entities</td>
-</tr>
-<tr class="row-even"><td><code class="docutils literal notranslate"><span class="pre">ner_duckling_http</span></code></td>
-<td>running duckling</td>
-<td>context-free grammar</td>
-<td>provides pre-trained entities</td>
-</tr>
-<tr class="row-odd"><td><code class="docutils literal notranslate"><span class="pre">ner_mitie</span></code></td>
-<td>MITIE</td>
-<td>structured SVM</td>
-<td>good for training custom entities</td>
-</tr>
-</tbody>
-</table>
 <div class="section" id="custom-entities">
 <h2>Custom Entities<a class="headerlink" href="#custom-entities" title="Permalink to this headline">¶</a></h2>
 <p>Almost every chatbot and voice app will have some custom entities.
 In a restaurant bot, <code class="docutils literal notranslate"><span class="pre">chinese</span></code> is a cuisine, but in a language-learning app it would mean something very different.
-The <code class="docutils literal notranslate"><span class="pre">ner_crf</span></code> component can learn custom entities in any language.</p>
+The <code class="docutils literal notranslate"><span class="pre">CRFEntityExtractor</span></code> component can learn custom entities in any language.</p>
 </div>
 <div class="section" id="extracting-places-dates-people-organisations">
 <h2>Extracting Places, Dates, People, Organisations<a class="headerlink" href="#extracting-places-dates-people-organisations" title="Permalink to this headline">¶</a></h2>
@@ -272,13 +235,13 @@ Duckling can also handle durations like “two hours”,
 amounts of money, distances, and ordinals.
 Fortunately, there is a duckling docker container ready to use,
 that you just need to spin up and connect to Rasa NLU.
-(see <a class="reference internal" href="../components/#ner-duckling-http"><span class="std std-ref">ner_duckling_http</span></a>)</p>
+(see <a class="reference internal" href="../components/#ducklinghttpextractor"><span class="std std-ref">DucklingHTTPExtractor</span></a>)</p>
 </div>
 <div class="section" id="regular-expressions-regex">
 <h2>Regular Expressions (regex)<a class="headerlink" href="#regular-expressions-regex" title="Permalink to this headline">¶</a></h2>
 <p>You can use regular expressions to help the CRF model learn to recognize entities.
 In the <a class="reference internal" href="../dataformat/#section-dataformat"><span class="std std-ref">Training Data Format</span></a> you can provide a list of regular expressions, each of which provides
-the <code class="docutils literal notranslate"><span class="pre">ner_crf</span></code> with an extra binary feature, which says if the regex was found (1) or not (0).</p>
+the <code class="docutils literal notranslate"><span class="pre">CRFEntityExtractor</span></code> with an extra binary feature, which says if the regex was found (1) or not (0).</p>
 <p>For example, the names of German streets often end in <code class="docutils literal notranslate"><span class="pre">strasse</span></code>. By adding this as a regex,
 we are telling the model to pay attention to words ending this way, and will quickly learn to
 associate that with a location entity.</p>
@@ -302,7 +265,7 @@ exactly. Instead it will return the trained synonym.</p>
       <span class="nt">&quot;end&quot;</span><span class="p">:</span> <span class="mi">15</span><span class="p">,</span>
       <span class="nt">&quot;value&quot;</span><span class="p">:</span> <span class="s2">&quot;chinese&quot;</span><span class="p">,</span>
       <span class="nt">&quot;entity&quot;</span><span class="p">:</span> <span class="s2">&quot;cuisine&quot;</span><span class="p">,</span>
-      <span class="nt">&quot;extractor&quot;</span><span class="p">:</span> <span class="s2">&quot;ner_crf&quot;</span><span class="p">,</span>
+      <span class="nt">&quot;extractor&quot;</span><span class="p">:</span> <span class="s2">&quot;CRFEntityExtractor&quot;</span><span class="p">,</span>
       <span class="nt">&quot;confidence&quot;</span><span class="p">:</span> <span class="mf">0.854</span><span class="p">,</span>
       <span class="nt">&quot;processors&quot;</span><span class="p">:</span> <span class="p">[]</span>
     <span class="p">}</span>
@@ -327,7 +290,7 @@ exactly. Instead it will return the trained synonym.</p>
   <span class="nt">&quot;confidence&quot;</span><span class="p">:</span><span class="mf">1.0</span><span class="p">,</span>
   <span class="nt">&quot;end&quot;</span><span class="p">:</span><span class="mi">5</span><span class="p">,</span>
   <span class="nt">&quot;entity&quot;</span><span class="p">:</span><span class="s2">&quot;time&quot;</span><span class="p">,</span>
-  <span class="nt">&quot;extractor&quot;</span><span class="p">:</span><span class="s2">&quot;ner_duckling_http&quot;</span><span class="p">,</span>
+  <span class="nt">&quot;extractor&quot;</span><span class="p">:</span><span class="s2">&quot;DucklingHTTPExtractor&quot;</span><span class="p">,</span>
   <span class="nt">&quot;start&quot;</span><span class="p">:</span><span class="mi">0</span><span class="p">,</span>
   <span class="nt">&quot;text&quot;</span><span class="p">:</span><span class="s2">&quot;today&quot;</span><span class="p">,</span>
   <span class="nt">&quot;value&quot;</span><span class="p">:</span><span class="s2">&quot;2018-06-21T00:00:00.000-07:00&quot;</span>
@@ -337,8 +300,8 @@ exactly. Instead it will return the trained synonym.</p>
 <div class="admonition note">
 <p class="first admonition-title">Note</p>
 <p class="last">The <cite>confidence</cite> will be set by the CRF entity extractor
-(<cite>ner_crf</cite> component). The duckling entity extractor will always return
-<cite>1</cite>. The <cite>ner_spacy</cite> extractor does not provide this information and
+(<cite>CRFEntityExtractor</cite> component). The duckling entity extractor will always return
+<cite>1</cite>. The <cite>SpacyEntityExtractor</cite> extractor does not provide this information and
 returns <cite>null</cite>.</p>
 </div>
 </div>

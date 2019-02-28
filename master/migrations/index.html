@@ -222,11 +222,39 @@ NLP engine and how to migrate from one version to another." />
 how you can migrate from one version to another.</p>
 <div class="section" id="x-to-0-15-0">
 <h2>0.14.x to 0.15.0<a class="headerlink" href="#x-to-0-15-0" title="Permalink to this headline">¶</a></h2>
+<div class="admonition warning">
+<p class="first admonition-title">Warning</p>
+<p class="last">This is a release <strong>breaking backwards compatibility</strong>.
+Unfortunately, it is not possible to load
+previously trained models (as the stored file names have changed as
+well as the configuration and metadata). Please make sure to retrain
+a model before trying to use it with this improved version.</p>
+</div>
+<div class="section" id="model-configuration">
+<h3>model configuration<a class="headerlink" href="#model-configuration" title="Permalink to this headline">¶</a></h3>
 <ul class="simple">
 <li>The standard pipelines have been renamed. <code class="docutils literal notranslate"><span class="pre">spacy_sklearn</span></code> is now
 <code class="docutils literal notranslate"><span class="pre">pretrained_embeddings_spacy</span></code> and <code class="docutils literal notranslate"><span class="pre">tensorflow_embedding</span></code> is now
 <code class="docutils literal notranslate"><span class="pre">supervised_embeddings</span></code>.</li>
+<li>Components names used for nlu config have been changed.
+Use component class name in nlu config file.</li>
 </ul>
+</div>
+<div class="section" id="custom-components">
+<h3>custom components<a class="headerlink" href="#custom-components" title="Permalink to this headline">¶</a></h3>
+<ul>
+<li><p class="first">The signature of Component’s methods have been changed:
+- <code class="docutils literal notranslate"><span class="pre">load(...)</span></code>, <code class="docutils literal notranslate"><span class="pre">create(...)</span></code> and <code class="docutils literal notranslate"><span class="pre">cache_key(...)</span></code> methods</p>
+<blockquote>
+<div><p>additionally take component’s meta/config dicts</p>
+</div></blockquote>
+<ul class="simple">
+<li><code class="docutils literal notranslate"><span class="pre">persist(...)</span></code> method additionally takes file name prefix</li>
+</ul>
+<p>Change your custom components accordingly.</p>
+</li>
+</ul>
+</div>
 </div>
 <div class="section" id="x-to-0-14-0">
 <h2>0.13.x to 0.14.0<a class="headerlink" href="#x-to-0-14-0" title="Permalink to this headline">¶</a></h2>
@@ -234,8 +262,8 @@ how you can migrate from one version to another.</p>
 <li><code class="docutils literal notranslate"><span class="pre">/config</span></code> endpoint removed, when training a new model, the user should
 always post the configuration as part of the request instead of relying
 on the servers config.</li>
-<li><code class="docutils literal notranslate"><span class="pre">ner_duckling</span></code> support has been removed. Use <code class="docutils literal notranslate"><span class="pre">ner_duckling_http</span></code>
-instead. More info about <code class="docutils literal notranslate"><span class="pre">ner_duckling_http</span></code> can be found at
+<li><code class="docutils literal notranslate"><span class="pre">ner_duckling</span></code> support has been removed. Use <code class="docutils literal notranslate"><span class="pre">DucklingHTTPExtractor</span></code>
+instead. More info about <code class="docutils literal notranslate"><span class="pre">DucklingHTTPExtractor</span></code> can be found at
 <a class="reference external" href="https://rasa.com/docs/nlu/components/#ner-duckling-http">https://rasa.com/docs/nlu/components/#ner-duckling-http</a>.</li>
 </ul>
 </div>
@@ -330,7 +358,7 @@ the parameters for the tensorflow and CRF models changed.</p>
 </tr>
 </tbody>
 </table>
-<p>Please change these keys in your pipeline configuration of the <code class="docutils literal notranslate"><span class="pre">ner_crf</span></code>
+<p>Please change these keys in your pipeline configuration of the <code class="docutils literal notranslate"><span class="pre">CRFEntityExtractor</span></code>
 components <code class="docutils literal notranslate"><span class="pre">features</span></code> attribute if you use them.</p>
 </div>
 </div>
@@ -344,8 +372,8 @@ previously trained models (as the stored file formats have changed as
 well as the configuration and metadata). Please make sure to retrain
 a model before trying to use it with this improved version.</p>
 </div>
-<div class="section" id="model-configuration">
-<h3>model configuration<a class="headerlink" href="#model-configuration" title="Permalink to this headline">¶</a></h3>
+<div class="section" id="id1">
+<h3>model configuration<a class="headerlink" href="#id1" title="Permalink to this headline">¶</a></h3>
 <p>We have split the configuration in a model configuration and parameters used
 to configure the server, train, and evaluate scripts. The configuration
 file now only contains the <code class="docutils literal notranslate"><span class="pre">pipeline</span></code> as well as the <code class="docutils literal notranslate"><span class="pre">language</span></code>
@@ -354,9 +382,9 @@ parameters. Example:</p>
 <div><div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">langauge</span><span class="p">:</span> <span class="s">&quot;en&quot;</span>
 
 <span class="nt">pipeline</span><span class="p">:</span>
-<span class="p p-Indicator">-</span> <span class="nt">name</span><span class="p">:</span> <span class="s">&quot;nlp_spacy&quot;</span>
+<span class="p p-Indicator">-</span> <span class="nt">name</span><span class="p">:</span> <span class="s">&quot;SpacyNLP&quot;</span>
   <span class="nt">model</span><span class="p">:</span> <span class="s">&quot;en&quot;</span>               <span class="c1"># parameter of the spacy component</span>
-<span class="p p-Indicator">-</span> <span class="nt">name</span><span class="p">:</span> <span class="s">&quot;ner_synonyms&quot;</span>
+<span class="p p-Indicator">-</span> <span class="nt">name</span><span class="p">:</span> <span class="s">&quot;EntitySynonymMapper&quot;</span>
 </pre></div>
 </div>
 </div></blockquote>
@@ -399,7 +427,7 @@ and unfortunately you need to retrain uploaded models and reupload them.</li>
 <div class="section" id="x-to-0-9-x">
 <h2>0.8.x to 0.9.x<a class="headerlink" href="#x-to-0-9-x" title="Permalink to this headline">¶</a></h2>
 <ul class="simple">
-<li>add <code class="docutils literal notranslate"><span class="pre">tokenizer_spacy</span></code> to trained spacy_sklearn models metadata (right after the <code class="docutils literal notranslate"><span class="pre">nlp_spacy</span></code>). alternative is to retrain the model</li>
+<li>add <code class="docutils literal notranslate"><span class="pre">SpacyTokenizer</span></code> to trained spacy_sklearn models metadata (right after the <code class="docutils literal notranslate"><span class="pre">SpacyNLP</span></code>). alternative is to retrain the model</li>
 </ul>
 </div>
 <div class="section" id="x-to-0-8-x">

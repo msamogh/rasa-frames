@@ -243,7 +243,7 @@ necessary information to reconstruct your model:</p>
 <div class="section" id="reducing-memory-use-when-loading-multiple-models">
 <h2>Reducing Memory Use When Loading Multiple Models<a class="headerlink" href="#reducing-memory-use-when-loading-multiple-models" title="Permalink to this headline">¶</a></h2>
 <p>If multiple models are created, it is reasonable to share components between the different models. E.g.
-the <code class="docutils literal notranslate"><span class="pre">'nlp_spacy'</span></code> component, which is used by every pipeline that wants to have access to the spacy word vectors,
+the <code class="docutils literal notranslate"><span class="pre">'SpacyNLP'</span></code> component, which is used by every pipeline that wants to have access to the spacy word vectors,
 can be cached to avoid storing the large word vectors more than once in main memory. To use the caching,
 a <code class="docutils literal notranslate"><span class="pre">ComponentBuilder</span></code> should be passed when loading and training models.</p>
 <p>Here is a short example on how to create a component builder,

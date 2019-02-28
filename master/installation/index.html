@@ -305,27 +305,27 @@ find this file.</p>
 <div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">language</span><span class="p">:</span> <span class="s">&quot;en&quot;</span>
 
 <span class="nt">pipeline</span><span class="p">:</span>
-<span class="p p-Indicator">-</span> <span class="nt">name</span><span class="p">:</span> <span class="s">&quot;nlp_mitie&quot;</span>
+<span class="p p-Indicator">-</span> <span class="nt">name</span><span class="p">:</span> <span class="s">&quot;MitieNLP&quot;</span>
   <span class="nt">model</span><span class="p">:</span> <span class="s">&quot;data/total_word_feature_extractor.dat&quot;</span>
-<span class="p p-Indicator">-</span> <span class="nt">name</span><span class="p">:</span> <span class="s">&quot;tokenizer_mitie&quot;</span>
-<span class="p p-Indicator">-</span> <span class="nt">name</span><span class="p">:</span> <span class="s">&quot;ner_mitie&quot;</span>
-<span class="p p-Indicator">-</span> <span class="nt">name</span><span class="p">:</span> <span class="s">&quot;ner_synonyms&quot;</span>
-<span class="p p-Indicator">-</span> <span class="nt">name</span><span class="p">:</span> <span class="s">&quot;intent_entity_featurizer_regex&quot;</span>
-<span class="p p-Indicator">-</span> <span class="nt">name</span><span class="p">:</span> <span class="s">&quot;intent_featurizer_mitie&quot;</span>
-<span class="p p-Indicator">-</span> <span class="nt">name</span><span class="p">:</span> <span class="s">&quot;intent_classifier_sklearn&quot;</span>
+<span class="p p-Indicator">-</span> <span class="nt">name</span><span class="p">:</span> <span class="s">&quot;MitieTokenizer&quot;</span>
+<span class="p p-Indicator">-</span> <span class="nt">name</span><span class="p">:</span> <span class="s">&quot;MitieEntityExtractor&quot;</span>
+<span class="p p-Indicator">-</span> <span class="nt">name</span><span class="p">:</span> <span class="s">&quot;EntitySynonymMapper&quot;</span>
+<span class="p p-Indicator">-</span> <span class="nt">name</span><span class="p">:</span> <span class="s">&quot;RegexFeaturizer&quot;</span>
+<span class="p p-Indicator">-</span> <span class="nt">name</span><span class="p">:</span> <span class="s">&quot;MitieFeaturizer&quot;</span>
+<span class="p p-Indicator">-</span> <span class="nt">name</span><span class="p">:</span> <span class="s">&quot;SklearnIntentClassifier&quot;</span>
 </pre></div>
 </div>
 <p>Using MITIE alone can be quite slow to train, but you can use it with this configuration</p>
 <div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">language</span><span class="p">:</span> <span class="s">&quot;en&quot;</span>
 
 <span class="nt">pipeline</span><span class="p">:</span>
-<span class="p p-Indicator">-</span> <span class="nt">name</span><span class="p">:</span> <span class="s">&quot;nlp_mitie&quot;</span>
+<span class="p p-Indicator">-</span> <span class="nt">name</span><span class="p">:</span> <span class="s">&quot;MitieNLP&quot;</span>
   <span class="nt">model</span><span class="p">:</span> <span class="s">&quot;data/total_word_feature_extractor.dat&quot;</span>
-<span class="p p-Indicator">-</span> <span class="nt">name</span><span class="p">:</span> <span class="s">&quot;tokenizer_mitie&quot;</span>
-<span class="p p-Indicator">-</span> <span class="nt">name</span><span class="p">:</span> <span class="s">&quot;ner_mitie&quot;</span>
-<span class="p p-Indicator">-</span> <span class="nt">name</span><span class="p">:</span> <span class="s">&quot;ner_synonyms&quot;</span>
-<span class="p p-Indicator">-</span> <span class="nt">name</span><span class="p">:</span> <span class="s">&quot;intent_entity_featurizer_regex&quot;</span>
-<span class="p p-Indicator">-</span> <span class="nt">name</span><span class="p">:</span> <span class="s">&quot;intent_classifier_mitie&quot;</span>
+<span class="p p-Indicator">-</span> <span class="nt">name</span><span class="p">:</span> <span class="s">&quot;MitieTokenizer&quot;</span>
+<span class="p p-Indicator">-</span> <span class="nt">name</span><span class="p">:</span> <span class="s">&quot;MitieEntityExtractor&quot;</span>
+<span class="p p-Indicator">-</span> <span class="nt">name</span><span class="p">:</span> <span class="s">&quot;EntitySynonymMapper&quot;</span>
+<span class="p p-Indicator">-</span> <span class="nt">name</span><span class="p">:</span> <span class="s">&quot;RegexFeaturizer&quot;</span>
+<span class="p p-Indicator">-</span> <span class="nt">name</span><span class="p">:</span> <span class="s">&quot;MitieIntentClassifier&quot;</span>
 </pre></div>
 </div>
 </div>

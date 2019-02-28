@@ -291,11 +291,11 @@ multiple tokens. A whitespace tokenizer would not work in this case.</p>
 </div>
 <div class="section" id="entity-extraction">
 <h2>Entity Extraction<a class="headerlink" href="#entity-extraction" title="Permalink to this headline">¶</a></h2>
-<p>The <code class="docutils literal notranslate"><span class="pre">ner_crf</span></code> is the only entity extractor which you train using your own data,
+<p>The <code class="docutils literal notranslate"><span class="pre">CRFEntityExtractor</span></code> is the only entity extractor which you train using your own data,
 and so is the only one which will be evaluated. If you use the spaCy or duckling
 pre-trained entity extractors, Rasa NLU will not include these in the evaluation.</p>
 <p>Rasa NLU will report recall, precision, and f1 measure for each entity type that
-<code class="docutils literal notranslate"><span class="pre">ner_crf</span></code> is trained to recognize.</p>
+<code class="docutils literal notranslate"><span class="pre">CRFEntityExtractor</span></code> is trained to recognize.</p>
 <div class="section" id="entity-scoring">
 <h3>Entity Scoring<a class="headerlink" href="#entity-scoring" title="Permalink to this headline">¶</a></h3>
 <p>To evaluate entity extraction we apply a simple tag-based approach. We don’t consider BILOU tags, but only the
