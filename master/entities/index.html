@@ -206,6 +206,43 @@ for building contextual AI Assistants." />
     <p class="scv-banner"><a href="../../0.14.4/entities/"><b>Warning:</b> This document is for the development version of Rasa NLU. The latest version is 0.14.4.</a></p>
 <div class="section" id="entity-extraction">
 <span id="section-entities"></span><h1>Entity Extraction<a class="headerlink" href="#entity-extraction" title="Permalink to this headline">¶</a></h1>
+<table border="1" class="docutils">
+<colgroup>
+<col width="26%" />
+<col width="16%" />
+<col width="24%" />
+<col width="34%" />
+</colgroup>
+<thead valign="bottom">
+<tr class="row-odd"><th class="head">Component</th>
+<th class="head">Requires</th>
+<th class="head">Model</th>
+<th class="head">Notes</th>
+</tr>
+</thead>
+<tbody valign="top">
+<tr class="row-even"><td><code class="docutils literal notranslate"><span class="pre">CRFEntityExtractor</span></code></td>
+<td>sklearn-crfsuite</td>
+<td>conditional random field</td>
+<td>good for training custom entities</td>
+</tr>
+<tr class="row-odd"><td><code class="docutils literal notranslate"><span class="pre">SpacyEntityExtractor</span></code></td>
+<td>spaCy</td>
+<td>averaged perceptron</td>
+<td>provides pre-trained entities</td>
+</tr>
+<tr class="row-even"><td><code class="docutils literal notranslate"><span class="pre">DucklingHTTPExtractor</span></code></td>
+<td>running duckling</td>
+<td>context-free grammar</td>
+<td>provides pre-trained entities</td>
+</tr>
+<tr class="row-odd"><td><code class="docutils literal notranslate"><span class="pre">MitieEntityExtractor</span></code></td>
+<td>MITIE</td>
+<td>structured SVM</td>
+<td>good for training custom entities</td>
+</tr>
+</tbody>
+</table>
 <div class="section" id="custom-entities">
 <h2>Custom Entities<a class="headerlink" href="#custom-entities" title="Permalink to this headline">¶</a></h2>
 <p>Almost every chatbot and voice app will have some custom entities.
