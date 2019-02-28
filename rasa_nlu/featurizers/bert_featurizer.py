@@ -56,6 +56,7 @@ class BertFeaturizer(Featurizer):
         is_per_host = tf.contrib.tpu.InputPipelineConfig.PER_HOST_V2
         run_config = tf.contrib.tpu.RunConfig(
             master=None,
+            model_dir='/tmp/bert_model',
             tpu_config=tf.contrib.tpu.TPUConfig(
                 num_shards=8,
                 per_host_input_for_training=is_per_host))
@@ -73,7 +74,6 @@ class BertFeaturizer(Featurizer):
            predict_batch_size=8)
 
     def train(self, training_data, config, **kwargs):
-        # type: (TrainingData) -> None
         messages = [example.text for example in training_data.intent_examples]
         fs = create_features(messages, self.estimator, self.tokenizer, self.layer_indexes)
         features = []
@@ -86,8 +86,6 @@ class BertFeaturizer(Featurizer):
             # self._set_bert_features(example)
 
     def process(self, message, **kwargs):
-        # type: (Message, **Any) -> None
-
         self._set_bert_features(message)
 
     def _set_bert_features(self, message):

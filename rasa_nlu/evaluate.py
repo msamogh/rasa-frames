@@ -340,12 +340,12 @@ def evaluate_intents(intent_results,
         plot_confusion_matrix(cnf_matrix, classes=labels,
                               title='Intent Confusion matrix',
                               out=confmat_filename)
-        plt.show()
+        # plt.show()
 
         plot_intent_confidences(intent_results,
                                 intent_hist_filename)
 
-        plt.show()
+        # plt.show()
 
     predictions = [
         {
