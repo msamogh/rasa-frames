@@ -332,8 +332,8 @@ class EmbeddingIntentClassifier(Component):
             overlap_ij = float(len([item for item, count in collections.Counter(merged_ij).items() if count > 1]))
 
             iou_i = (overlap_ij / unique_ij)
-            if iou_i > 0.33:
-                print(iou_i)
+            if iou_i > 0.34:
+                # print(iou_i)
                 return True
             else:
                 iou.append(iou_i)
@@ -631,7 +631,7 @@ class EmbeddingIntentClassifier(Component):
         Where the first is correct intent
         and the rest are wrong intents sampled randomly
         """
-        print('new intent')
+        # print('new intent')
         batch_pos_b = np.expand_dims(batch_pos_b, axis=1)
 
         # sample negatives
@@ -650,12 +650,13 @@ class EmbeddingIntentClassifier(Component):
                                 if i != intent_ids[b]]
 
             negs = np.random.choice(negative_indexes, size=self.num_neg)
+            actual_vecs = self.encoded_all_intents[negs]
             if self.use_iou:
-                while self.is_too_large_iou(batch_pos_b, negs):
-                    print("new iou")
+                while self.is_too_large_iou(batch_pos_b, actual_vecs):
                     negs = np.random.choice(negative_indexes, size=self.num_neg)
+                    actual_vecs = self.encoded_all_intents[negs]
 
-            batch_neg_b[b] = self._toarray(self.encoded_all_intents[negs])
+            batch_neg_b[b] = self._toarray(actual_vecs)
 
         return np.concatenate([batch_pos_b, batch_neg_b], 1)
 
@@ -665,6 +666,7 @@ class EmbeddingIntentClassifier(Component):
 
         negs = []
         for b in range(batch_pos_b.shape[0]):
+            # print("new intent")
             # create negative indexes out of possible ones
             # except for correct index of b
             negative_indexes = [i for i in
