@@ -312,6 +312,33 @@ class EmbeddingIntentClassifier(Component):
 
         return np.array(iou)
 
+    def is_too_large_iou(self, pos, neg_samples):
+        import collections
+        iou = []
+        if issparse(pos):
+            unique_j = find(pos)[1]
+        else:
+            unique_j = np.nonzero(pos.clip(min=0))[-1]
+        for intent_i in neg_samples:
+            # ignore number of counts
+            if issparse(intent_i):
+                unique_i = find(intent_i)[1]
+            else:
+                unique_i = np.nonzero(intent_i.clip(min=0))[-1]
+
+            merged_ij = np.concatenate((unique_i, unique_j), axis=0)
+
+            unique_ij = float(len(list(set(merged_ij))))
+            overlap_ij = float(len([item for item, count in collections.Counter(merged_ij).items() if count > 1]))
+
+            iou_i = (overlap_ij / unique_ij)
+            if iou_i > 0.33:
+                print(iou_i)
+                return True
+            else:
+                iou.append(iou_i)
+        return False
+
     # noinspection PyPep8Naming
     def _create_all_Y(self, size: int) -> np.ndarray:
         """Stack encoded_all_intents on top of each other
@@ -604,7 +631,7 @@ class EmbeddingIntentClassifier(Component):
         Where the first is correct intent
         and the rest are wrong intents sampled randomly
         """
-
+        print('new intent')
         batch_pos_b = np.expand_dims(batch_pos_b, axis=1)
 
         # sample negatives
@@ -618,15 +645,15 @@ class EmbeddingIntentClassifier(Component):
         for b in range(batch_pos_b.shape[0]):
             # create negative indexes out of possible ones
             # except for correct index of b
-            if self.use_iou:
-                negative_indexes = [i for i in
-                                    range(self.encoded_all_intents.shape[0])
-                                    if self.iou[i, intent_ids[b]] < 0.66]
-            else:
-                negative_indexes = [i for i in
-                                    range(self.encoded_all_intents.shape[0])
-                                    if i != intent_ids[b]]
+            negative_indexes = [i for i in
+                                range(self.encoded_all_intents.shape[0])
+                                if i != intent_ids[b]]
+
             negs = np.random.choice(negative_indexes, size=self.num_neg)
+            if self.use_iou:
+                while self.is_too_large_iou(batch_pos_b, negs):
+                    print("new iou")
+                    negs = np.random.choice(negative_indexes, size=self.num_neg)
 
             batch_neg_b[b] = self._toarray(self.encoded_all_intents[negs])
 
@@ -640,18 +667,18 @@ class EmbeddingIntentClassifier(Component):
         for b in range(batch_pos_b.shape[0]):
             # create negative indexes out of possible ones
             # except for correct index of b
-            if self.use_iou:
-                negative_indexes = [i for i in
-                                    range(batch_pos_b.shape[0])
-                                    if self.iou[intent_ids[i], intent_ids[b]] < 0.66]
-            else:
-                negative_indexes = [i for i in
-                                    range(batch_pos_b.shape[0])
-                                    if not np.array_equal(batch_pos_b[i], batch_pos_b[b])]
+            negative_indexes = [i for i in
+                                range(batch_pos_b.shape[0])
+                                if not np.array_equal(batch_pos_b[i], batch_pos_b[b])]
 
             negs_ids = np.random.choice(negative_indexes, size=self.num_neg)
-            negs.append(np.eye(batch_pos_b.shape[0])[negs_ids])
+            actual_vecs = self.encoded_all_intents[negs_ids]
 
+            if self.use_iou:
+                while self.is_too_large_iou(batch_pos_b[b], actual_vecs):
+                    negs_ids = np.random.choice(negative_indexes, size=self.num_neg)
+                    actual_vecs = self.encoded_all_intents[negs_ids]
+            negs.append(np.eye(batch_pos_b.shape[0])[negs_ids])
         return np.array(negs)
 
     def _linearly_increasing_batch_size(self, epoch: int) -> int:
@@ -740,6 +767,7 @@ class EmbeddingIntentClassifier(Component):
                                    negs_in: negs,
                                    is_training: True}
                     )
+
                 else:
                     batch_b = self._create_batch_b(batch_pos_b, intents_for_b)
 
@@ -750,6 +778,19 @@ class EmbeddingIntentClassifier(Component):
                                    is_training: True}
                     )
                 ep_loss += sess_out.get('loss') / batches_per_epoch
+
+            # optimizer = tf.train.AdamOptimizer()
+            # variables = tf.trainable_variables()
+            # gradients = optimizer.compute_gradients(loss, variables)
+            # print(batch_a.shape)
+            # print(batch_b.shape)
+            # gradient_vals = self.session.run(gradients, feed_dict={self.a_in: batch_a,
+            #            self.b_in: batch_b,
+            #            negs_in: negs,
+            #            is_training: False})
+            # for x in gradient_vals:
+            #     print("avg: {}, max: {}, min: {}".format(np.average(x[0]), np.amax(np.absolute(x[0])), np.amin(np.absolute(x[0]))))
+            #     print("avg: {}, max: {}, min: {}".format(np.average(x[0]), np.amax(np.absolute(x[1])), np.amin(np.absolute(x[1]))))
 
             if self.evaluate_on_num_examples:
                 if (ep == 0 or
@@ -763,6 +804,7 @@ class EmbeddingIntentClassifier(Component):
                     "loss": "{:.3f}".format(ep_loss),
                     "acc": "{:.3f}".format(train_acc)
                 })
+
             else:
                 pbar.set_postfix({
                     "loss": "{:.3f}".format(ep_loss)
@@ -818,8 +860,8 @@ class EmbeddingIntentClassifier(Component):
         self.encoded_all_intents = self._create_encoded_intents(
             intent_dict, training_data)
 
-        if self.use_iou:
-            self.iou = self._create_iou_for_intents()
+        # if self.use_iou:
+        #     self.iou = self._create_iou_for_intents()
 
         X, Y, intents_for_X = self._prepare_data_for_training(
             training_data, intent_dict)
@@ -892,8 +934,21 @@ class EmbeddingIntentClassifier(Component):
 
             train_op = tf.train.AdamOptimizer().minimize(loss)
 
+            # optimizer = tf.train.AdamOptimizer()
+            # variables = tf.trainable_variables()
+            # gradients = optimizer.compute_gradients(loss, variables)
+
+
             # train tensorflow graph
             self.session = tf.Session()
+            # array_X = self._toarray(X)
+            # print("done X")
+            # array_Y = self._create_all_Y(X.shape[0])
+            # print("done Y")
+            # gradient_vals = self.session.run(gradients, feed_dict={self.a_in: array_X,
+            #            self.b_in: array_Y,
+            #            is_training: False})
+            # print(gradient_vals)
 
             self._train_tf(X, Y, intents_for_X, negs_in,
                            loss, is_training, train_op)
