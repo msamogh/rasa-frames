@@ -71,6 +71,7 @@ class BertFeaturizer(Featurizer):
            use_tpu=False,
            model_fn=model_fn,
            config=run_config,
+           model_dir='/tmp/bert_model',
            predict_batch_size=8)
 
     def train(self, training_data, config, **kwargs):
