@@ -4,36 +4,19 @@ from __future__ import print_function
 from __future__ import unicode_literals
 
 import numpy as np
-import typing
 from typing import Any
 import os
 
 from rasa_nlu.featurizers import Featurizer
 from rasa_nlu.training_data import Message
 from rasa_nlu.training_data import TrainingData
-from extract_features import main, create_features, model_fn_builder
 from rasa_nlu import config
+from bert import modeling, tokenization
+from bert.extract_features import create_features, model_fn_builder
 
 import tensorflow as tf
-import modeling
-import tokenization
-
-if typing.TYPE_CHECKING:
-    from spacy.language import Language
-    from spacy.tokens import Doc
 
 tf.logging.set_verbosity(tf.logging.INFO)
-
-def ndim(spacy_nlp):
-    """Number of features used to represent a document / sentence."""
-    # type: Language -> int
-    return spacy_nlp.vocab.vectors_length
-
-
-def features_for_doc(doc):
-    """Feature vector for a single document / sentence."""
-    # type: Doc -> np.ndarray
-    return doc.vector
 
 
 class BertFeaturizer(Featurizer):
