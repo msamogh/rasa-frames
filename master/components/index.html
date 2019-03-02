@@ -941,9 +941,21 @@ The MITIE component does not provide entity confidence values.</p>
 </div>
 </td>
 </tr>
-<tr class="field-even field"><th class="field-name">Description:</th><td class="field-body"><p class="first last">Using spacy this component predicts the entities of a message. spacy uses a statistical BILOU transition model.
+<tr class="field-even field"><th class="field-name">Description:</th><td class="field-body"><p class="first">Using spacy this component predicts the entities of a message. spacy uses a statistical BILOU transition model.
 As of now, this component can only use the spacy builtin entity extraction models and can not be retrained.
 This extractor does not provide any confidence scores.</p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Configuration:</th><td class="field-body"><p class="first">Configure which dimensions, i.e. entity types, the spacy component
+should extract. A full list of available dimensions can be found in
+the <a class="reference external" href="https://spacy.io/api/annotation#section-named-entities">spacy documentation</a>.
+Leaving the dimensions option unspecified will extract all available dimensions.</p>
+<div class="last highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">pipeline</span><span class="p">:</span>
+<span class="p p-Indicator">-</span> <span class="nt">name</span><span class="p">:</span> <span class="s">&quot;SpacyEntityExtractor&quot;</span>
+  <span class="c1"># dimensions to extract</span>
+  <span class="nt">dimensions</span><span class="p">:</span> <span class="p p-Indicator">[</span><span class="s">&quot;PERSON&quot;</span><span class="p p-Indicator">,</span> <span class="s">&quot;LOC&quot;</span><span class="p p-Indicator">,</span> <span class="s">&quot;ORG&quot;</span><span class="p p-Indicator">,</span> <span class="s">&quot;PRODUCT&quot;</span><span class="p p-Indicator">]</span>
+</pre></div>
+</div>
 </td>
 </tr>
 </tbody>
@@ -1103,8 +1115,9 @@ based system.</p>
 </td>
 </tr>
 <tr class="field-odd field"><th class="field-name">Configuration:</th><td class="field-body"><p class="first">Configure which dimensions, i.e. entity types, the duckling component
-to extract. A full list of available dimensions can be found in
-the <a class="reference external" href="https://duckling.wit.ai/">duckling documentation</a>.</p>
+should extract. A full list of available dimensions can be found in
+the <a class="reference external" href="https://duckling.wit.ai/">duckling documentation</a>.
+Leaving the dimensions option unspecified will extract all available dimensions.</p>
 <div class="last highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">pipeline</span><span class="p">:</span>
 <span class="p p-Indicator">-</span> <span class="nt">name</span><span class="p">:</span> <span class="s">&quot;DucklingHTTPExtractor&quot;</span>
   <span class="c1"># url of the running duckling server</span>

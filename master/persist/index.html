@@ -259,7 +259,12 @@ which you can install with <code class="docutils literal notranslate"><span clas
 </dl>
 </li>
 </ul>
-<p>Models are gzipped before saving to cloud.</p>
+<p>Models are gzipped before they are saved in the cloud. The gzipped file naming convention
+is <cite>{PROJECT}___{MODEL_NAME}.tar.gz</cite> and it is stored in the root folder of the storage service.
+Currently, you are not able to manually specify the path on the cloud storage.</p>
+<p>If storing trained models, Rasa NLU will gzip the new model and upload it to the container. If retrieving/loading models
+from the cloud storage, Rasa NLU will download the gzipped model locally and extract the contents to the location
+specified by the <cite>–path</cite> flag.</p>
 <div class="section" id="have-questions-or-feedback">
 <h2>Have questions or feedback?<a class="headerlink" href="#have-questions-or-feedback" title="Permalink to this headline">¶</a></h2>
 <p>We have a very active support community on <a class="reference external" href="https://forum.rasa.com">Rasa Community Forum</a>
