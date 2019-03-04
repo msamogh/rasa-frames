@@ -70,6 +70,7 @@ class EmbeddingIntentClassifier(Component):
         "gpu_lstm": False,
         "transformer": False,
         "pos_encoding": "asytiming",  # {"asytiming", "timing", "emb"}
+        "max_seq_length": 256,
         "num_heads": 4,
 
         # training parameters
@@ -195,6 +196,7 @@ class EmbeddingIntentClassifier(Component):
                 raise ValueError("GPU training only supports identical sizes among layers b")
 
         self.pos_encoding = config['pos_encoding']
+        self.max_seq_length = config['max_seq_length']
         self.num_heads = config['num_heads']
 
         self.batch_size = config['batch_size']
@@ -500,7 +502,7 @@ class EmbeddingIntentClassifier(Component):
             hparams.num_heads = self.num_heads
             # hparams.relu_dropout = self.droprate
             hparams.pos = self.pos_encoding
-            # hparams.max_length = 14
+            hparams.max_length = self.max_seq_length
             if not self.bidirectional:
                 hparams.unidirectional_encoder = True
 
