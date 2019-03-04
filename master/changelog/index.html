@@ -286,6 +286,11 @@ with their class name</li>
 <li>Components <code class="docutils literal notranslate"><span class="pre">load(...)</span></code>, <code class="docutils literal notranslate"><span class="pre">create(...)</span></code> and <code class="docutils literal notranslate"><span class="pre">cache_key(...)</span></code> methods
 additionally take component’s meta/config dicts</li>
 <li>Components <code class="docutils literal notranslate"><span class="pre">persist(...)</span></code> method additionally takes file name prefix</li>
+<li>renamed <code class="docutils literal notranslate"><span class="pre">rasa_nlu.evaluate</span></code> to <code class="docutils literal notranslate"><span class="pre">rasa_nlu.test</span></code></li>
+<li>renamed <code class="docutils literal notranslate"><span class="pre">rasa_nlu.test.run_cv_evaluation</span></code> to
+<code class="docutils literal notranslate"><span class="pre">rasa_nlu.test.cross_validate</span></code></li>
+<li>renamed <code class="docutils literal notranslate"><span class="pre">rasa_nlu.train.do_train()</span></code> to <code class="docutils literal notranslate"><span class="pre">rasa_nlu.train.train()</span></code></li>
+<li>train command can now also load config from file</li>
 </ul>
 </div>
 <div class="section" id="removed">
