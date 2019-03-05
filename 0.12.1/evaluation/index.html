@@ -305,7 +305,15 @@ BILOU-based one.</p>
 </pre></div>
 </div>
 <p>Here is a quick overview:</p>
-<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>/home/travis/virtualenv/python3.5.6/bin/python: No module named rasa_nlu.evaluate
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>Calling `rasa_nlu.evaluate` is deprecated. Please use `rasa_nlu.test` instead.
+Traceback (most recent call last):
+  File &quot;/opt/python/3.5.6/lib/python3.5/runpy.py&quot;, line 193, in _run_module_as_main
+    &quot;__main__&quot;, mod_spec)
+  File &quot;/opt/python/3.5.6/lib/python3.5/runpy.py&quot;, line 85, in _run_code
+    exec(code, run_globals)
+  File &quot;/home/travis/build/RasaHQ/rasa_nlu/rasa_nlu/evaluate.py&quot;, line 10, in &lt;module&gt;
+    test.main()
+AttributeError: &#39;function&#39; object has no attribute &#39;main&#39;
 </pre></div>
 </div>
 </div>
