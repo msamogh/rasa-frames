@@ -615,7 +615,7 @@ class EmbeddingIntentClassifier(Component):
 
         if self.bidirectional:
             with tf.variable_scope('rnn_encoder_{}'.format(name)):
-                single_cell = lambda: tf.contrib.cudnn_rnn.CudnnCompatibleLSTMCell(layer_sizes[0])
+                single_cell = lambda: tf.contrib.cudnn_rnn.CudnnCompatibleLSTMCell(layer_sizes[0], reuse=tf.AUTO_REUSE)
                 cells_fw = [single_cell() for _ in range(len(layer_sizes))]
                 cells_bw = [single_cell() for _ in range(len(layer_sizes))]
                 x, _, _ = tf.contrib.rnn.stack_bidirectional_dynamic_rnn(cells_fw, cells_bw, x,
@@ -623,7 +623,7 @@ class EmbeddingIntentClassifier(Component):
                                                                          sequence_length=real_length)
         else:
             with tf.variable_scope('rnn_encoder_{}'.format(name)):
-                single_cell = lambda: tf.contrib.cudnn_rnn.CudnnCompatibleLSTMCell(layer_sizes[0])
+                single_cell = lambda: tf.contrib.cudnn_rnn.CudnnCompatibleLSTMCell(layer_sizes[0], reuse=tf.AUTO_REUSE)
                 # NOTE: Even if there's only one layer, the cell needs to be wrapped in
                 # MultiRNNCell.
                 cell = tf.nn.rnn_cell.MultiRNNCell([single_cell() for _ in range(layer_sizes[0])])
