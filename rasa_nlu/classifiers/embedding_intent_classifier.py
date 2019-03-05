@@ -1,12 +1,16 @@
 import io
 import logging
-import numpy as np
 import os
 import pickle
 import typing
 from tqdm import tqdm
 from typing import Any, Dict, List, Optional, Text, Tuple
+
+import numpy as np
+import math
 from scipy.sparse import issparse, find
+from tensor2tensor.models.transformer import transformer_small, transformer_prepare_encoder, transformer_encoder
+from tensor2tensor.layers import common_layers
 
 from rasa_nlu.classifiers import INTENT_RANKING_LENGTH
 from rasa_nlu.components import Component
@@ -62,8 +66,12 @@ class EmbeddingIntentClassifier(Component):
 
         "share_embedding": False,
         "bidirectional": False,
-        "fused": False,
-        "gpu": False,
+        "fused_lstm": False,
+        "gpu_lstm": False,
+        "transformer": False,
+        "pos_encoding": "shifted_timing",  # {"shifted_timing", "timing", "emb"}
+        "max_seq_length": 256,
+        "num_heads": 4,
 
         # training parameters
         "layer_norm": True,
@@ -176,17 +184,22 @@ class EmbeddingIntentClassifier(Component):
                                  "hidden_layer_sizes must coincide")
 
         self.bidirectional = config['bidirectional']
-        self.fused = config['fused']
-        self.gpu = config['gpu']
-        if self.gpu and self.fused:
-            raise ValueError("Either `gpu` or `fused` should be specified")
-        if self.gpu:
+        self.fused_lstm = config['fused_lstm']
+        self.gpu_lstm = config['gpu_lstm']
+        self.transformer = config['transformer']
+        if (self.gpu_lstm and self.fused_lstm) or (self.transformer and self.fused_lstm) or (self.gpu_lstm and self.transformer):
+            raise ValueError("Either `gpu_lstm` or `fused_lstm` or `transformer` should be specified")
+        if self.gpu_lstm or self.transformer:
             if any(self.hidden_layer_sizes['a'][0] != size
                    for size in self.hidden_layer_sizes['a']):
                 raise ValueError("GPU training only supports identical sizes among layers a")
             if any(self.hidden_layer_sizes['b'][0] != size
                    for size in self.hidden_layer_sizes['b']):
                 raise ValueError("GPU training only supports identical sizes among layers b")
+
+        self.pos_encoding = config['pos_encoding']
+        self.max_seq_length = config['max_seq_length']
+        self.num_heads = config['num_heads']
 
         self.batch_size = config['batch_size']
         self.epochs = config['epochs']
@@ -427,10 +440,35 @@ class EmbeddingIntentClassifier(Component):
             reuse=tf.AUTO_REUSE
         )
 
+    @staticmethod
+    def _get_shifted_timing_signal_1d(length,
+                                      channels,
+                                      min_timescale=1.0,
+                                      max_timescale=1.0e4,
+                                      start_index=0):
+        """See `tensor2tensor.layers.common_attention.get_timing_signal_1d
+
+        adds random phase shift to timing embeddings to break symmetry
+        """
+
+        position = tf.to_float(tf.range(length) + start_index)
+        num_timescales = channels // 2
+        log_timescale_increment = (
+                math.log(float(max_timescale) / float(min_timescale)) /
+                tf.maximum(tf.to_float(num_timescales) - 1, 1))
+        inv_timescales = min_timescale * tf.exp(
+            tf.to_float(tf.range(num_timescales)) * -log_timescale_increment)
+        scaled_time = tf.expand_dims(position, 1) * tf.expand_dims(inv_timescales, 0) + np.random.rand()
+        signal = tf.concat([tf.sin(scaled_time), tf.cos(scaled_time)], axis=1)
+        signal = tf.pad(signal, [[0, 0], [0, tf.mod(channels, 2)]])
+        signal = tf.reshape(signal, [1, length, channels])
+        return signal
+
     def _create_tf_rnn_embed(self, x_in: 'tf.Tensor', is_training: 'tf.Tensor',
                              layer_sizes: List[int], name: Text) -> 'tf.Tensor':
         """Create rnn for dialogue level embedding."""
 
+        reg = tf.contrib.layers.l2_regularizer(self.C2)
         # mask different length sequences
         # if there is at least one `-1` it should be masked
         mask = tf.sign(tf.reduce_max(x_in, -1) + 1)
@@ -439,7 +477,7 @@ class EmbeddingIntentClassifier(Component):
 
         x = tf.nn.relu(x_in)
 
-        if self.fused:
+        if self.fused_lstm:
             last = tf.expand_dims(mask * tf.cumprod(1 - mask, axis=1, exclusive=True, reverse=True), -1)
             x = tf.transpose(x, [1, 0, 2])
 
@@ -466,8 +504,8 @@ class EmbeddingIntentClassifier(Component):
             x = tf.transpose(x, [1, 0, 2])
             x = tf.reduce_sum(x * last, 1)
 
-        elif self.gpu:
-            # only trains and predicts on gpu
+        elif self.gpu_lstm:
+            # only trains and predicts on gpu_lstm
             x = tf.transpose(x, [1, 0, 2])
 
             if self.bidirectional:
@@ -481,12 +519,76 @@ class EmbeddingIntentClassifier(Component):
                                                   name='rnn_encoder_{}'.format(name))
 
             x, _ = cell(x, training=True)
-            # TODO prediction should be done according to guide:
+            # TODO prediction should be done according to a guide:
             #  https://gist.github.com/melgor/41e7d9367410b71dfddc33db34cba85f
             #  https://github.com/tensorflow/tensorflow/blob/r1.12/tensorflow/contrib/cudnn_rnn/python/layers/cudnn_rnn.py
 
             x = tf.transpose(x, [1, 0, 2])
             x = tf.reduce_sum(x * last, 1)
+
+        elif self.transformer:
+            hparams = transformer_small()
+
+            hparams.num_hidden_layers = len(layer_sizes)
+            hparams.hidden_size = layer_sizes[0]
+            # it seems to be factor of 4 for transformer architectures in t2t
+            hparams.filter_size = layer_sizes[0] * 4
+            hparams.num_heads = self.num_heads
+            # hparams.relu_dropout = self.droprate
+            hparams.pos = self.pos_encoding
+            hparams.max_length = self.max_seq_length
+            if not self.bidirectional:
+                hparams.unidirectional_encoder = True
+
+            # When not in training mode, set all forms of dropout to zero.
+            for key, value in hparams.values().items():
+                if key.endswith("dropout") or key == "label_smoothing":
+                    setattr(hparams, key, value * tf.cast(is_training, tf.float32))
+
+            x = tf.layers.dense(inputs=x,
+                                units=hparams.hidden_size,
+                                use_bias=False,
+                                kernel_initializer=tf.random_normal_initializer(0.0, hparams.hidden_size**-0.5),
+                                kernel_regularizer=reg,
+                                name='transformer_embed_layer_{}'.format(name),
+                                reuse=tf.AUTO_REUSE)
+            x = tf.nn.dropout(x, rate=hparams.layer_prepostprocess_dropout)
+
+            if hparams.multiply_embedding_mode == "sqrt_depth":
+                x *= hparams.hidden_size**0.5
+
+            x *= tf.expand_dims(mask, -1)
+
+            with tf.variable_scope('transformer_{}'.format(name), reuse=tf.AUTO_REUSE):
+                (x,
+                 self_attention_bias,
+                 encoder_decoder_attention_bias
+                 ) = transformer_prepare_encoder(x, None, hparams)
+
+                if hparams.pos == 'shifted_timing':
+                    length = common_layers.shape_list(x)[1]
+                    channels = common_layers.shape_list(x)[2]
+                    signal = self._get_shifted_timing_signal_1d(length, channels)
+                    x += common_layers.cast_like(signal, x)
+
+                x *= tf.expand_dims(mask, -1)
+
+                x = tf.nn.dropout(x, rate=hparams.layer_prepostprocess_dropout)
+
+                attn_bias_for_padding = None
+                # Otherwise the encoder will just use encoder_self_attention_bias.
+                if hparams.unidirectional_encoder:
+                    attn_bias_for_padding = encoder_decoder_attention_bias
+
+                x = transformer_encoder(
+                    x,
+                    self_attention_bias,
+                    hparams,
+                    nonpadding=mask,
+                    attn_bias_for_padding=attn_bias_for_padding)
+
+            # x = tf.reduce_sum(x * last, 1)
+            x = tf.reduce_mean(x, 1)
 
         else:
             for i, layer_size in enumerate(layer_sizes):
@@ -514,7 +616,6 @@ class EmbeddingIntentClassifier(Component):
 
             x = tf.reduce_sum(x * last, 1)
 
-        reg = tf.contrib.layers.l2_regularizer(self.C2)
         return tf.layers.dense(inputs=x,
                                units=self.embed_dim,
                                kernel_regularizer=reg,
@@ -627,8 +728,7 @@ class EmbeddingIntentClassifier(Component):
         loss = (tf.reduce_mean(loss) + tf.losses.get_regularization_loss())
         return loss
 
-        # training helpers:
-
+    # training helpers:
     def _create_batch_b(self, batch_pos_b: np.ndarray,
                         intent_ids: np.ndarray) -> np.ndarray:
         """Create batch of intents.
@@ -826,7 +926,6 @@ class EmbeddingIntentClassifier(Component):
                         "".format(last_loss, train_acc))
 
     # noinspection PyPep8Naming
-
     def _output_training_stat(self,
                               X: np.ndarray,
                               Y: np.ndarray,
@@ -944,10 +1043,12 @@ class EmbeddingIntentClassifier(Component):
 
             train_op = tf.train.AdamOptimizer().minimize(loss)
 
+            # [print(v.name, v.shape) for v in tf.trainable_variables()]
+            # exit()
+
             # optimizer = tf.train.AdamOptimizer()
             # variables = tf.trainable_variables()
             # gradients = optimizer.compute_gradients(loss, variables)
-
 
             # train tensorflow graph
             self.session = tf.Session()
