@@ -169,6 +169,7 @@ class EmbeddingIntentClassifier(Component):
         # persisted embeddings
         self.word_embed = word_embed
         self.intent_embed = intent_embed
+        self.phase = None
 
     # init helpers
     def _load_nn_architecture_params(self, config: Dict[Text, Any]) -> None:
@@ -406,8 +407,8 @@ class EmbeddingIntentClassifier(Component):
             reuse=tf.AUTO_REUSE
         )
 
-    @staticmethod
-    def _get_shifted_timing_signal_1d(length,
+    def _get_shifted_timing_signal_1d(self,
+                                      length,
                                       channels,
                                       min_timescale=1.0,
                                       max_timescale=1.0e4,
@@ -424,7 +425,15 @@ class EmbeddingIntentClassifier(Component):
                 tf.maximum(tf.to_float(num_timescales) - 1, 1))
         inv_timescales = min_timescale * tf.exp(
             tf.to_float(tf.range(num_timescales)) * -log_timescale_increment)
-        scaled_time = tf.expand_dims(position, 1) * tf.expand_dims(inv_timescales, 0) + np.random.rand()
+        if self.phase is None:
+            self.phase = 0.
+        else:
+            # introduce phase shift in time encodings between transformers
+            # 0.5 - 0.8 works on small dataset
+            self.phase += 0.65
+        phase = self.phase
+
+        scaled_time = tf.expand_dims(position, 1) * tf.expand_dims(inv_timescales, 0) + phase
         signal = tf.concat([tf.sin(scaled_time), tf.cos(scaled_time)], axis=1)
         signal = tf.pad(signal, [[0, 0], [0, tf.mod(channels, 2)]])
         signal = tf.reshape(signal, [1, length, channels])
