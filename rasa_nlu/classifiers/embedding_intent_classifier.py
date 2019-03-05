@@ -70,6 +70,9 @@ class EmbeddingIntentClassifier(Component):
         "gpu_lstm": False,
         "transformer": False,
         "pos_encoding": "shifted_timing",  # {"shifted_timing", "timing", "emb"}
+        # introduce phase shift in time encodings between transformers
+        # 0.5 - 0.8 works on small dataset
+        "pos_phase_shift": 0.65,
         "max_seq_length": 256,
         "num_heads": 4,
 
@@ -197,6 +200,7 @@ class EmbeddingIntentClassifier(Component):
                 raise ValueError("GPU training only supports identical sizes among layers b")
 
         self.pos_encoding = config['pos_encoding']
+        self.pos_phase_shift = config['pos_phase_shift']
         self.max_seq_length = config['max_seq_length']
         self.num_heads = config['num_heads']
 
@@ -428,9 +432,7 @@ class EmbeddingIntentClassifier(Component):
         if self.phase is None:
             self.phase = 0.
         else:
-            # introduce phase shift in time encodings between transformers
-            # 0.5 - 0.8 works on small dataset
-            self.phase += 0.65
+            self.phase += self.pos_phase_shift
         phase = self.phase
 
         scaled_time = tf.expand_dims(position, 1) * tf.expand_dims(inv_timescales, 0) + phase
