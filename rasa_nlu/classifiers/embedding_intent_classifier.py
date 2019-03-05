@@ -238,6 +238,9 @@ class EmbeddingIntentClassifier(Component):
             self.evaluate_every_num_epochs = self.epochs
 
         self.evaluate_on_num_examples = config['evaluate_on_num_examples']
+        if self.gpu_lstm:
+            logger.info("Calculating train accuracy on gpu is not supported")
+            self.evaluate_on_num_examples = 0
 
     def _load_params(self) -> None:
 
@@ -490,15 +493,13 @@ class EmbeddingIntentClassifier(Component):
             else:
                 direction = 'unidirectional'
 
-            cell = tf.contrib.cudnn_rnn.CudnnLSTM(len(layer_sizes),
+            lstm = tf.contrib.cudnn_rnn.CudnnLSTM(len(layer_sizes),
                                                   layer_sizes[0],
                                                   direction=direction,
                                                   name='rnn_encoder_{}'.format(name))
 
-            x, _ = cell(x, training=True)
-            # TODO prediction should be done according to a guide:
-            #  https://gist.github.com/melgor/41e7d9367410b71dfddc33db34cba85f
-            #  https://github.com/tensorflow/tensorflow/blob/r1.12/tensorflow/contrib/cudnn_rnn/python/layers/cudnn_rnn.py
+            x, _ = lstm(x, training=True)
+            # prediction graph is created separately
 
             x = tf.transpose(x, [1, 0, 2])
             x = tf.reduce_sum(x * last, 1)
@@ -592,6 +593,44 @@ class EmbeddingIntentClassifier(Component):
                     )
 
             x = tf.reduce_sum(x * last, 1)
+
+        return tf.layers.dense(inputs=x,
+                               units=self.embed_dim,
+                               kernel_regularizer=reg,
+                               name='embed_layer_{}'.format(name),
+                               reuse=tf.AUTO_REUSE)
+
+    def _create_tf_gpu_predict_embed(self, x_in: 'tf.Tensor',
+                                     layer_sizes: List[int], name: Text) -> 'tf.Tensor':
+        """Used for prediction if gpu_lstm is true"""
+
+        reg = tf.contrib.layers.l2_regularizer(self.C2)
+        # mask different length sequences
+        # if there is at least one `-1` it should be masked
+        mask = tf.sign(tf.reduce_max(x_in, -1) + 1)
+        last = tf.expand_dims(mask * tf.cumprod(1 - mask, axis=1, exclusive=True, reverse=True), -1)
+        real_length = tf.cast(tf.reduce_sum(mask, 1), tf.int32)
+
+        x = tf.nn.relu(x_in)
+
+        if self.bidirectional:
+            with tf.variable_scope('rnn_encoder_{}'.format(name)):
+                single_cell = lambda: tf.contrib.cudnn_rnn.CudnnCompatibleLSTMCell(layer_sizes[0])
+                cells_fw = [single_cell() for _ in range(len(layer_sizes))]
+                cells_bw = [single_cell() for _ in range(len(layer_sizes))]
+                x, _, _ = tf.contrib.rnn.stack_bidirectional_dynamic_rnn(cells_fw, cells_bw, x,
+                                                                         dtype=tf.float32,
+                                                                         sequence_length=real_length)
+        else:
+            with tf.variable_scope('rnn_encoder_{}'.format(name)):
+                single_cell = lambda: tf.contrib.cudnn_rnn.CudnnCompatibleLSTMCell(layer_sizes[0])
+                # NOTE: Even if there's only one layer, the cell needs to be wrapped in
+                # MultiRNNCell.
+                cell = tf.nn.rnn_cell.MultiRNNCell([single_cell() for _ in range(layer_sizes[0])])
+                # Leave the scope arg unset.
+                x, _ = tf.nn.dynamic_rnn(cell, x, dtype=tf.float32, sequence_length=real_length)
+
+        x = tf.reduce_sum(x * last, 1)
 
         return tf.layers.dense(inputs=x,
                                units=self.embed_dim,
@@ -1000,7 +1039,6 @@ class EmbeddingIntentClassifier(Component):
 
             train_op = tf.train.AdamOptimizer().minimize(loss)
 
-
             # [print(v.name, v.shape) for v in tf.trainable_variables()]
             # exit()
             # train tensorflow graph
@@ -1010,6 +1048,22 @@ class EmbeddingIntentClassifier(Component):
                            loss, is_training, train_op)
 
             self.all_intents_embed_values = self._create_all_intents_embed(self.encoded_all_intents)
+
+            if self.gpu_lstm:
+                # rebuild tf graph for prediction
+                self.word_embed = self._create_tf_gpu_predict_embed(self.a_in,
+                                                                    self.hidden_layer_sizes['a'],
+                                                                    name='a_and_b' if self.share_embedding else 'a')
+                shape = tf.shape(self.b_in)
+                self.b_in = tf.reshape(self.b_in, [-1, shape[-2], self.b_in.shape[-1]])
+                emb_b = self._create_tf_gpu_predict_embed(self.b_in,
+                                                          self.hidden_layer_sizes['b'],
+                                                          name='a_and_b' if self.share_embedding else 'b')
+                # reshape back
+                self.intent_embed = tf.reshape(emb_b, [shape[0], shape[1], self.embed_dim])
+
+                self.sim_op, _ = self._tf_sim(self.word_embed, self.intent_embed)
+
             self.all_intents_embed_in = tf.placeholder(tf.float32, (None, None, self.embed_dim),
                                                        name='all_intents_embed')
 
