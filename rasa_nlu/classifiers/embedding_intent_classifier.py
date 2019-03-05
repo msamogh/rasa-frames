@@ -325,37 +325,27 @@ class EmbeddingIntentClassifier(Component):
 
         return np.array(iou)
 
-    def calculate_iou(self, pos, neg_samples):
+    def calculate_iou(self, pos, neg):
         import collections
-        new_negs = []
+
         # print(pos.shape)
         if issparse(pos):
             unique_j = find(pos)[1]
         else:
             unique_j = np.nonzero(pos.clip(min=0))[-1]
-        for intent_i in neg_samples:
-            og_intent = intent_i
-            # ignore number of counts
-            # print(type(intent_i))
-            if isinstance(intent_i, np.int64):
-                intent_i = self.encoded_all_intents[intent_i]
-                # print(intent_i.shape)
-            if issparse(intent_i):
-                unique_i = find(intent_i)[1]
-            else:
-                unique_i = np.nonzero(intent_i.clip(min=0))[-1]
 
-            merged_ij = np.concatenate((unique_i, unique_j), axis=0)
+        # ignore number of counts
+        if issparse(neg):
+            unique_i = find(neg)[1]
+        else:
+            unique_i = np.nonzero(neg.clip(min=0))[-1]
 
-            unique_ij = float(len(list(set(merged_ij))))
-            overlap_ij = float(len([item for item, count in collections.Counter(merged_ij).items() if count > 1]))
+        merged_ij = np.concatenate((unique_i, unique_j), axis=0)
 
-            iou_i = (overlap_ij / unique_ij)
-            # print(iou_i)
-            if iou_i < 0.34:
-                new_negs.append(og_intent)
+        unique_ij = float(len(list(set(merged_ij))))
+        overlap_ij = float(len([item for item, count in collections.Counter(merged_ij).items() if count > 1]))
 
-        return new_negs
+        return overlap_ij / unique_ij
 
     # noinspection PyPep8Naming
     def _create_all_Y(self, size: int) -> np.ndarray:
@@ -729,6 +719,41 @@ class EmbeddingIntentClassifier(Component):
         return loss
 
     # training helpers:
+    def _filter_negs(self, pos, negative_indexes, neg_source):
+
+        negs_ids = np.random.choice(negative_indexes, size=self.num_neg)
+
+        good_negs_ids = []
+        if self.use_iou:
+            while True:
+                good_negs_ids.extend(
+                    [i
+                     for i in negs_ids
+                     if self.calculate_iou(pos, neg_source[i]) < 0.66]
+                )
+                len_negs = len(good_negs_ids)
+                if len_negs == self.num_neg:
+                    break
+
+                negative_indexes = [i
+                                    for i in negative_indexes
+                                    if i not in negs_ids]
+                if not negative_indexes:
+                    if not good_negs_ids:
+                        raise Exception("Increase iou threshold")
+                    good_negs_ids = np.random.choice(good_negs_ids, size=self.num_neg)
+                    break
+
+                negs_ids = np.random.choice(negative_indexes,
+                                            size=self.num_neg - len_negs)
+                negative_indexes = [i
+                                    for i in negative_indexes
+                                    if i not in negs_ids]
+        else:
+            good_negs_ids = negs_ids
+
+        return good_negs_ids
+
     def _create_batch_b(self, batch_pos_b: np.ndarray,
                         intent_ids: np.ndarray) -> np.ndarray:
         """Create batch of intents.
@@ -750,19 +775,15 @@ class EmbeddingIntentClassifier(Component):
         for b in range(batch_pos_b.shape[0]):
             # create negative indexes out of possible ones
             # except for correct index of b
-            negative_indexes = [i for i in
-                                range(self.encoded_all_intents.shape[0])
+            negative_indexes = [i
+                                for i in range(self.encoded_all_intents.shape[0])
                                 if i != intent_ids[b]]
 
-            negs = np.random.choice(negative_indexes, size=self.num_neg)
+            negs_ids = self._filter_negs(batch_pos_b[b, 0],
+                                         negative_indexes,
+                                         self.encoded_all_intents)
 
-            if self.use_iou:
-                while True:
-                    negs = self.calculate_iou(batch_pos_b[b], negs)
-                    len_negs = len(negs)
-                    if len_negs < self.num_neg:
-                        negs = np.append(negs, np.random.choice(negative_indexes, size=self.num_neg - len_negs))
-            actual_vecs = self.encoded_all_intents[negs]
+            actual_vecs = self.encoded_all_intents[negs_ids]
             batch_neg_b[b] = self._toarray(actual_vecs)
 
         return np.concatenate([batch_pos_b, batch_neg_b], 1)
@@ -774,20 +795,14 @@ class EmbeddingIntentClassifier(Component):
         for b in range(batch_pos_b.shape[0]):
             # create negative indexes out of possible ones
             # except for correct index of b
-            negative_indexes = [i for i in
-                                range(batch_pos_b.shape[0])
+            negative_indexes = [i
+                                for i in range(batch_pos_b.shape[0])
                                 if not np.array_equal(batch_pos_b[i], batch_pos_b[b])]
 
-            negs_ids = np.random.choice(negative_indexes, size=self.num_neg)
+            negs_ids = self._filter_negs(batch_pos_b[b],
+                                         negative_indexes,
+                                         self.encoded_all_intents)
 
-            if self.use_iou:
-                while True:
-                    negs_ids = self.calculate_iou(batch_pos_b[b], negs_ids)
-                    len_negs_ids = len(negs_ids)
-                    if len_negs_ids < self.num_neg:
-                        negs_ids = np.append(negs_ids, np.random.choice(negative_indexes, size=self.num_neg-len_negs_ids))
-                    else:
-                        break
             negs.append(np.eye(batch_pos_b.shape[0])[negs_ids])
         return np.array(negs)
 
