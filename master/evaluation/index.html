@@ -355,34 +355,14 @@ run:</p>
 </div>
 <p>Which will produce the following output:</p>
 <div class="highlight-text notranslate"><div class="highlight"><pre><span></span>Calling `rasa_nlu.evaluate` is deprecated. Please use `rasa_nlu.test` instead.
-usage: evaluate.py [-h] [--debug] [-v] -d DATA [--mode MODE] [-c CONFIG]
-                   [-m MODEL] [-f FOLDS] [--report [REPORT]]
-                   [--successes [SUCCESSES]] [--errors ERRORS]
-                   [--histogram HISTOGRAM] [--confmat CONFMAT]
-
-evaluate a Rasa NLU pipeline with cross validation or on external data
-
-optional arguments:
-  -h, --help            show this help message and exit
-  --debug               Print lots of debugging statements. Sets logging level
-                        to DEBUG
-  -v, --verbose         Be verbose. Sets logging level to INFO
-  -d DATA, --data DATA  file containing training/evaluation data
-  --mode MODE           evaluation|crossvalidation (evaluate pretrained model
-                        or train model by crossvalidation)
-  -c CONFIG, --config CONFIG
-                        model configuration file (crossvalidation only)
-  -m MODEL, --model MODEL
-                        path to model (evaluation only)
-  -f FOLDS, --folds FOLDS
-                        number of CV folds (crossvalidation only)
-  --report [REPORT]     output path to save the intent/entitymetrics report
-  --successes [SUCCESSES]
-                        output path to save successful predictions
-  --errors ERRORS       output path to save model errors
-  --histogram HISTOGRAM
-                        output path for the confidence histogram
-  --confmat CONFMAT     output path for the confusion matrix plot
+Traceback (most recent call last):
+  File &quot;/opt/python/3.5.6/lib/python3.5/runpy.py&quot;, line 193, in _run_module_as_main
+    &quot;__main__&quot;, mod_spec)
+  File &quot;/opt/python/3.5.6/lib/python3.5/runpy.py&quot;, line 85, in _run_code
+    exec(code, run_globals)
+  File &quot;/home/travis/build/RasaHQ/rasa_nlu/rasa_nlu/evaluate.py&quot;, line 10, in &lt;module&gt;
+    test.main()
+AttributeError: &#39;function&#39; object has no attribute &#39;main&#39;
 </pre></div>
 </div>
 </div>
