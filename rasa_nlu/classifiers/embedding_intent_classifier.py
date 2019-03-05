@@ -69,7 +69,7 @@ class EmbeddingIntentClassifier(Component):
         "fused_lstm": False,
         "gpu_lstm": False,
         "transformer": False,
-        "pos_encoding": "asytiming",  # {"asytiming", "timing", "emb"}
+        "pos_encoding": "shifted_timing",  # {"shifted_timing", "timing", "emb"}
         "max_seq_length": 256,
         "num_heads": 4,
 
@@ -407,11 +407,11 @@ class EmbeddingIntentClassifier(Component):
         )
 
     @staticmethod
-    def _get_asymmetric_timing_signal_1d(length,
-                                         channels,
-                                         min_timescale=1.0,
-                                         max_timescale=1.0e4,
-                                         start_index=0):
+    def _get_shifted_timing_signal_1d(length,
+                                      channels,
+                                      min_timescale=1.0,
+                                      max_timescale=1.0e4,
+                                      start_index=0):
         """See `tensor2tensor.layers.common_attention.get_timing_signal_1d
 
         adds random phase shift to timing embeddings to break symmetry
@@ -531,10 +531,10 @@ class EmbeddingIntentClassifier(Component):
                  encoder_decoder_attention_bias
                  ) = transformer_prepare_encoder(x, None, hparams)
 
-                if hparams.pos == 'asytiming':
+                if hparams.pos == 'shifted_timing':
                     length = common_layers.shape_list(x)[1]
                     channels = common_layers.shape_list(x)[2]
-                    signal = self._get_asymmetric_timing_signal_1d(length, channels)
+                    signal = self._get_shifted_timing_signal_1d(length, channels)
                     x += common_layers.cast_like(signal, x)
 
                 x *= tf.expand_dims(mask, -1)
