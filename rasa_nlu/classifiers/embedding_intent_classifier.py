@@ -1151,31 +1151,32 @@ class EmbeddingIntentClassifier(Component):
             if e.errno != errno.EEXIST:
                 raise
         with self.graph.as_default():
-            self.graph.clear_collection('message_placeholder')
-            self.graph.add_to_collection('message_placeholder',
-                                         self.a_in)
+            if not self.gpu_lstm:
+                self.graph.clear_collection('message_placeholder')
+                self.graph.add_to_collection('message_placeholder',
+                                             self.a_in)
 
-            self.graph.clear_collection('intent_placeholder')
-            self.graph.add_to_collection('intent_placeholder',
-                                         self.b_in)
+                self.graph.clear_collection('intent_placeholder')
+                self.graph.add_to_collection('intent_placeholder',
+                                             self.b_in)
 
-            self.graph.clear_collection('similarity_op')
-            self.graph.add_to_collection('similarity_op',
-                                         self.sim_op)
+                self.graph.clear_collection('similarity_op')
+                self.graph.add_to_collection('similarity_op',
+                                             self.sim_op)
 
-            self.graph.clear_collection('all_intents_embed_in')
-            self.graph.add_to_collection('all_intents_embed_in',
-                                         self.all_intents_embed_in)
-            self.graph.clear_collection('sim_all')
-            self.graph.add_to_collection('sim_all',
-                                         self.sim_all)
+                self.graph.clear_collection('all_intents_embed_in')
+                self.graph.add_to_collection('all_intents_embed_in',
+                                             self.all_intents_embed_in)
+                self.graph.clear_collection('sim_all')
+                self.graph.add_to_collection('sim_all',
+                                             self.sim_all)
 
-            self.graph.clear_collection('word_embed')
-            self.graph.add_to_collection('word_embed',
-                                         self.word_embed)
-            self.graph.clear_collection('intent_embed')
-            self.graph.add_to_collection('intent_embed',
-                                         self.intent_embed)
+                self.graph.clear_collection('word_embed')
+                self.graph.add_to_collection('word_embed',
+                                             self.word_embed)
+                self.graph.clear_collection('intent_embed')
+                self.graph.add_to_collection('intent_embed',
+                                             self.intent_embed)
 
             saver = tf.train.Saver()
             saver.save(self.session, checkpoint)
