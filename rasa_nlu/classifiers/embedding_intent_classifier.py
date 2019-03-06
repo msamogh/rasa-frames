@@ -530,7 +530,7 @@ class EmbeddingIntentClassifier(Component):
                                 kernel_regularizer=reg,
                                 name='transformer_embed_layer_{}'.format(name),
                                 reuse=tf.AUTO_REUSE)
-            x = tf.nn.dropout(x, rate=hparams.layer_prepostprocess_dropout)
+            x = tf.layers.dropout(x, rate=hparams.layer_prepostprocess_dropout, training=is_training)
 
             if hparams.multiply_embedding_mode == "sqrt_depth":
                 x *= hparams.hidden_size**0.5
@@ -551,7 +551,7 @@ class EmbeddingIntentClassifier(Component):
 
                 x *= tf.expand_dims(mask, -1)
 
-                x = tf.nn.dropout(x, rate=hparams.layer_prepostprocess_dropout)
+                x = tf.nn.dropout(x, 1.0 - hparams.layer_prepostprocess_dropout)
 
                 attn_bias_for_padding = None
                 # Otherwise the encoder will just use encoder_self_attention_bias.
