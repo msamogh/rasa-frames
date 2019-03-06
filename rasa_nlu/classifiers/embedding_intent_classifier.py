@@ -600,44 +600,6 @@ class EmbeddingIntentClassifier(Component):
                                name='embed_layer_{}'.format(name),
                                reuse=tf.AUTO_REUSE)
 
-    def _create_tf_gpu_predict_embed(self, x_in: 'tf.Tensor',
-                                     layer_sizes: List[int], name: Text) -> 'tf.Tensor':
-        """Used for prediction if gpu_lstm is true"""
-
-        reg = tf.contrib.layers.l2_regularizer(self.C2)
-        # mask different length sequences
-        # if there is at least one `-1` it should be masked
-        mask = tf.sign(tf.reduce_max(x_in, -1) + 1)
-        last = tf.expand_dims(mask * tf.cumprod(1 - mask, axis=1, exclusive=True, reverse=True), -1)
-        real_length = tf.cast(tf.reduce_sum(mask, 1), tf.int32)
-
-        x = tf.nn.relu(x_in)
-
-        if self.bidirectional:
-            with tf.variable_scope('rnn_encoder_{}'.format(name)):
-                single_cell = lambda: tf.contrib.cudnn_rnn.CudnnCompatibleLSTMCell(layer_sizes[0], reuse=tf.AUTO_REUSE)
-                cells_fw = [single_cell() for _ in range(len(layer_sizes))]
-                cells_bw = [single_cell() for _ in range(len(layer_sizes))]
-                x, _, _ = tf.contrib.rnn.stack_bidirectional_dynamic_rnn(cells_fw, cells_bw, x,
-                                                                         dtype=tf.float32,
-                                                                         sequence_length=real_length)
-        else:
-            with tf.variable_scope('rnn_encoder_{}'.format(name)):
-                single_cell = lambda: tf.contrib.cudnn_rnn.CudnnCompatibleLSTMCell(layer_sizes[0], reuse=tf.AUTO_REUSE)
-                # NOTE: Even if there's only one layer, the cell needs to be wrapped in
-                # MultiRNNCell.
-                cell = tf.nn.rnn_cell.MultiRNNCell([single_cell() for _ in range(layer_sizes[0])])
-                # Leave the scope arg unset.
-                x, _ = tf.nn.dynamic_rnn(cell, x, dtype=tf.float32, sequence_length=real_length)
-
-        x = tf.reduce_sum(x * last, 1)
-
-        return tf.layers.dense(inputs=x,
-                               units=self.embed_dim,
-                               kernel_regularizer=reg,
-                               name='embed_layer_{}'.format(name),
-                               reuse=tf.AUTO_REUSE)
-
     def _create_tf_embed_a(self,
                            a_in: 'tf.Tensor',
                            is_training: 'tf.Tensor',
@@ -1218,38 +1180,12 @@ class EmbeddingIntentClassifier(Component):
             saver = tf.train.Saver()
             saver.save(self.session, checkpoint)
 
-            if self.gpu_lstm:
-                # rebuild tf graph for prediction
-                self.word_embed = self._create_tf_gpu_predict_embed(self.a_in,
-                                                                    self.hidden_layer_sizes['a'],
-                                                                    name='a_and_b' if self.share_embedding else 'a')
-                shape = tf.shape(self.b_in)
-                b_in = tf.reshape(self.b_in, [-1, shape[-2], self.b_in.shape[-1]])
-                emb_b = self._create_tf_gpu_predict_embed(b_in,
-                                                          self.hidden_layer_sizes['b'],
-                                                          name='a_and_b' if self.share_embedding else 'b')
-                # reshape back
-                self.intent_embed = tf.reshape(emb_b, [shape[0], shape[1], self.embed_dim])
-
-                self.sim_op, _ = self._tf_sim(self.word_embed, self.intent_embed)
-
-                self.sim_all, _ = self._tf_sim(self.word_embed, self.all_intents_embed_in)
-
-                self.graph.clear_collection('similarity_op')
-                self.graph.add_to_collection('similarity_op',
-                                             self.sim_op)
-
-                self.graph.clear_collection('sim_all')
-                self.graph.add_to_collection('sim_all',
-                                             self.sim_all)
-
-                self.graph.clear_collection('word_embed')
-                self.graph.add_to_collection('word_embed',
-                                             self.word_embed)
-                self.graph.clear_collection('intent_embed')
-                self.graph.add_to_collection('intent_embed',
-                                             self.intent_embed)
-
+        placeholder_dims = {'a_in': np.int(self.a_in.shape[-1]),
+                            'b_in': np.int(self.b_in.shape[-1])}
+        with io.open(os.path.join(
+                model_dir,
+                self.name + "_placeholder_dims.pkl"), 'wb') as f:
+            pickle.dump(placeholder_dims, f)
         with io.open(os.path.join(
                 model_dir,
                 self.name + "_inv_intent_dict.pkl"), 'wb') as f:
@@ -1264,6 +1200,72 @@ class EmbeddingIntentClassifier(Component):
             pickle.dump(self.all_intents_embed_values, f)
 
         return {"classifier_file": self.name + ".ckpt"}
+
+    @staticmethod
+    def _create_tf_gpu_predict_embed(meta, x_in: 'tf.Tensor',
+                                     layer_sizes: List[int], name: Text) -> 'tf.Tensor':
+        """Used for prediction if gpu_lstm is true"""
+
+        reg = tf.contrib.layers.l2_regularizer(meta['C2'])
+        # mask different length sequences
+        # if there is at least one `-1` it should be masked
+        mask = tf.sign(tf.reduce_max(x_in, -1) + 1)
+        last = tf.expand_dims(mask * tf.cumprod(1 - mask, axis=1, exclusive=True, reverse=True), -1)
+        real_length = tf.cast(tf.reduce_sum(mask, 1), tf.int32)
+
+        x = tf.nn.relu(x_in)
+
+        if meta['bidirectional']:
+            with tf.variable_scope('rnn_encoder_{}'.format(name)):
+                single_cell = lambda: tf.contrib.cudnn_rnn.CudnnCompatibleLSTMCell(layer_sizes[0], reuse=tf.AUTO_REUSE)
+                cells_fw = [single_cell() for _ in range(len(layer_sizes))]
+                cells_bw = [single_cell() for _ in range(len(layer_sizes))]
+                x, _, _ = tf.contrib.rnn.stack_bidirectional_dynamic_rnn(cells_fw, cells_bw, x,
+                                                                         dtype=tf.float32,
+                                                                         sequence_length=real_length)
+        else:
+            with tf.variable_scope('rnn_encoder_{}'.format(name)):
+                single_cell = lambda: tf.contrib.cudnn_rnn.CudnnCompatibleLSTMCell(layer_sizes[0], reuse=tf.AUTO_REUSE)
+                # NOTE: Even if there's only one layer, the cell needs to be wrapped in
+                # MultiRNNCell.
+                cell = tf.nn.rnn_cell.MultiRNNCell([single_cell() for _ in range(layer_sizes[0])])
+                # Leave the scope arg unset.
+                x, _ = tf.nn.dynamic_rnn(cell, x, dtype=tf.float32, sequence_length=real_length)
+
+        x = tf.reduce_sum(x * last, 1)
+
+        return tf.layers.dense(inputs=x,
+                               units=meta['embed_dim'],
+                               kernel_regularizer=reg,
+                               name='embed_layer_{}'.format(name),
+                               reuse=tf.AUTO_REUSE)
+
+    @staticmethod
+    def _tf_gpu_sim(meta,
+                    a: 'tf.Tensor',
+                    b: 'tf.Tensor') -> Tuple['tf.Tensor', 'tf.Tensor']:
+        """Define similarity
+
+        in two cases:
+            sim: between embedded words and embedded intent labels
+            sim_emb: between individual embedded intent labels only
+        """
+
+        if meta['similarity_type'] == 'cosine':
+            # normalize embedding vectors for cosine similarity
+            a = tf.nn.l2_normalize(a, -1)
+            b = tf.nn.l2_normalize(b, -1)
+
+        if meta['similarity_type'] in {'cosine', 'inner'}:
+            sim = tf.reduce_sum(tf.expand_dims(a, 1) * b, -1)
+            sim_emb = tf.reduce_sum(b[:, 0:1, :] * b[:, 1:, :], -1)
+
+            return sim, sim_emb
+
+        else:
+            raise ValueError("Wrong similarity type {}, "
+                             "should be 'cosine' or 'inner'"
+                             "".format(meta['similarity_type']))
 
     @classmethod
     def load(cls,
@@ -1281,20 +1283,50 @@ class EmbeddingIntentClassifier(Component):
             graph = tf.Graph()
             with graph.as_default():
                 sess = tf.Session()
-                saver = tf.train.import_meta_graph(checkpoint + '.meta')
+                if meta['gpu_lstm']:
+                    # rebuild tf graph for prediction
+                    with io.open(os.path.join(
+                            model_dir,
+                            cls.name + "_placeholder_dims.pkl"), 'rb') as f:
+                        placeholder_dims = pickle.load(f)
+                    a_in = tf.placeholder(tf.float32, (None, None, placeholder_dims['a_in']),
+                                          name='a')
+                    b_in = tf.placeholder(tf.float32, (None, None, None, placeholder_dims['b_in']),
+                                          name='b')
+                    word_embed = cls._create_tf_gpu_predict_embed(meta, a_in,
+                                                                  meta['hidden_layers_sizes_a'],
+                                                                  name='a_and_b' if meta['share_embedding'] else 'a')
+                    shape = tf.shape(b_in)
+                    b_in = tf.reshape(b_in, [-1, shape[-2], b_in.shape[-1]])
+                    emb_b = cls._create_tf_gpu_predict_embed(meta, b_in,
+                                                             meta['hidden_layers_sizes_b'],
+                                                             name='a_and_b' if meta['share_embedding'] else 'b')
+                    # reshape back
+                    intent_embed = tf.reshape(emb_b, [shape[0], shape[1], meta['embed_dim']])
+
+                    sim_op, _ = cls._tf_gpu_sim(meta, word_embed, intent_embed)
+
+                    all_intents_embed_in = tf.placeholder(tf.float32, (None, None, meta['embed_dim']),
+                                                          name='all_intents_embed')
+                    sim_all, _ = cls._tf_gpu_sim(meta, word_embed, all_intents_embed_in)
+
+                    saver = tf.train.Saver()
+
+                else:
+                    saver = tf.train.import_meta_graph(checkpoint + '.meta')
+
+                    a_in = tf.get_collection('message_placeholder')[0]
+                    b_in = tf.get_collection('intent_placeholder')[0]
+
+                    sim_op = tf.get_collection('similarity_op')[0]
+
+                    all_intents_embed_in = tf.get_collection('all_intents_embed_in')[0]
+                    sim_all = tf.get_collection('sim_all')[0]
+
+                    word_embed = tf.get_collection('word_embed')[0]
+                    intent_embed = tf.get_collection('intent_embed')[0]
 
                 saver.restore(sess, checkpoint)
-
-                a_in = tf.get_collection('message_placeholder')[0]
-                b_in = tf.get_collection('intent_placeholder')[0]
-
-                sim_op = tf.get_collection('similarity_op')[0]
-
-                all_intents_embed_in = tf.get_collection('all_intents_embed_in')[0]
-                sim_all = tf.get_collection('sim_all')[0]
-
-                word_embed = tf.get_collection('word_embed')[0]
-                intent_embed = tf.get_collection('intent_embed')[0]
 
             with io.open(os.path.join(
                     model_dir,
