@@ -1299,8 +1299,8 @@ class EmbeddingIntentClassifier(Component):
                                                                   meta['hidden_layers_sizes_a'],
                                                                   name='a_and_b' if meta['share_embedding'] else 'a')
                     shape = tf.shape(b_in)
-                    b_in = tf.reshape(b_in, [-1, shape[-2], b_in.shape[-1]])
-                    emb_b = cls._create_tf_gpu_predict_embed(meta, b_in,
+                    b = tf.reshape(b_in, [-1, shape[-2], b_in.shape[-1]])
+                    emb_b = cls._create_tf_gpu_predict_embed(meta, b,
                                                              meta['hidden_layers_sizes_b'],
                                                              name='a_and_b' if meta['share_embedding'] else 'b')
                     # reshape back
