@@ -1229,7 +1229,7 @@ class EmbeddingIntentClassifier(Component):
                 single_cell = lambda: tf.contrib.cudnn_rnn.CudnnCompatibleLSTMCell(layer_sizes[0], reuse=tf.AUTO_REUSE)
                 # NOTE: Even if there's only one layer, the cell needs to be wrapped in
                 # MultiRNNCell.
-                cell = tf.nn.rnn_cell.MultiRNNCell([single_cell() for _ in range(layer_sizes[0])])
+                cell = tf.nn.rnn_cell.MultiRNNCell([single_cell() for _ in range(len(layer_sizes))])
                 # Leave the scope arg unset.
                 x, _ = tf.nn.dynamic_rnn(cell, x, dtype=tf.float32, sequence_length=real_length)
 
@@ -1281,6 +1281,7 @@ class EmbeddingIntentClassifier(Component):
         if model_dir and meta.get("classifier_file"):
             file_name = meta.get("classifier_file")
             checkpoint = os.path.join(model_dir, file_name)
+
             graph = tf.Graph()
             with graph.as_default():
                 sess = tf.Session()
