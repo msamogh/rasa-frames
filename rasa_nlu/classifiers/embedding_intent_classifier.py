@@ -10,7 +10,7 @@ import numpy as np
 import math
 from scipy.sparse import issparse, find
 from tensor2tensor.models.transformer import transformer_small, transformer_prepare_encoder, transformer_encoder
-from tensor2tensor.layers import common_layers
+from tensor2tensor.layers.common_attention import add_timing_signal_1d
 
 from rasa_nlu.classifiers import INTENT_RANKING_LENGTH
 from rasa_nlu.components import Component
@@ -69,10 +69,10 @@ class EmbeddingIntentClassifier(Component):
         "fused_lstm": False,
         "gpu_lstm": False,
         "transformer": False,
-        "pos_encoding": "shifted_timing",  # {"shifted_timing", "timing", "emb"}
+        "pos_encoding": "timing",  # {"timing", "emb"}
         # introduce phase shift in time encodings between transformers
         # 0.5 - 0.8 works on small dataset
-        "pos_phase_shift": 0.65,
+        "pos_max_timescale": 1.0e2,
         "max_seq_length": 256,
         "num_heads": 4,
 
@@ -172,7 +172,6 @@ class EmbeddingIntentClassifier(Component):
         # persisted embeddings
         self.word_embed = word_embed
         self.intent_embed = intent_embed
-        self.phase = None
 
         self.new_test_intent_dict = None
 
@@ -202,7 +201,10 @@ class EmbeddingIntentClassifier(Component):
                 raise ValueError("GPU training only supports identical sizes among layers b")
 
         self.pos_encoding = config['pos_encoding']
-        self.pos_phase_shift = config['pos_phase_shift']
+        if self.pos_encoding == 'timing':
+            self.pos_encoding = 'custom_timing'
+
+        self.pos_max_timescale = config['pos_max_timescale']
         self.max_seq_length = config['max_seq_length']
         self.num_heads = config['num_heads']
 
@@ -438,36 +440,6 @@ class EmbeddingIntentClassifier(Component):
             reuse=tf.AUTO_REUSE
         )
 
-    def _get_shifted_timing_signal_1d(self,
-                                      length,
-                                      channels,
-                                      min_timescale=1.0,
-                                      max_timescale=1.0e4,
-                                      start_index=0):
-        """See `tensor2tensor.layers.common_attention.get_timing_signal_1d
-
-        adds random phase shift to timing embeddings to break symmetry
-        """
-
-        position = tf.to_float(tf.range(length) + start_index)
-        num_timescales = channels // 2
-        log_timescale_increment = (
-                math.log(float(max_timescale) / float(min_timescale)) /
-                tf.maximum(tf.to_float(num_timescales) - 1, 1))
-        inv_timescales = min_timescale * tf.exp(
-            tf.to_float(tf.range(num_timescales)) * -log_timescale_increment)
-        if self.phase is None:
-            self.phase = 0.
-        else:
-            self.phase += self.pos_phase_shift
-        phase = self.phase
-
-        scaled_time = tf.expand_dims(position, 1) * tf.expand_dims(inv_timescales, 0) + phase
-        signal = tf.concat([tf.sin(scaled_time), tf.cos(scaled_time)], axis=1)
-        signal = tf.pad(signal, [[0, 0], [0, tf.mod(channels, 2)]])
-        signal = tf.reshape(signal, [1, length, channels])
-        return signal
-
     def _create_tf_rnn_embed(self, x_in: 'tf.Tensor', is_training: 'tf.Tensor',
                              layer_sizes: List[int], name: Text) -> 'tf.Tensor':
         """Create rnn for dialogue level embedding."""
@@ -538,6 +510,7 @@ class EmbeddingIntentClassifier(Component):
             hparams.num_heads = self.num_heads
             # hparams.relu_dropout = self.droprate
             hparams.pos = self.pos_encoding
+
             hparams.max_length = self.max_seq_length
             if not self.bidirectional:
                 hparams.unidirectional_encoder = True
@@ -567,11 +540,8 @@ class EmbeddingIntentClassifier(Component):
                  encoder_decoder_attention_bias
                  ) = transformer_prepare_encoder(x, None, hparams)
 
-                if hparams.pos == 'shifted_timing':
-                    length = common_layers.shape_list(x)[1]
-                    channels = common_layers.shape_list(x)[2]
-                    signal = self._get_shifted_timing_signal_1d(length, channels)
-                    x += common_layers.cast_like(signal, x)
+                if hparams.pos == 'custom_timing':
+                    x = add_timing_signal_1d(x, max_timescale=self.pos_max_timescale)
 
                 x *= tf.expand_dims(mask, -1)
 
