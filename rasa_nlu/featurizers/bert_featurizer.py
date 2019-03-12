@@ -4,15 +4,12 @@ from __future__ import print_function
 from __future__ import unicode_literals
 
 import numpy as np
-from typing import Any
 import os
 
 from rasa_nlu.featurizers import Featurizer
-from rasa_nlu.training_data import Message
-from rasa_nlu.training_data import TrainingData
 from rasa_nlu import config
 from bert import modeling, tokenization
-from bert.extract_features import create_features, model_fn_builder
+from bert.extract_features import *
 
 import tensorflow as tf
 
@@ -92,8 +89,56 @@ class BertFeaturizer(Featurizer):
     def _set_bert_features(self, message):
         """Adds the spacy word vectors to the messages text features."""
         # print(message)
-        fs = create_features([message.text], self.estimator, self.tokenizer, self.layer_indexes)
+        fs = self.create_features([message.text], self.estimator, self.tokenizer, self.layer_indexes)
         feats = [x['layers'][0]['values'] for x in fs[0]['features'][1:-1]]
         features = np.average(feats, axis=0)
         # features = np.array(fs[0]['features'][0]['layers'][0]['values'])
         message.set("text_features", features)
+
+    @staticmethod
+    def create_features(examples_array, estimator, tokenizer, layer_indexes):
+        examples = read_array_examples(examples_array)
+
+        features = convert_examples_to_features(
+            examples=examples, seq_length=128, tokenizer=tokenizer)
+
+        unique_id_to_feature = {}
+        for feature in features:
+            unique_id_to_feature[feature.unique_id] = feature
+
+        input_fn = input_fn_builder(
+            features=features, seq_length=128)
+
+        if len(examples_array) > 1:
+            save_hook = tf.train.CheckpointSaverHook('/tmp/bert_model', save_secs=1)
+            predictions = estimator.predict(input_fn,
+                                            hooks=[save_hook],
+                                            yield_single_examples=True)
+        else:
+            predictions = estimator.predict(input_fn, yield_single_examples=True)
+
+        results = []
+
+        for result in predictions:
+            unique_id = int(result["unique_id"])
+            feature = unique_id_to_feature[unique_id]
+            output_json = collections.OrderedDict()
+            output_json["linex_index"] = unique_id
+            all_features = []
+            for (i, token) in enumerate(feature.tokens):
+                all_layers = []
+                for (j, layer_index) in enumerate(layer_indexes):
+                    layer_output = result["layer_output_%d" % j]
+                    layers = collections.OrderedDict()
+                    layers["index"] = layer_index
+                    layers["values"] = [
+                        round(float(x), 6) for x in layer_output[i:(i + 1)].flat
+                    ]
+                    all_layers.append(layers)
+                features = collections.OrderedDict()
+                features["token"] = token
+                features["layers"] = all_layers
+                all_features.append(features)
+            output_json["features"] = all_features
+            results.append(output_json)
+        return results
