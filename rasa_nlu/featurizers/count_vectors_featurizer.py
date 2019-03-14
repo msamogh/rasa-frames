@@ -234,6 +234,7 @@ class CountVectorsFeaturizer(Featurizer):
 
         for i, tokens in enumerate(texts):
             x = vect.transform(tokens)
+            x.sort_indices()
             if self.sparse:
                 X.append(x)
             else:
@@ -318,6 +319,9 @@ class CountVectorsFeaturizer(Featurizer):
                 if not self.sparse:
                     X = X.toarray()
                     Y = Y.toarray()
+                else:
+                    X.sort_indices()
+                    Y.sort_indices()
 
             else:
                 if self.use_shared_vocab:
@@ -369,6 +373,7 @@ class CountVectorsFeaturizer(Featurizer):
             else:
                 if not self.sequence:
                     bag = vect.transform([message_text])
+                    bag.sort_indices()
                     message.set("text_features", bag)
                 else:
                     seq = self._create_sequence(vect, [message_text])
