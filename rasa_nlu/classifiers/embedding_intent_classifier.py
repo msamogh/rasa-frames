@@ -674,7 +674,8 @@ class EmbeddingIntentClassifier(Component):
             return int(self.batch_size[0])
 
     @staticmethod
-    def _to_sparse_tensor(array_of_sparse, seq_len):
+    def _to_sparse_tensor(array_of_sparse):
+        seq_len = max([x.shape[0] for x in array_of_sparse])
         coo = [x.tocoo() for x in array_of_sparse]
         data = [v for x in array_of_sparse for v in x.data]
         if seq_len == 1:
@@ -728,10 +729,8 @@ class EmbeddingIntentClassifier(Component):
             np.random.seed(self.random_seed)
             tf.set_random_seed(self.random_seed)
 
-            X_seq_len = max([x.shape[0] for x in X])
-            Y_seq_len = max([y.shape[0] for y in Y])
-            X_tensor = self._to_sparse_tensor(X, X_seq_len)
-            Y_tensor = self._to_sparse_tensor(Y, Y_seq_len)
+            X_tensor = self._to_sparse_tensor(X)
+            Y_tensor = self._to_sparse_tensor(Y)
 
             batch_size_in = tf.placeholder(tf.int64)
             train_dataset = tf.data.Dataset.from_tensor_slices((X_tensor, Y_tensor))
@@ -740,25 +739,35 @@ class EmbeddingIntentClassifier(Component):
 
             if self.evaluate_on_num_examples:
                 ids = np.random.permutation(len(X))[:self.evaluate_on_num_examples]
-                X_tensor_val = self._to_sparse_tensor(X[ids], X_seq_len)
-                Y_tensor_val = self._to_sparse_tensor(Y[ids], Y_seq_len)
+                X_tensor_val = self._to_sparse_tensor(X[ids])
+                Y_tensor_val = self._to_sparse_tensor(Y[ids])
 
                 val_dataset = tf.data.Dataset.from_tensor_slices((X_tensor_val, Y_tensor_val)).batch(self.evaluate_on_num_examples)
             else:
                 val_dataset = None
 
+            if len(train_dataset.output_shapes[0]) == 2:
+                train_dataset_output_shapes_X = train_dataset.output_shapes[0]
+            else:
+                train_dataset_output_shapes_X = (None, None, train_dataset.output_shapes[0][-1])
+
+            if len(train_dataset.output_shapes[1]) == 2:
+                train_dataset_output_shapes_Y = train_dataset.output_shapes[1]
+            else:
+                train_dataset_output_shapes_Y = (None, None, train_dataset.output_shapes[1][-1])
+
             self.iterator = tf.data.Iterator.from_structure(train_dataset.output_types,
-                                                            train_dataset.output_shapes,
+                                                            (train_dataset_output_shapes_X, train_dataset_output_shapes_Y),
                                                             output_classes=train_dataset.output_classes)
             # iterator = train_dataset.make_initializable_iterator()
             a_sparse, b_sparse = self.iterator.get_next()
 
-            if X_seq_len == 1:
+            if len(a_sparse.shape) == 2:
                 shape_a = (tf.shape(a_sparse)[0], X_tensor.shape[-1])
             else:
                 shape_a = (tf.shape(a_sparse)[0], tf.shape(a_sparse)[1], X_tensor.shape[-1])
 
-            if Y_seq_len == 1:
+            if len(b_sparse.shape) == 2:
                 shape_b = (tf.shape(b_sparse)[0], Y_tensor.shape[-1])
             else:
                 shape_b = (tf.shape(b_sparse)[0], tf.shape(b_sparse)[1], Y_tensor.shape[-1])
