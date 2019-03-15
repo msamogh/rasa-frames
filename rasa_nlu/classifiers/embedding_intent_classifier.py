@@ -7,10 +7,10 @@ from tqdm import tqdm
 from typing import Any, Dict, List, Optional, Text, Tuple
 
 import numpy as np
-import math
-from scipy.sparse import issparse, find
+
+from scipy.sparse import issparse, csr_matrix
 from tensor2tensor.models.transformer import transformer_small, transformer_prepare_encoder, transformer_encoder
-from tensor2tensor.layers.common_attention import add_timing_signal_1d
+from tensor2tensor.layers.common_attention import add_timing_signal_1d, large_compatible_negative
 
 from rasa_nlu.classifiers import INTENT_RANKING_LENGTH
 from rasa_nlu.components import Component
@@ -97,8 +97,7 @@ class EmbeddingIntentClassifier(Component):
         # the number of incorrect intents, the algorithm will minimize
         # their similarity to the input words during training
         "num_neg": 20,
-        "use_neg_from_batch": False,
-        "use_iou": False,
+        "iou_threshold": 1.0,
         # flag: if true, only minimize the maximum similarity for
         # incorrect intent labels
         "use_max_sim_neg": True,
@@ -218,8 +217,7 @@ class EmbeddingIntentClassifier(Component):
         self.mu_neg = config['mu_neg']
         self.similarity_type = config['similarity_type']
         self.num_neg = config['num_neg']
-        self.use_neg_from_batch = config['use_neg_from_batch']
-        self.use_iou = config['use_iou']
+        self.iou_threshold = config['iou_threshold']
         self.use_max_sim_neg = config['use_max_sim_neg']
         self.random_seed = self.component_config['random_seed']
 
@@ -307,66 +305,6 @@ class EmbeddingIntentClassifier(Component):
         else:
             return np.eye(len(intent_dict))
 
-    def _create_iou_for_intents(self):
-        import collections
-        iou = []
-        for intent_i in self.encoded_all_intents:
-            # ignore number of counts
-            if issparse(intent_i):
-                unique_i = find(intent_i)[1]
-            else:
-                unique_i = np.nonzero(intent_i.clip(min=0))[-1]
-
-            iou_i = []
-            for intent_j in self.encoded_all_intents:
-                if issparse(intent_j):
-                    unique_j = find(intent_j)[1]
-                else:
-                    unique_j = np.nonzero(intent_j.clip(min=0))[-1]
-
-                merged_ij = np.concatenate((unique_i, unique_j), axis=0)
-
-                unique_ij = float(len(list(set(merged_ij))))
-                overlap_ij = float(len([item for item, count in collections.Counter(merged_ij).items() if count > 1]))
-
-                iou_i.append(overlap_ij / unique_ij)
-
-            iou.append(iou_i)
-
-        return np.array(iou)
-
-    def calculate_iou(self, pos, neg):
-        import collections
-
-        # print(pos.shape)
-        if issparse(pos):
-            unique_j = find(pos)[1]
-        else:
-            unique_j = np.nonzero(pos.clip(min=0))[-1]
-
-        # ignore number of counts
-        if issparse(neg):
-            unique_i = find(neg)[1]
-        else:
-            unique_i = np.nonzero(neg.clip(min=0))[-1]
-
-        merged_ij = np.concatenate((unique_i, unique_j), axis=0)
-
-        unique_ij = float(len(list(set(merged_ij))))
-        overlap_ij = float(len([item for item, count in collections.Counter(merged_ij).items() if count > 1]))
-
-        return overlap_ij / unique_ij
-
-    # noinspection PyPep8Naming
-    def _create_all_Y(self, size: int) -> np.ndarray:
-        """Stack encoded_all_intents on top of each other
-
-        to create candidates for training examples and
-        to calculate training accuracy
-        """
-
-        return np.stack([self._toarray(self.encoded_all_intents)] * size)
-
     # noinspection PyPep8Naming
     def _prepare_data_for_training(
         self,
@@ -446,15 +384,16 @@ class EmbeddingIntentClassifier(Component):
 
         reg = tf.contrib.layers.l2_regularizer(self.C2)
         # mask different length sequences
-        # if there is at least one `-1` it should be masked
-        mask = tf.sign(tf.reduce_max(x_in, -1) + 1)
-        last = tf.expand_dims(mask * tf.cumprod(1 - mask, axis=1, exclusive=True, reverse=True), -1)
+        mask = tf.sign(tf.reduce_max(x_in, -1))
+        last = mask * tf.cumprod(1 - mask, axis=1, exclusive=True, reverse=True)
+        mask = tf.cumsum(last, axis=1, reverse=True)
         real_length = tf.cast(tf.reduce_sum(mask, 1), tf.int32)
+
+        last = tf.expand_dims(last, -1)
 
         x = tf.nn.relu(x_in)
 
         if self.fused_lstm:
-            last = tf.expand_dims(mask * tf.cumprod(1 - mask, axis=1, exclusive=True, reverse=True), -1)
             x = tf.transpose(x, [1, 0, 2])
 
             for i, layer_size in enumerate(layer_sizes):
@@ -617,39 +556,55 @@ class EmbeddingIntentClassifier(Component):
                            ) -> 'tf.Tensor':
         """Create tf graph for training"""
 
-        if len(b_in.shape) == 3:
+        if len(b_in.shape) == 2:
             emb_b = self._create_tf_embed_nn(b_in, is_training,
                                              self.hidden_layer_sizes['b'],
                                              name='a_and_b' if self.share_embedding else 'b')
 
         else:
-            # reshape b_in
-            shape = tf.shape(b_in)
-            b_in = tf.reshape(b_in, [-1, shape[-2], b_in.shape[-1]])
             emb_b = self._create_tf_rnn_embed(b_in, is_training,
                                               self.hidden_layer_sizes['b'],
                                               name='a_and_b' if self.share_embedding else 'b')
-            # reshape back
-            emb_b = tf.reshape(emb_b, [shape[0], shape[1], self.embed_dim])
 
         return emb_b
 
     @staticmethod
-    def _tile_tf_embed_b(emb_b,
-                         is_training: 'tf.Tensor',
-                         negs_in,
-                         ) -> 'tf.Tensor':
+    def _tf_sample_neg(emb_b,
+                       is_training: 'tf.Tensor',
+                       neg_ids=None,
+                       batch_size=None
+                       ) -> 'tf.Tensor':
 
-        all_b = emb_b[tf.newaxis, :, 0, :]
-        all_b = tf.tile(all_b, [tf.shape(emb_b)[0], 1, 1])
+        all_b = emb_b[tf.newaxis, :, :]
+        if batch_size is None:
+            batch_size = tf.shape(emb_b)[0]
+        all_b = tf.tile(all_b, [batch_size, 1, 1])
+        if neg_ids is None:
+            return all_b
 
         def sample_neg_b():
-            neg_b = tf.matmul(negs_in, all_b)
-            return tf.concat([emb_b, neg_b], 1)
+            neg_b = tf.batch_gather(all_b, neg_ids)
+            return tf.concat([emb_b[:, tf.newaxis, :], neg_b], 1)
 
-        emb_b = tf.cond(is_training, sample_neg_b, lambda: all_b)
+        emb_b = tf.cond(tf.logical_and(is_training, tf.shape(neg_ids)[0] > 1), sample_neg_b, lambda: all_b)
 
         return emb_b
+
+    def _tf_calc_iou(self,
+                     b_raw,
+                     is_training: 'tf.Tensor',
+                     neg_ids,
+                     ) -> 'tf.Tensor':
+
+        if len(b_raw.shape) == 3:
+            b_raw = tf.reduce_sum(b_raw, 1)
+        tiled_intent_raw = self._tf_sample_neg(b_raw, is_training, neg_ids)
+        pos_b_raw = tiled_intent_raw[:, :1, :]
+        neg_b_raw = tiled_intent_raw[:, 1:, :]
+        intersection_b_raw = tf.minimum(neg_b_raw, pos_b_raw)
+        union_b_raw = tf.maximum(neg_b_raw, pos_b_raw)
+
+        return tf.reduce_sum(intersection_b_raw, -1) / tf.reduce_sum(union_b_raw, -1)
 
     def _tf_sim(self,
                 a: 'tf.Tensor',
@@ -677,22 +632,24 @@ class EmbeddingIntentClassifier(Component):
                              "should be 'cosine' or 'inner'"
                              "".format(self.similarity_type))
 
-    def _tf_loss(self, sim: 'tf.Tensor', sim_emb: 'tf.Tensor') -> 'tf.Tensor':
+    def _tf_loss(self, sim: 'tf.Tensor', sim_emb: 'tf.Tensor', bad_negs) -> 'tf.Tensor':
         """Define loss"""
 
         # loss for maximizing similarity with correct action
         loss = tf.maximum(0., self.mu_pos - sim[:, 0])
 
+        sim_neg = sim[:, 1:] + large_compatible_negative(bad_negs.dtype) * bad_negs
         if self.use_max_sim_neg:
             # minimize only maximum similarity over incorrect actions
-            max_sim_neg = tf.reduce_max(sim[:, 1:], -1)
+            max_sim_neg = tf.reduce_max(sim_neg, -1)
             loss += tf.maximum(0., self.mu_neg + max_sim_neg)
         else:
             # minimize all similarities with incorrect actions
-            max_margin = tf.maximum(0., self.mu_neg + sim[:, 1:])
+            max_margin = tf.maximum(0., self.mu_neg + sim_neg)
             loss += tf.reduce_sum(max_margin, -1)
 
         # penalize max similarity between intent embeddings
+        sim_emb += large_compatible_negative(bad_negs.dtype) * bad_negs
         max_sim_emb = tf.maximum(0., tf.reduce_max(sim_emb, -1))
         loss += max_sim_emb * self.C_emb
 
@@ -701,93 +658,6 @@ class EmbeddingIntentClassifier(Component):
         return loss
 
     # training helpers:
-    def _filter_negs(self, pos, negative_indexes, neg_source):
-
-        negs_ids = np.random.choice(negative_indexes, size=self.num_neg)
-
-        good_negs_ids = []
-        if self.use_iou:
-            while True:
-                good_negs_ids.extend(
-                    [i
-                     for i in negs_ids
-                     if self.calculate_iou(pos, neg_source[i]) < 0.66]
-                )
-                len_negs = len(good_negs_ids)
-                if len_negs == self.num_neg:
-                    break
-
-                negative_indexes = [i
-                                    for i in negative_indexes
-                                    if i not in negs_ids]
-                if not negative_indexes:
-                    if not good_negs_ids:
-                        raise Exception("Increase iou threshold")
-                    good_negs_ids = np.random.choice(good_negs_ids, size=self.num_neg)
-                    break
-
-                negs_ids = np.random.choice(negative_indexes,
-                                            size=self.num_neg - len_negs)
-                negative_indexes = [i
-                                    for i in negative_indexes
-                                    if i not in negs_ids]
-        else:
-            good_negs_ids = negs_ids
-
-        return good_negs_ids
-
-    def _create_batch_b(self, batch_pos_b: np.ndarray,
-                        intent_ids: np.ndarray) -> np.ndarray:
-        """Create batch of intents.
-
-        Where the first is correct intent
-        and the rest are wrong intents sampled randomly
-        """
-        # print('new intent')
-        batch_pos_b = np.expand_dims(batch_pos_b, axis=1)
-
-        # sample negatives
-        if len(batch_pos_b.shape) == 3:
-            batch_neg_b = np.zeros((batch_pos_b.shape[0], self.num_neg,
-                                    batch_pos_b.shape[-1]))
-        else:
-            batch_neg_b = np.zeros((batch_pos_b.shape[0], self.num_neg,
-                                    batch_pos_b.shape[-2], batch_pos_b.shape[-1]))
-
-        for b in range(batch_pos_b.shape[0]):
-            # create negative indexes out of possible ones
-            # except for correct index of b
-            negative_indexes = [i
-                                for i in range(self.encoded_all_intents.shape[0])
-                                if i != intent_ids[b]]
-
-            negs_ids = self._filter_negs(batch_pos_b[b, 0],
-                                         negative_indexes,
-                                         self.encoded_all_intents)
-
-            actual_vecs = self.encoded_all_intents[negs_ids]
-            batch_neg_b[b] = self._toarray(actual_vecs)
-
-        return np.concatenate([batch_pos_b, batch_neg_b], 1)
-
-    def _negs_from_batch(self, batch_pos_b: np.ndarray,
-                         intent_ids: np.ndarray) -> np.ndarray:
-        """Find incorrect intents in the batch."""
-        negs = []
-        for b in range(batch_pos_b.shape[0]):
-            # create negative indexes out of possible ones
-            # except for correct index of b
-            negative_indexes = [i
-                                for i in range(batch_pos_b.shape[0])
-                                if not np.array_equal(batch_pos_b[i], batch_pos_b[b])]
-
-            negs_ids = self._filter_negs(batch_pos_b[b],
-                                         negative_indexes,
-                                         self.encoded_all_intents)
-
-            negs.append(np.eye(batch_pos_b.shape[0])[negs_ids])
-        return np.array(negs)
-
     def _linearly_increasing_batch_size(self, epoch: int) -> int:
         """Linearly increase batch size with every epoch.
 
@@ -807,146 +677,27 @@ class EmbeddingIntentClassifier(Component):
         else:
             return int(self.batch_size[0])
 
-    def _toarray(self, array_of_sparse):
-        if issparse(array_of_sparse):
-            return array_of_sparse.toarray()
-        elif issparse(array_of_sparse[0]):
-            if not self.sequence:
-                return np.array([x.toarray() for x in array_of_sparse]).squeeze()
+    @staticmethod
+    def _to_sparse_tensor(array_of_sparse, auto2d=True):
+        seq_len = max([x.shape[0] for x in array_of_sparse])
+        coo = [x.tocoo() for x in array_of_sparse]
+        data = [v for x in array_of_sparse for v in x.data]
+        if seq_len == 1 and auto2d:
+            indices = [ids for i, x in enumerate(coo) for ids in zip([i] * len(x.row), x.col)]
+            return tf.SparseTensor(indices, data, (len(array_of_sparse), array_of_sparse[0].shape[-1]))
+        else:
+            indices = [ids for i, x in enumerate(coo) for ids in zip([i] * len(x.row), x.row, x.col)]
+            return tf.SparseTensor(indices, data, (len(array_of_sparse), seq_len, array_of_sparse[0].shape[-1]))
+
+    @staticmethod
+    def _sparse_tensor_to_dense(sparse, units=None, shape=None):
+        if shape is None:
+            if len(sparse.shape) == 2:
+                shape = (tf.shape(sparse)[0], units)
             else:
-                seq_len = max([x.shape[0] for x in array_of_sparse])
-                X = np.ones([len(array_of_sparse), seq_len, array_of_sparse[0].shape[-1]], dtype=np.int32) * -1
-                for i, x in enumerate(array_of_sparse):
-                    X[i, :x.shape[0], :] = x.toarray()
+                shape = (tf.shape(sparse)[0], tf.shape(sparse)[1], units)
 
-                return X
-        else:
-            return array_of_sparse
-
-    # noinspection PyPep8Naming
-    def _train_tf(self,
-                  X: np.ndarray,
-                  Y: np.ndarray,
-                  intents_for_X: np.ndarray,
-                  negs_in,
-                  loss: 'tf.Tensor',
-                  is_training: 'tf.Tensor',
-                  train_op: 'tf.Tensor'
-                  ) -> None:
-        """Train tf graph"""
-
-        self.session.run(tf.global_variables_initializer())
-
-        if self.evaluate_on_num_examples:
-            logger.info("Accuracy is updated every {} epochs"
-                        "".format(self.evaluate_every_num_epochs))
-
-        pbar = tqdm(range(self.epochs), desc="Epochs")
-        train_acc = 0
-        last_loss = 0
-        for ep in pbar:
-            indices = np.random.permutation(len(X))
-
-            batch_size = self._linearly_increasing_batch_size(ep)
-            batches_per_epoch = (len(X) // batch_size +
-                                 int(len(X) % batch_size > 0))
-
-            ep_loss = 0
-            for i in range(batches_per_epoch):
-                end_idx = (i + 1) * batch_size
-                start_idx = i * batch_size
-
-                batch_a = X[indices[start_idx:end_idx]]
-                if batch_a.shape[0] % 2 != 0:
-                    start_idx -= 1
-                batch_a = self._toarray(X[indices[start_idx:end_idx]])
-
-                batch_pos_b = self._toarray(Y[indices[start_idx:end_idx]])
-                intents_for_b = self._toarray(intents_for_X[indices[start_idx:end_idx]])
-                # add negatives
-                if self.use_neg_from_batch:
-                    negs = self._negs_from_batch(batch_pos_b, intents_for_b)
-                    batch_b = np.expand_dims(batch_pos_b, axis=1)
-                    sess_out = self.session.run(
-                        {'loss': loss, 'train_op': train_op},
-                        feed_dict={self.a_in: batch_a,
-                                   self.b_in: batch_b,
-                                   negs_in: negs,
-                                   is_training: True}
-                    )
-
-                else:
-                    batch_b = self._create_batch_b(batch_pos_b, intents_for_b)
-
-                    sess_out = self.session.run(
-                        {'loss': loss, 'train_op': train_op},
-                        feed_dict={self.a_in: batch_a,
-                                   self.b_in: batch_b,
-                                   is_training: True}
-                    )
-                ep_loss += sess_out.get('loss') / batches_per_epoch
-
-            # optimizer = tf.train.AdamOptimizer()
-            # variables = tf.trainable_variables()
-            # gradients = optimizer.compute_gradients(loss, variables)
-            # print(batch_a.shape)
-            # print(batch_b.shape)
-            # gradient_vals = self.session.run(gradients, feed_dict={self.a_in: batch_a,
-            #            self.b_in: batch_b,
-            #            negs_in: negs,
-            #            is_training: False})
-            # for x in gradient_vals:
-            #     print("avg: {}, max: {}, min: {}".format(np.average(x[0]), np.amax(np.absolute(x[0])), np.amin(np.absolute(x[0]))))
-            #     print("avg: {}, max: {}, min: {}".format(np.average(x[0]), np.amax(np.absolute(x[1])), np.amin(np.absolute(x[1]))))
-
-            if self.evaluate_on_num_examples:
-                if (ep == 0 or
-                        (ep + 1) % self.evaluate_every_num_epochs == 0 or
-                        (ep + 1) == self.epochs):
-                    train_acc = self._output_training_stat(X, Y, intents_for_X,
-                                                           is_training)
-                    last_loss = ep_loss
-
-                pbar.set_postfix({
-                    "loss": "{:.3f}".format(ep_loss),
-                    "acc": "{:.3f}".format(train_acc)
-                })
-
-            else:
-                pbar.set_postfix({
-                    "loss": "{:.3f}".format(ep_loss)
-                })
-
-        if self.evaluate_on_num_examples:
-            logger.info("Finished training embedding classifier, "
-                        "loss={:.3f}, train accuracy={:.3f}"
-                        "".format(last_loss, train_acc))
-
-    # noinspection PyPep8Naming
-    def _output_training_stat(self,
-                              X: np.ndarray,
-                              Y: np.ndarray,
-                              intents_for_X: np.ndarray,
-                              is_training: 'tf.Tensor') -> np.ndarray:
-        """Output training statistics"""
-
-        n = self.evaluate_on_num_examples
-        ids = np.random.permutation(len(X))[:n]
-        if self.use_neg_from_batch:
-            all_Y = np.expand_dims(self._toarray(Y[ids]), axis=1)
-        else:
-            all_Y = self._create_all_Y(X[ids].shape[0])
-
-        train_sim = self.session.run(self.sim_op,
-                                     feed_dict={self.a_in: self._toarray(X[ids]),
-                                                self.b_in: all_Y,
-                                                is_training: False})
-        if self.use_neg_from_batch:
-            train_acc = np.mean(np.argmax(train_sim, -1) == np.arange(n))
-        else:
-            train_acc = np.mean(np.argmax(train_sim, -1) == intents_for_X[ids])
-
-        return train_acc
+        return tf.cast(tf.reshape(tf.sparse_tensor_to_dense(sparse), shape), tf.float32)
 
     # noinspection PyPep8Naming
     def train(self,
@@ -966,13 +717,8 @@ class EmbeddingIntentClassifier(Component):
         self.encoded_all_intents = self._create_encoded_intents(
             intent_dict, training_data)
 
-        # if self.use_iou:
-        #     self.iou = self._create_iou_for_intents()
-
         X, Y, intents_for_X = self._prepare_data_for_training(
             training_data, intent_dict)
-
-        self.sequence = len(X.shape) != 2 and any(x.shape[0] != 1 for x in X)
 
         if self.share_embedding:
             if X[0].shape[-1] != Y[0].shape[-1]:
@@ -995,50 +741,61 @@ class EmbeddingIntentClassifier(Component):
             np.random.seed(self.random_seed)
             tf.set_random_seed(self.random_seed)
 
-            # if issparse(X[0]):
-            #     placeholder = tf.sparse.placeholder
-            # else:
-            #     placeholder = tf.placeholder
+            X_tensor = self._to_sparse_tensor(X)
+            Y_tensor = self._to_sparse_tensor(Y)
 
-            if not self.sequence:
-                self.a_in = tf.placeholder(tf.float32, (None, X[0].shape[-1]),
-                                           name='a')
-            else:
-                if not self.hidden_layer_sizes['a']:
-                    raise ValueError("If X is a sequence, hidden_layer_sizes_a "
-                                     "should be specified")
-                self.a_in = tf.placeholder(tf.float32, (None, None, X[0].shape[-1]),
-                                           name='a')
+            batch_size_in = tf.placeholder(tf.int64)
+            train_dataset = tf.data.Dataset.from_tensor_slices((X_tensor, Y_tensor))
+            train_dataset = train_dataset.shuffle(buffer_size=len(X))
+            train_dataset = train_dataset.batch(batch_size_in, drop_remainder=self.fused_lstm)
 
-            if not self.sequence:
-                self.b_in = tf.placeholder(tf.float32, (None, None, Y[0].shape[-1]),
-                                           name='b')
+            if self.evaluate_on_num_examples:
+                ids = np.random.permutation(len(X))[:self.evaluate_on_num_examples]
+                X_tensor_val = self._to_sparse_tensor(X[ids])
+                Y_tensor_val = self._to_sparse_tensor(Y[ids])
+
+                val_dataset = tf.data.Dataset.from_tensor_slices((X_tensor_val, Y_tensor_val)).batch(self.evaluate_on_num_examples)
             else:
-                if not self.hidden_layer_sizes['b']:
-                    raise ValueError("If Y is a sequence, hidden_layer_sizes_b "
-                                     "should be specified")
-                self.b_in = tf.placeholder(tf.float32, (None, None, None, Y[0].shape[-1]),
-                                           name='b')
-            if self.use_neg_from_batch:
-                negs_in = tf.placeholder_with_default(np.zeros((1, self.num_neg, 1), dtype=np.float32),
-                                                      (None, self.num_neg, None), name='negs')
+                val_dataset = None
+
+            if len(train_dataset.output_shapes[0]) == 2:
+                train_dataset_output_shapes_X = train_dataset.output_shapes[0]
             else:
-                negs_in = None
+                train_dataset_output_shapes_X = (None, None, train_dataset.output_shapes[0][-1])
+
+            if len(train_dataset.output_shapes[1]) == 2:
+                train_dataset_output_shapes_Y = train_dataset.output_shapes[1]
+            else:
+                train_dataset_output_shapes_Y = (None, None, train_dataset.output_shapes[1][-1])
+
+            iterator = tf.data.Iterator.from_structure(train_dataset.output_types,
+                                                       (train_dataset_output_shapes_X, train_dataset_output_shapes_Y),
+                                                       output_classes=train_dataset.output_classes)
+            # iterator = train_dataset.make_initializable_iterator()
+            a_sparse, b_sparse = iterator.get_next()
+
+            a_raw = self._sparse_tensor_to_dense(a_sparse, X[0].shape[-1])
+            b_raw = self._sparse_tensor_to_dense(b_sparse, Y[0].shape[-1])
 
             is_training = tf.placeholder_with_default(False, shape=())
 
-            self.word_embed = self._create_tf_embed_a(self.a_in, is_training)
-            self.intent_embed = self._create_tf_embed_b(self.b_in, is_training)
-            if self.use_neg_from_batch:
-                tiled_intent_embed = self._tile_tf_embed_b(self.intent_embed, is_training, negs_in)
-            else:
-                tiled_intent_embed = self.intent_embed
+            self.word_embed = self._create_tf_embed_a(a_raw, is_training)
+            self.intent_embed = self._create_tf_embed_b(b_raw, is_training)
 
-            self.sim_op, sim_emb = self._tf_sim(self.word_embed,
-                                                tiled_intent_embed)
-            loss = self._tf_loss(self.sim_op, sim_emb)
+            neg_ids = tf.random.categorical(tf.log(1. - tf.eye(tf.shape(b_raw)[0])), self.num_neg)
+
+            iou_intent = self._tf_calc_iou(b_raw, is_training, neg_ids)
+            bad_negs = tf.nn.relu(tf.sign(iou_intent - self.iou_threshold))
+
+            tiled_intent_embed = self._tf_sample_neg(self.intent_embed, is_training, neg_ids)
+
+            self.sim_op, sim_emb = self._tf_sim(self.word_embed, tiled_intent_embed)
+            loss = self._tf_loss(self.sim_op, sim_emb, bad_negs)
 
             train_op = tf.train.AdamOptimizer().minimize(loss)
+
+            train_init_op = iterator.make_initializer(train_dataset)
+            val_init_op = iterator.make_initializer(val_dataset)
 
             # [print(v.name, v.shape) for v in tf.trainable_variables()]
             # exit()
@@ -1058,32 +815,136 @@ class EmbeddingIntentClassifier(Component):
             #            is_training: False})
             # print(gradient_vals)
 
-            self._train_tf(X, Y, intents_for_X, negs_in,
-                           loss, is_training, train_op)
+            # self._train_tf(X, Y, intents_for_X, negs_in,
+            #                loss, is_training, train_op)
+            self._train_tf_dataset(train_init_op, val_init_op, batch_size_in, loss, is_training, train_op)
 
-            self.all_intents_embed_values = self._create_all_intents_embed(self.encoded_all_intents)
+            self.all_intents_embed_values = self._create_all_intents_embed(self.encoded_all_intents, iterator)
 
+            # prediction graph
             self.all_intents_embed_in = tf.placeholder(tf.float32, (None, None, self.embed_dim),
                                                        name='all_intents_embed')
 
+            self.a_in = tf.placeholder(a_raw.dtype, a_raw.shape, name='a')
+            self.b_in = tf.placeholder(b_raw.dtype, b_raw.shape, name='b')
+
+            self.word_embed = self._create_tf_embed_a(self.a_in, is_training)
+            self.intent_embed = self._create_tf_embed_b(self.b_in, is_training)
+
+            tiled_intent_embed = self._tf_sample_neg(self.intent_embed, is_training, None, tf.shape(self.word_embed)[0])
+
+            self.sim_op, _ = self._tf_sim(self.word_embed, tiled_intent_embed)
+
             self.sim_all, _ = self._tf_sim(self.word_embed, self.all_intents_embed_in)
 
-    def _create_all_intents_embed(self, encoded_all_intents):
+    # noinspection PyPep8Naming
+    def _train_tf_dataset(self,
+                          train_init_op,
+                          val_init_op,
+                          batch_size_in,
+                          loss: 'tf.Tensor',
+                          is_training: 'tf.Tensor',
+                          train_op: 'tf.Tensor'
+                          ) -> None:
+        """Train tf graph"""
+
+        self.session.run(tf.global_variables_initializer())
+
+        if self.evaluate_on_num_examples:
+            logger.info("Accuracy is updated every {} epochs"
+                        "".format(self.evaluate_every_num_epochs))
+
+        pbar = tqdm(range(self.epochs), desc="Epochs")
+        train_acc = 0
+        last_loss = 0
+        for ep in pbar:
+
+            batch_size = self._linearly_increasing_batch_size(ep)
+            self.session.run(train_init_op, feed_dict={batch_size_in: batch_size})
+
+            ep_loss = 0
+            batches_per_epoch = 0
+            while True:
+                try:
+                    _, batch_loss = self.session.run((train_op, loss),
+                                                     feed_dict={is_training: True})
+                except tf.errors.OutOfRangeError:
+                    break
+
+                batches_per_epoch += 1
+                ep_loss += batch_loss
+
+            ep_loss /= batches_per_epoch
+
+            if self.evaluate_on_num_examples:
+                if (ep == 0 or
+                        (ep + 1) % self.evaluate_every_num_epochs == 0 or
+                        (ep + 1) == self.epochs):
+                    train_acc = self._output_training_stat_dataset(val_init_op)
+                    last_loss = ep_loss
+
+                pbar.set_postfix({
+                    "loss": "{:.3f}".format(ep_loss),
+                    "acc": "{:.3f}".format(train_acc)
+                })
+            else:
+                pbar.set_postfix({
+                    "loss": "{:.3f}".format(ep_loss)
+                })
+
+        if self.evaluate_on_num_examples:
+            logger.info("Finished training embedding classifier, "
+                        "loss={:.3f}, train accuracy={:.3f}"
+                        "".format(last_loss, train_acc))
+
+    # noinspection PyPep8Naming
+    def _output_training_stat_dataset(self, val_init_op) -> np.ndarray:
+        """Output training statistics"""
+
+        self.session.run(val_init_op)
+        train_sim = self.session.run(self.sim_op)
+
+        train_acc = np.mean(np.argmax(train_sim, -1) == np.arange(len(train_sim)))
+
+        return train_acc
+
+    def _create_all_intents_embed(self, encoded_all_intents, iterator=None):
+
+        all_intents_embed = []
         batch_size = self._linearly_increasing_batch_size(0)
-        batches_per_epoch = (len(encoded_all_intents) // batch_size +
-                             int(len(encoded_all_intents) % batch_size > 0))
 
-        all_intents_embed = np.empty((1, len(encoded_all_intents), self.embed_dim))
-        for i in range(batches_per_epoch):
-            end_idx = (i + 1) * batch_size
-            start_idx = i * batch_size
+        if iterator is None:
+            batches_per_epoch = (len(encoded_all_intents) // batch_size +
+                                 int(len(encoded_all_intents) % batch_size > 0))
 
-            batch_b = self._toarray(encoded_all_intents[start_idx:end_idx])
-            batch_b = np.expand_dims(batch_b, axis=0)
+            for i in range(batches_per_epoch):
+                start_idx = i * batch_size
+                end_idx = (i + 1) * batch_size
 
-            all_intents_embed[
-                0, start_idx:end_idx, :
-            ] = self.session.run(self.intent_embed, feed_dict={self.b_in: batch_b})
+                # batch_b = self._to_sparse_tensor(encoded_all_intents[start_idx:end_idx])
+                batch_b = self._toarray(encoded_all_intents[start_idx:end_idx])
+
+                all_intents_embed.append(self.session.run(self.intent_embed, feed_dict={self.b_in: batch_b}))
+        else:
+            if len(iterator.output_shapes[0]) == 2:
+                shape_X = (len(encoded_all_intents), iterator.output_shapes[0][-1])
+            else:
+                shape_X = (len(encoded_all_intents), 1, iterator.output_shapes[0][-1])
+
+            X_tensor = tf.SparseTensor(tf.zeros((0, len(iterator.output_shapes[0])), tf.int64),
+                                       tf.zeros((0,), tf.int32), shape_X)
+            Y_tensor = self._to_sparse_tensor(encoded_all_intents)
+
+            all_intents_dataset = tf.data.Dataset.from_tensor_slices((X_tensor, Y_tensor)).batch(batch_size)
+            self.session.run(iterator.make_initializer(all_intents_dataset))
+
+            while True:
+                try:
+                    all_intents_embed.append(self.session.run(self.intent_embed))
+                except tf.errors.OutOfRangeError:
+                    break
+
+        all_intents_embed = np.expand_dims(np.concatenate(all_intents_embed, 0), 0)
 
         return all_intents_embed
 
@@ -1141,6 +1002,22 @@ class EmbeddingIntentClassifier(Component):
         # transform sim to python list for JSON serializing
         return intent_ids, message_sim.tolist()
 
+    def _toarray(self, array_of_sparse):
+        if issparse(array_of_sparse):
+            return array_of_sparse.toarray()
+        elif issparse(array_of_sparse[0]):
+            if not self.sequence:
+                return np.array([x.toarray() for x in array_of_sparse]).squeeze()
+            else:
+                seq_len = max([x.shape[0] for x in array_of_sparse])
+                X = np.ones([len(array_of_sparse), seq_len, array_of_sparse[0].shape[-1]], dtype=np.int32) * -1
+                for i, x in enumerate(array_of_sparse):
+                    X[i, :x.shape[0], :] = x.toarray()
+
+                return X
+        else:
+            return array_of_sparse
+
     # noinspection PyPep8Naming
     def process(self, message: 'Message', test_data=None, **kwargs: Any) -> None:
         """Return the most likely intent and its similarity to the input."""
@@ -1155,10 +1032,17 @@ class EmbeddingIntentClassifier(Component):
         else:
             # get features (bag of words) for a message
             X = message.get("text_features")
-            if issparse(X[0]):
-                X = self._toarray(X)
-            else:
-                X = np.expand_dims(message.get("text_features"), axis=0)
+            X = self._toarray(X)
+
+            # with self.graph.as_default():
+            #     if issparse(X):
+            #         a_sparse = self._to_sparse_tensor([X])
+            #     else:
+            #         a_sparse = self._to_sparse_tensor(X, auto2d=False)
+            #
+            #     a_raw = self._sparse_tensor_to_dense(a_sparse, X[0].shape[-1])
+            #
+            # X = self.session.run(a_raw)
 
             if test_data:
                 if not self.new_test_intent_dict:
@@ -1363,15 +1247,14 @@ class EmbeddingIntentClassifier(Component):
                     word_embed = cls._create_tf_gpu_predict_embed(meta, a_in,
                                                                   meta['hidden_layers_sizes_a'],
                                                                   name='a_and_b' if meta['share_embedding'] else 'a')
-                    shape = tf.shape(b_in)
-                    b = tf.reshape(b_in, [-1, shape[-2], b_in.shape[-1]])
-                    emb_b = cls._create_tf_gpu_predict_embed(meta, b,
+                    intent_embed = cls._create_tf_gpu_predict_embed(meta, b_in,
                                                              meta['hidden_layers_sizes_b'],
                                                              name='a_and_b' if meta['share_embedding'] else 'b')
-                    # reshape back
-                    intent_embed = tf.reshape(emb_b, [shape[0], shape[1], meta['embed_dim']])
 
-                    sim_op, _ = cls._tf_gpu_sim(meta, word_embed, intent_embed)
+                    tiled_intent_embed = cls._tf_sample_neg(intent_embed, None, None,
+                                                            tf.shape(word_embed)[0])
+
+                    sim_op, _ = cls._tf_gpu_sim(meta, word_embed, tiled_intent_embed)
 
                     all_intents_embed_in = tf.placeholder(tf.float32, (None, None, meta['embed_dim']),
                                                           name='all_intents_embed')
@@ -1381,6 +1264,8 @@ class EmbeddingIntentClassifier(Component):
 
                 else:
                     saver = tf.train.import_meta_graph(checkpoint + '.meta')
+
+                    # iterator = tf.get_collection('data_iterator')[0]
 
                     a_in = tf.get_collection('message_placeholder')[0]
                     b_in = tf.get_collection('intent_placeholder')[0]
