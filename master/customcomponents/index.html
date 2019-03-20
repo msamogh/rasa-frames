@@ -142,7 +142,7 @@ analysis to integrate with open source bot framework Rasa Stack." />
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../migrations/">Migration Guide</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../license/">License</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../changelog/">Change Log</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../old_nlu_changelog/">NLU Change Log</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../support/">Getting Support</a></li>
 </ul>
 
@@ -209,9 +209,8 @@ analysis to integrate with open source bot framework Rasa Stack." />
 
 
     <p class="scv-banner"><a href="../../0.14.6/customcomponents/"><b>Warning:</b> This document is for the development version of Rasa NLU. The latest version is 0.14.6.</a></p>
-<p>.._section_customcomponents:</p>
 <div class="section" id="custom-components">
-<h1>Custom Components<a class="headerlink" href="#custom-components" title="Permalink to this headline">¶</a></h1>
+<span id="section-customcomponents"></span><h1>Custom Components<a class="headerlink" href="#custom-components" title="Permalink to this headline">¶</a></h1>
 <p>You can create a custom Component to perform a specific task which NLU doesn’t currently offer (for example, sentiment analysis).
 Below is the specification of the <a class="reference internal" href="#rasa_nlu.components.Component" title="rasa_nlu.components.Component"><code class="xref py py-class docutils literal notranslate"><span class="pre">rasa_nlu.components.Component</span></code></a> class with the methods you’ll need to implement.</p>
 <p>You can add a custom component to your pipeline by adding the module path.
@@ -226,179 +225,6 @@ containing a <code class="docutils literal notranslate"><span class="pre">Sentim
 <p>Also be sure to read the section on the <a class="reference internal" href="../choosing_pipeline/#section-component-lifecycle"><span class="std std-ref">Component Lifecycle</span></a> .</p>
 <p>To get started, you can use this skeleton that contains the most important
 methods that you should implement:</p>
-<div class="highlight-python notranslate"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre> 1
- 2
- 3
- 4
- 5
- 6
- 7
- 8
- 9
-10
-11
-12
-13
-14
-15
-16
-17
-18
-19
-20
-21
-22
-23
-24
-25
-26
-27
-28
-29
-30
-31
-32
-33
-34
-35
-36
-37
-38
-39
-40
-41
-42
-43
-44
-45
-46
-47
-48
-49
-50
-51
-52
-53
-54
-55
-56
-57
-58
-59
-60
-61
-62
-63
-64
-65
-66
-67
-68
-69
-70
-71
-72
-73
-74
-75
-76
-77
-78
-79
-80
-81
-82
-83
-84
-85
-86</pre></div></td><td class="code"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">rasa_nlu.components</span> <span class="kn">import</span> <span class="n">Component</span>
-<span class="kn">import</span> <span class="nn">typing</span>
-<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">Text</span><span class="p">,</span> <span class="n">Dict</span>
-
-<span class="k">if</span> <span class="n">typing</span><span class="o">.</span><span class="n">TYPE_CHECKING</span><span class="p">:</span>
-    <span class="kn">from</span> <span class="nn">rasa_nlu.model</span> <span class="kn">import</span> <span class="n">Metadata</span>
-
-
-<span class="k">class</span> <span class="nc">MyComponent</span><span class="p">(</span><span class="n">Component</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;A new component&quot;&quot;&quot;</span>
-
-    <span class="c1"># Defines what attributes the pipeline component will</span>
-    <span class="c1"># provide when called. The listed attributes</span>
-    <span class="c1"># should be set by the component on the message object</span>
-    <span class="c1"># during test and train, e.g.</span>
-    <span class="c1"># ```message.set(&quot;entities&quot;, [...])```</span>
-    <span class="n">provides</span> <span class="o">=</span> <span class="p">[]</span>
-
-    <span class="c1"># Which attributes on a message are required by this</span>
-    <span class="c1"># component. e.g. if requires contains &quot;tokens&quot;, than a</span>
-    <span class="c1"># previous component in the pipeline needs to have &quot;tokens&quot;</span>
-    <span class="c1"># within the above described `provides` property.</span>
-    <span class="n">requires</span> <span class="o">=</span> <span class="p">[]</span>
-
-    <span class="c1"># Defines the default configuration parameters of a component</span>
-    <span class="c1"># these values can be overwritten in the pipeline configuration</span>
-    <span class="c1"># of the model. The component should choose sensible defaults</span>
-    <span class="c1"># and should be able to create reasonable results with the defaults.</span>
-    <span class="n">defaults</span> <span class="o">=</span> <span class="p">{}</span>
-
-    <span class="c1"># Defines what language(s) this component can handle.</span>
-    <span class="c1"># This attribute is designed for instance method: `can_handle_language`.</span>
-    <span class="c1"># Default value is None which means it can handle all languages.</span>
-    <span class="c1"># This is an important feature for backwards compatibility of components.</span>
-    <span class="n">language_list</span> <span class="o">=</span> <span class="bp">None</span>
-
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">component_config</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
-        <span class="nb">super</span><span class="p">(</span><span class="n">MyComponent</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">component_config</span><span class="p">)</span>
-
-    <span class="k">def</span> <span class="nf">train</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">training_data</span><span class="p">,</span> <span class="n">cfg</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Train this component.</span>
-
-<span class="sd">        This is the components chance to train itself provided</span>
-<span class="sd">        with the training data. The component can rely on</span>
-<span class="sd">        any context attribute to be present, that gets created</span>
-<span class="sd">        by a call to :meth:`components.Component.pipeline_init`</span>
-<span class="sd">        of ANY component and</span>
-<span class="sd">        on any context attributes created by a call to</span>
-<span class="sd">        :meth:`components.Component.train`</span>
-<span class="sd">        of components previous to this one.&quot;&quot;&quot;</span>
-        <span class="k">pass</span>
-
-    <span class="k">def</span> <span class="nf">process</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">message</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Process an incoming message.</span>
-
-<span class="sd">        This is the components chance to process an incoming</span>
-<span class="sd">        message. The component can rely on</span>
-<span class="sd">        any context attribute to be present, that gets created</span>
-<span class="sd">        by a call to :meth:`components.Component.pipeline_init`</span>
-<span class="sd">        of ANY component and</span>
-<span class="sd">        on any context attributes created by a call to</span>
-<span class="sd">        :meth:`components.Component.process`</span>
-<span class="sd">        of components previous to this one.&quot;&quot;&quot;</span>
-        <span class="k">pass</span>
-
-    <span class="k">def</span> <span class="nf">persist</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
-                <span class="n">file_name</span><span class="p">:</span> <span class="n">Text</span><span class="p">,</span>
-                <span class="n">model_dir</span><span class="p">:</span> <span class="n">Text</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Dict</span><span class="p">[</span><span class="n">Text</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]:</span>
-        <span class="sd">&quot;&quot;&quot;Persist this component to disk for future loading.&quot;&quot;&quot;</span>
-
-        <span class="k">pass</span>
-
-    <span class="nd">@classmethod</span>
-    <span class="k">def</span> <span class="nf">load</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span>
-             <span class="n">meta</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="n">Text</span><span class="p">,</span> <span class="n">Any</span><span class="p">],</span>
-             <span class="n">model_dir</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Text</span><span class="p">]</span> <span class="o">=</span> <span class="bp">None</span><span class="p">,</span>
-             <span class="n">model_metadata</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="s1">&#39;Metadata&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">None</span><span class="p">,</span>
-             <span class="n">cached_component</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="s1">&#39;Component&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">None</span><span class="p">,</span>
-             <span class="o">**</span><span class="n">kwargs</span><span class="p">:</span> <span class="n">Any</span>
-             <span class="p">)</span> <span class="o">-&gt;</span> <span class="s1">&#39;Component&#39;</span><span class="p">:</span>
-        <span class="sd">&quot;&quot;&quot;Load this component from file.&quot;&quot;&quot;</span>
-
-        <span class="k">if</span> <span class="n">cached_component</span><span class="p">:</span>
-            <span class="k">return</span> <span class="n">cached_component</span>
-        <span class="k">else</span><span class="p">:</span>
-            <span class="k">return</span> <span class="bp">cls</span><span class="p">(</span><span class="n">meta</span><span class="p">)</span>
-</pre></div>
-</td></tr></table></div>
 <div class="section" id="component">
 <h2>Component<a class="headerlink" href="#component" title="Permalink to this headline">¶</a></h2>
 <dl class="class">

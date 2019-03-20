@@ -139,7 +139,7 @@ processes performed on the user input of your contextual assistant." />
 <li class="toctree-l1"><a class="reference internal" href="../customcomponents/">Custom Components</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../migrations/">Migration Guide</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../license/">License</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../changelog/">Change Log</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../old_nlu_changelog/">NLU Change Log</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../support/">Getting Support</a></li>
 </ul>
 
@@ -218,7 +218,7 @@ what they <em>do</em> rather than which libraries they use as of Rasa NLU
 </div>
 <p>This is a reference of the configuration options for every built-in
 component in Rasa NLU. If you want to build a custom component, check
-out <span class="xref std std-ref">section_customcomponents</span>.</p>
+out <a class="reference internal" href="../customcomponents/#section-customcomponents"><span class="std std-ref">Custom Components</span></a>.</p>
 <div class="contents topic" id="contents">
 <p class="topic-title first">Contents</p>
 <ul class="simple">
@@ -467,39 +467,39 @@ as Out-Of-Vacabulary is known, it can be set to <code class="docutils literal no
 Unseen words will be substituted with <code class="docutils literal notranslate"><span class="pre">OOV_token</span></code> <strong>only</strong> if this token is present in the training data or <code class="docutils literal notranslate"><span class="pre">OOV_words</span></code> list is provided.</p>
 </div>
 </div></blockquote>
-<div class="last highlight-yaml notranslate"><div class="highlight"><pre><span></span>pipeline:
-- name: &quot;CountVectorsFeaturizer&quot;
-  # whether to use word or character n-grams
-  # &#39;char_wb&#39; creates character n-grams only inside word boundaries
-  # n-grams at the edges of words are padded with space.
-  &quot;analyzer&quot;: &#39;word&#39;,  # use &#39;char&#39; or &#39;char_wb&#39; for character
-  # the parameters are taken from
-  # sklearn&#39;s CountVectorizer
-  # regular expression for tokens
-  &quot;token_pattern&quot;: r&#39;(?u)\b\w\w+\b&#39;
-  # remove accents during the preprocessing step
-  &quot;strip_accents&quot;: None  # {&#39;ascii&#39;, &#39;unicode&#39;, None}
-  # list of stop words
-  &quot;stop_words&quot;: None  # string {&#39;english&#39;}, list, or None (default)
-  # min document frequency of a word to add to vocabulary
-  # float - the parameter represents a proportion of documents
-  # integer - absolute counts
-  &quot;min_df&quot;: 1  # float in range [0.0, 1.0] or int
-  # max document frequency of a word to add to vocabulary
-  # float - the parameter represents a proportion of documents
-  # integer - absolute counts
-  &quot;max_df&quot;: 1.0  # float in range [0.0, 1.0] or int
-  # set ngram range
-  &quot;min_ngram&quot;: 1  # int
-  &quot;max_ngram&quot;: 1  # int
-  # limit vocabulary size
-  &quot;max_features&quot;: None  # int or None
-  # if convert all characters to lowercase
-  &quot;lowercase&quot;: true  # bool
-  # handling Out-Of-Vacabulary (OOV) words
-  # will be converted to lowercase if lowercase is true
-  &quot;OOV_token&quot;: None  # string or None
-  &quot;OOV_words&quot;: []  # list of strings
+<div class="last highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">pipeline</span><span class="p">:</span>
+<span class="p p-Indicator">-</span> <span class="nt">name</span><span class="p">:</span> <span class="s">&quot;CountVectorsFeaturizer&quot;</span>
+  <span class="c1"># whether to use word or character n-grams</span>
+  <span class="c1"># &#39;char_wb&#39; creates character n-grams only inside word boundaries</span>
+  <span class="c1"># n-grams at the edges of words are padded with space.</span>
+  <span class="nt">analyzer</span><span class="p">:</span> <span class="s">&#39;word&#39;</span>  <span class="c1"># use &#39;char&#39; or &#39;char_wb&#39; for character</span>
+  <span class="c1"># the parameters are taken from</span>
+  <span class="c1"># sklearn&#39;s CountVectorizer</span>
+  <span class="c1"># regular expression for tokens</span>
+  <span class="nt">token_pattern</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">r&#39;(?u)\b\w\w+\b&#39;</span>
+  <span class="c1"># remove accents during the preprocessing step</span>
+  <span class="nt">strip_accents</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">None</span>  <span class="c1"># {&#39;ascii&#39;, &#39;unicode&#39;, None}</span>
+  <span class="c1"># list of stop words</span>
+  <span class="nt">stop_words</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">None</span>  <span class="c1"># string {&#39;english&#39;}, list, or None (default)</span>
+  <span class="c1"># min document frequency of a word to add to vocabulary</span>
+  <span class="c1"># float - the parameter represents a proportion of documents</span>
+  <span class="c1"># integer - absolute counts</span>
+  <span class="nt">min_df</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">1</span>  <span class="c1"># float in range [0.0, 1.0] or int</span>
+  <span class="c1"># max document frequency of a word to add to vocabulary</span>
+  <span class="c1"># float - the parameter represents a proportion of documents</span>
+  <span class="c1"># integer - absolute counts</span>
+  <span class="nt">max_df</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">1.0</span>  <span class="c1"># float in range [0.0, 1.0] or int</span>
+  <span class="c1"># set ngram range</span>
+  <span class="nt">min_ngram</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">1</span>  <span class="c1"># int</span>
+  <span class="nt">max_ngram</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">1</span>  <span class="c1"># int</span>
+  <span class="c1"># limit vocabulary size</span>
+  <span class="nt">max_features</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">None</span>  <span class="c1"># int or None</span>
+  <span class="c1"># if convert all characters to lowercase</span>
+  <span class="nt">lowercase</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">true</span>  <span class="c1"># bool</span>
+  <span class="c1"># handling Out-Of-Vacabulary (OOV) words</span>
+  <span class="c1"># will be converted to lowercase if lowercase is true</span>
+  <span class="nt">OOV_token</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">None</span>  <span class="c1"># string or None</span>
+  <span class="nt">OOV_words</span><span class="p">:</span> <span class="p p-Indicator">[]</span>  <span class="c1"># list of strings</span>
 </pre></div>
 </div>
 </td>

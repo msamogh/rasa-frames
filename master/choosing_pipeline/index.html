@@ -143,7 +143,7 @@ for open source NLU." />
 <li class="toctree-l1"><a class="reference internal" href="../customcomponents/">Custom Components</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../migrations/">Migration Guide</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../license/">License</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../changelog/">Change Log</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../old_nlu_changelog/">NLU Change Log</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../support/">Getting Support</a></li>
 </ul>
 
@@ -212,6 +212,8 @@ for open source NLU." />
     <p class="scv-banner"><a href="../../0.14.6/choosing_pipeline/"><b>Warning:</b> This document is for the development version of Rasa NLU. The latest version is 0.14.6.</a></p>
 <div class="section" id="choosing-a-rasa-nlu-pipeline">
 <span id="choosing-pipeline"></span><h1>Choosing a Rasa NLU Pipeline<a class="headerlink" href="#choosing-a-rasa-nlu-pipeline" title="Permalink to this headline">¶</a></h1>
+<p>Choosing an NLU pipeline allows you to customize your model and finetune
+it on your dataset.</p>
 <div class="section" id="the-short-answer">
 <h2>The Short Answer<a class="headerlink" href="#the-short-answer" title="Permalink to this headline">¶</a></h2>
 <p>If you have less than 1000 total training examples, and there is a spaCy model for your
@@ -286,7 +288,7 @@ To do this, use these flags:</p>
 These components are executed one after another
 in a so-called processing pipeline. There are components for entity extraction, for intent classification,
 pre-processing, and others. If you want to add your own component, for example to run a spell-check or to
-do sentiment analysis, check out <span class="xref std std-ref">section_customcomponents</span>.</p>
+do sentiment analysis, check out <a class="reference internal" href="../customcomponents/#section-customcomponents"><span class="std std-ref">Custom Components</span></a>.</p>
 <p>Each component processes the input and creates an output. The ouput can be used by any component that comes after
 this component in the pipeline. There are components which only produce information that is used by other components
 in the pipeline and there are other components that produce <code class="docutils literal notranslate"><span class="pre">Output</span></code> attributes which will be returned after
@@ -309,17 +311,22 @@ For example, the <code class="docutils literal notranslate"><span class="pre">en
 </div>
 <div class="section" id="component-lifecycle">
 <span id="section-component-lifecycle"></span><h2>Component Lifecycle<a class="headerlink" href="#component-lifecycle" title="Permalink to this headline">¶</a></h2>
-<p>Every component can implement several methods from the <code class="xref py py-class docutils literal notranslate"><span class="pre">Component</span></code> base class; in a pipeline these different methods
-will be called in a specific order. Lets assume, we added the following pipeline to our config:
+<p>Every component can implement several methods from the <code class="docutils literal notranslate"><span class="pre">Component</span></code>
+base class; in a pipeline these different methods
+will be called in a specific order. Lets assume, we added the following
+pipeline to our config:
 <code class="docutils literal notranslate"><span class="pre">&quot;pipeline&quot;:</span> <span class="pre">[&quot;Component</span> <span class="pre">A&quot;,</span> <span class="pre">&quot;Component</span> <span class="pre">B&quot;,</span> <span class="pre">&quot;Last</span> <span class="pre">Component&quot;]</span></code>.
 The image shows the call order during the training of this pipeline :</p>
 <img alt="../_images/component_lifecycle.png" src="../_images/component_lifecycle.png" />
-<p>Before the first component is created using the <code class="docutils literal notranslate"><span class="pre">create</span></code> function, a so called <code class="docutils literal notranslate"><span class="pre">context</span></code> is created (which is
-nothing more than a python dict). This context is used to pass information between the components. For example,
-one component can calculate feature vectors for the training data, store that within the context and another
-component can retrieve these feature vectors from the context and do intent classification.</p>
-<p>Initially the context is filled with all configuration values, the arrows in the image show the call order
-and visualize the path of the passed context. After all components are trained and persisted, the
+<p>Before the first component is created using the <code class="docutils literal notranslate"><span class="pre">create</span></code> function, a so
+called <code class="docutils literal notranslate"><span class="pre">context</span></code> is created (which is nothing more than a python dict).
+This context is used to pass information between the components. For example,
+one component can calculate feature vectors for the training data, store
+that within the context and another component can retrieve these feature
+vectors from the context and do intent classification.</p>
+<p>Initially the context is filled with all configuration values, the arrows
+in the image show the call order and visualize the path of the passed
+context. After all components are trained and persisted, the
 final context dictionary is used to persist the model’s metadata.</p>
 </div>
 <div class="section" id="returned-entities-object">
@@ -491,7 +498,7 @@ by listing the names of the components you want to use:</p>
 <p>This creates a pipeline that only does entity recognition, but no
 intent classification. So Rasa NLU will not predict any intents.
 You can find the details of each component in <a class="reference internal" href="../components/#section-pipeline"><span class="std std-ref">Component Configuration</span></a>.</p>
-<p>If you want to use custom components in your pipeline, see <span class="xref std std-ref">section_customcomponents</span>.</p>
+<p>If you want to use custom components in your pipeline, see <a class="reference internal" href="../customcomponents/#section-customcomponents"><span class="std std-ref">Custom Components</span></a>.</p>
 </div>
 <div class="section" id="have-questions-or-feedback">
 <h2>Have questions or feedback?<a class="headerlink" href="#have-questions-or-feedback" title="Permalink to this headline">¶</a></h2>

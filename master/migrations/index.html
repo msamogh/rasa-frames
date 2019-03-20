@@ -151,7 +151,7 @@ NLP engine and how to migrate from one version to another." />
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../license/">License</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../changelog/">Change Log</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../old_nlu_changelog/">NLU Change Log</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../support/">Getting Support</a></li>
 </ul>
 
@@ -244,16 +244,13 @@ Use component class name in nlu config file.</li>
 </div>
 <div class="section" id="custom-components">
 <h3>custom components<a class="headerlink" href="#custom-components" title="Permalink to this headline">¶</a></h3>
-<ul>
-<li><p class="first">The signature of Component’s methods have been changed:
-- <code class="docutils literal notranslate"><span class="pre">load(...)</span></code>, <code class="docutils literal notranslate"><span class="pre">create(...)</span></code> and <code class="docutils literal notranslate"><span class="pre">cache_key(...)</span></code> methods</p>
-<blockquote>
-<div><p>additionally take component’s meta/config dicts</p>
-</div></blockquote>
 <ul class="simple">
-<li><code class="docutils literal notranslate"><span class="pre">persist(...)</span></code> method additionally takes file name prefix</li>
+<li>The signature of Component’s methods have been changed:<ul>
+<li><code class="docutils literal notranslate"><span class="pre">load(...)</span></code>, <code class="docutils literal notranslate"><span class="pre">create(...)</span></code> and <code class="docutils literal notranslate"><span class="pre">cache_key(...)</span></code> methods
+additionally take component’s meta/config dicts</li>
+<li><code class="docutils literal notranslate"><span class="pre">persist(...)</span></code> method additionally takes file name prefix
+Change your custom components accordingly.</li>
 </ul>
-<p>Change your custom components accordingly.</p>
 </li>
 </ul>
 </div>
@@ -400,7 +397,7 @@ parameters. Example:</p>
 </div>
 </div></blockquote>
 <p>All other parameters have either been moved to the scripts
-for training (<span class="xref std std-ref">train_parameters</span>), serving models
+for training, serving models
 (<a class="reference internal" href="../config/#server-parameters"><span class="std std-ref">Server Parameters</span></a>), or put into the pipeline
 configuration (<a class="reference internal" href="../components/#section-pipeline"><span class="std std-ref">Component Configuration</span></a>).</p>
 </div>
