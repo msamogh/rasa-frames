@@ -828,14 +828,15 @@ class EmbeddingIntentClassifier(Component):
             self.a_in = tf.placeholder(a_raw.dtype, a_raw.shape, name='a')
             self.b_in = tf.placeholder(b_raw.dtype, b_raw.shape, name='b')
 
-            self.word_embed = self._create_tf_embed_a(self.a_in, is_training)
-            self.intent_embed = self._create_tf_embed_b(self.b_in, is_training)
+            if not self.gpu_lstm:
+                self.word_embed = self._create_tf_embed_a(self.a_in, is_training)
+                self.intent_embed = self._create_tf_embed_b(self.b_in, is_training)
 
-            tiled_intent_embed = self._tf_sample_neg(self.intent_embed, is_training, None, tf.shape(self.word_embed)[0])
+                tiled_intent_embed = self._tf_sample_neg(self.intent_embed, is_training, None, tf.shape(self.word_embed)[0])
 
-            self.sim_op, _ = self._tf_sim(self.word_embed, tiled_intent_embed)
+                self.sim_op, _ = self._tf_sim(self.word_embed, tiled_intent_embed)
 
-            self.sim_all, _ = self._tf_sim(self.word_embed, self.all_intents_embed_in)
+                self.sim_all, _ = self._tf_sim(self.word_embed, self.all_intents_embed_in)
 
     # noinspection PyPep8Naming
     def _train_tf_dataset(self,
