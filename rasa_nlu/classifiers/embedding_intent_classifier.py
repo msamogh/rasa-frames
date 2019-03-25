@@ -344,11 +344,6 @@ class EmbeddingIntentClassifier(Component):
                                 reuse=tf.AUTO_REUSE)
             x = tf.layers.dropout(x, rate=self.droprate, training=is_training)
 
-        x = tf.layers.dense(inputs=x,
-                            units=self.embed_dim,
-                            kernel_regularizer=reg,
-                            name='embed_layer_{}'.format(name),
-                            reuse=tf.AUTO_REUSE)
         return x
 
     def _create_rnn_cell(self,
@@ -527,11 +522,7 @@ class EmbeddingIntentClassifier(Component):
 
             x = tf.reduce_sum(x * last, 1)
 
-        return tf.layers.dense(inputs=x,
-                               units=self.embed_dim,
-                               kernel_regularizer=reg,
-                               name='embed_layer_{}'.format(name),
-                               reuse=tf.AUTO_REUSE)
+        return x
 
     def _create_tf_embed_a(self,
                            a_in: 'tf.Tensor',
@@ -540,13 +531,20 @@ class EmbeddingIntentClassifier(Component):
         """Create tf graph for training"""
 
         if len(a_in.shape) == 2:
-            emb_a = self._create_tf_embed_nn(a_in, is_training,
-                                             self.hidden_layer_sizes['a'],
-                                             name='a_and_b' if self.share_embedding else 'a')
+            a = self._create_tf_embed_nn(a_in, is_training,
+                                         self.hidden_layer_sizes['a'],
+                                         name='a_and_b' if self.share_embedding else 'a')
         else:
-            emb_a = self._create_tf_rnn_embed(a_in, is_training,
-                                              self.hidden_layer_sizes['a'],
-                                              name='a_and_b' if self.share_embedding else 'a')
+            a = self._create_tf_rnn_embed(a_in, is_training,
+                                          self.hidden_layer_sizes['a'],
+                                          name='a_and_b' if self.share_embedding else 'a')
+
+        reg = tf.contrib.layers.l2_regularizer(self.C2)
+        emb_a = tf.layers.dense(inputs=a,
+                                units=self.embed_dim,
+                                kernel_regularizer=reg,
+                                name='embed_layer_{}'.format('a'),
+                                reuse=tf.AUTO_REUSE)
 
         return emb_a
 
@@ -557,15 +555,21 @@ class EmbeddingIntentClassifier(Component):
         """Create tf graph for training"""
 
         if len(b_in.shape) == 2:
-            emb_b = self._create_tf_embed_nn(b_in, is_training,
-                                             self.hidden_layer_sizes['b'],
-                                             name='a_and_b' if self.share_embedding else 'b')
+            b = self._create_tf_embed_nn(b_in, is_training,
+                                         self.hidden_layer_sizes['b'],
+                                         name='a_and_b' if self.share_embedding else 'b')
 
         else:
-            emb_b = self._create_tf_rnn_embed(b_in, is_training,
-                                              self.hidden_layer_sizes['b'],
-                                              name='a_and_b' if self.share_embedding else 'b')
+            b = self._create_tf_rnn_embed(b_in, is_training,
+                                          self.hidden_layer_sizes['b'],
+                                          name='a_and_b' if self.share_embedding else 'b')
 
+        reg = tf.contrib.layers.l2_regularizer(self.C2)
+        emb_b = tf.layers.dense(inputs=b,
+                                units=self.embed_dim,
+                                kernel_regularizer=reg,
+                                name='embed_layer_{}'.format('b'),
+                                reuse=tf.AUTO_REUSE)
         return emb_b
 
     @staticmethod
