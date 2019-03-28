@@ -488,8 +488,9 @@ class EmbeddingIntentClassifier(Component):
                     nonpadding=mask,
                     attn_bias_for_padding=attn_bias_for_padding)
 
-            # x = tf.reduce_sum(x * last, 1)
-            x = tf.reduce_mean(x, 1)
+                x *= tf.expand_dims(mask, -1)
+
+            x = tf.reduce_sum(x, 1) / tf.reduce_sum(tf.expand_dims(mask, -1), 1)
 
         else:
             for i, layer_size in enumerate(layer_sizes):
