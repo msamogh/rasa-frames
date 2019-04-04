@@ -1169,6 +1169,8 @@ class EmbeddingIntentClassifier(Component):
         mask = tf.cumsum(last, axis=1, reverse=True)
         real_length = tf.cast(tf.reduce_sum(mask, 1), tf.int32)
 
+        last = tf.expand_dims(last, -1)
+
         x = tf.nn.relu(x_in)
 
         if meta['bidirectional']:
