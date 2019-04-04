@@ -235,9 +235,6 @@ class EmbeddingIntentClassifier(Component):
             self.evaluate_every_num_epochs = self.epochs
 
         self.evaluate_on_num_examples = config['evaluate_on_num_examples']
-        if self.gpu_lstm:
-            logger.info("Calculating train accuracy on gpu is not supported")
-            self.evaluate_on_num_examples = 0
 
     def _load_params(self) -> None:
 
