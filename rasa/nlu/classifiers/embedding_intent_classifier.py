@@ -795,7 +795,10 @@ class EmbeddingIntentClassifier(Component):
             train_op = tf.train.AdamOptimizer().minimize(loss)
 
             train_init_op = iterator.make_initializer(train_dataset)
-            val_init_op = iterator.make_initializer(val_dataset)
+            if self.evaluate_on_num_examples:
+                val_init_op = iterator.make_initializer(val_dataset)
+            else:
+                val_init_op = None
 
             # [print(v.name, v.shape) for v in tf.trainable_variables()]
             # exit()
@@ -864,7 +867,7 @@ class EmbeddingIntentClassifier(Component):
 
             ep_loss /= batches_per_epoch
 
-            if self.evaluate_on_num_examples:
+            if self.evaluate_on_num_examples and val_init_op is not None:
                 if (ep == 0 or
                         (ep + 1) % self.evaluate_every_num_epochs == 0 or
                         (ep + 1) == self.epochs):
@@ -1133,11 +1136,10 @@ class EmbeddingIntentClassifier(Component):
                                      layer_sizes: List[int], name: Text) -> 'tf.Tensor':
         """Used for prediction if gpu_lstm is true"""
 
-        reg = tf.contrib.layers.l2_regularizer(meta['C2'])
         # mask different length sequences
-        # if there is at least one `-1` it should be masked
         mask = tf.sign(tf.reduce_max(x_in, -1) + 1)
-        last = tf.expand_dims(mask * tf.cumprod(1 - mask, axis=1, exclusive=True, reverse=True), -1)
+        last = mask * tf.cumprod(1 - mask, axis=1, exclusive=True, reverse=True)
+        mask = tf.cumsum(last, axis=1, reverse=True)
         real_length = tf.cast(tf.reduce_sum(mask, 1), tf.int32)
 
         x = tf.nn.relu(x_in)
@@ -1161,11 +1163,7 @@ class EmbeddingIntentClassifier(Component):
 
         x = tf.reduce_sum(x * last, 1)
 
-        return tf.layers.dense(inputs=x,
-                               units=meta['embed_dim'],
-                               kernel_regularizer=reg,
-                               name='embed_layer_{}'.format(name),
-                               reuse=tf.AUTO_REUSE)
+        return x
 
     @staticmethod
     def _tf_gpu_sim(meta,
@@ -1216,16 +1214,29 @@ class EmbeddingIntentClassifier(Component):
                             model_dir,
                             file_name + "_placeholder_dims.pkl"), 'rb') as f:
                         placeholder_dims = pickle.load(f)
+                    reg = tf.contrib.layers.l2_regularizer(meta['C2'])
+
                     a_in = tf.placeholder(tf.float32, (None, None, placeholder_dims['a_in']),
                                           name='a')
-                    b_in = tf.placeholder(tf.float32, (None, None, None, placeholder_dims['b_in']),
+                    b_in = tf.placeholder(tf.float32, (None, None, placeholder_dims['b_in']),
                                           name='b')
-                    word_embed = cls._create_tf_gpu_predict_embed(meta, a_in,
-                                                                  meta['hidden_layers_sizes_a'],
-                                                                  name='a_and_b' if meta['share_embedding'] else 'a')
-                    intent_embed = cls._create_tf_gpu_predict_embed(meta, b_in,
-                                                             meta['hidden_layers_sizes_b'],
-                                                             name='a_and_b' if meta['share_embedding'] else 'b')
+                    a = cls._create_tf_gpu_predict_embed(meta, a_in,
+                                                         meta['hidden_layers_sizes_a'],
+                                                         name='a_and_b' if meta['share_embedding'] else 'a')
+                    word_embed = tf.layers.dense(inputs=a,
+                                                 units=meta['embed_dim'],
+                                                 kernel_regularizer=reg,
+                                                 name='embed_layer_{}'.format('a'),
+                                                 reuse=tf.AUTO_REUSE)
+
+                    b = cls._create_tf_gpu_predict_embed(meta, b_in,
+                                                         meta['hidden_layers_sizes_b'],
+                                                         name='a_and_b' if meta['share_embedding'] else 'b')
+                    intent_embed = tf.layers.dense(inputs=b,
+                                                   units=meta['embed_dim'],
+                                                   kernel_regularizer=reg,
+                                                   name='embed_layer_{}'.format('b'),
+                                                   reuse=tf.AUTO_REUSE)
 
                     tiled_intent_embed = cls._tf_sample_neg(intent_embed, None, None,
                                                             tf.shape(word_embed)[0])
