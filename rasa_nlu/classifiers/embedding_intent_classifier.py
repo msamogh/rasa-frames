@@ -490,7 +490,10 @@ class EmbeddingIntentClassifier(Component):
 
                 x *= tf.expand_dims(mask, -1)
 
-            x = tf.reduce_sum(x, 1) / tf.reduce_sum(tf.expand_dims(mask, -1), 1)
+            sum_mask = tf.reduce_sum(tf.expand_dims(mask, -1), 1)
+            # fix for zero length sequences
+            sum_mask = tf.where(sum_mask < 1, tf.ones_like(sum_mask), sum_mask)
+            x = tf.reduce_sum(x, 1) / sum_mask
 
         else:
             for i, layer_size in enumerate(layer_sizes):
