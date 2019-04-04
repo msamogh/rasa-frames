@@ -798,7 +798,10 @@ class EmbeddingIntentClassifier(Component):
             train_op = tf.train.AdamOptimizer().minimize(loss)
 
             train_init_op = iterator.make_initializer(train_dataset)
-            val_init_op = iterator.make_initializer(val_dataset)
+            if self.evaluate_on_num_examples:
+                val_init_op = iterator.make_initializer(val_dataset)
+            else:
+                val_init_op = None
 
             # [print(v.name, v.shape) for v in tf.trainable_variables()]
             # exit()
@@ -880,7 +883,7 @@ class EmbeddingIntentClassifier(Component):
 
             ep_loss /= batches_per_epoch
 
-            if self.evaluate_on_num_examples:
+            if self.evaluate_on_num_examples and val_init_op is not None:
                 if (ep == 0 or
                         (ep + 1) % self.evaluate_every_num_epochs == 0 or
                         (ep + 1) == self.epochs):
