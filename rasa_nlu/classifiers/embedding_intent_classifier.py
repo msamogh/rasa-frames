@@ -75,6 +75,7 @@ class EmbeddingIntentClassifier(Component):
         "pos_max_timescale": 1.0e2,
         "max_seq_length": 256,
         "num_heads": 4,
+        "use_last": False,
 
         # training parameters
         "layer_norm": True,
@@ -200,10 +201,10 @@ class EmbeddingIntentClassifier(Component):
                 raise ValueError("GPU training only supports identical sizes among layers b")
 
         self.pos_encoding = config['pos_encoding']
-
         self.pos_max_timescale = config['pos_max_timescale']
         self.max_seq_length = config['max_seq_length']
         self.num_heads = config['num_heads']
+        self.use_last = config['use_last']
 
         self.batch_size = config['batch_size']
         self.epochs = config['epochs']
@@ -488,12 +489,14 @@ class EmbeddingIntentClassifier(Component):
                     nonpadding=mask,
                     attn_bias_for_padding=attn_bias_for_padding)
 
+            if self.use_last:
+                x = tf.reduce_sum(x * last, 1)
+            else:
                 x *= tf.expand_dims(mask, -1)
-
-            sum_mask = tf.reduce_sum(tf.expand_dims(mask, -1), 1)
-            # fix for zero length sequences
-            sum_mask = tf.where(sum_mask < 1, tf.ones_like(sum_mask), sum_mask)
-            x = tf.reduce_sum(x, 1) / sum_mask
+                sum_mask = tf.reduce_sum(tf.expand_dims(mask, -1), 1)
+                # fix for zero length sequences
+                sum_mask = tf.where(sum_mask < 1, tf.ones_like(sum_mask), sum_mask)
+                x = tf.reduce_sum(x, 1) / sum_mask
 
         else:
             for i, layer_size in enumerate(layer_sizes):
