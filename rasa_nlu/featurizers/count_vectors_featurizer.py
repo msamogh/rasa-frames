@@ -36,7 +36,7 @@ class CountVectorsFeaturizer(Featurizer):
         # the parameters are taken from
         # sklearn's CountVectorizer
         "sequence": False,
-
+        "shuffle_sequence": False,
         "use_shared_vocab": False,
         "sparse": False,
 
@@ -87,6 +87,8 @@ class CountVectorsFeaturizer(Featurizer):
 
     def _load_count_vect_params(self):
         self.sequence = self.component_config['sequence']
+        self.shuffle_sequence = self.component_config['shuffle_sequence']
+
         self.use_shared_vocab = self.component_config['use_shared_vocab']
         self.sparse = self.component_config['sparse']
         # set analyzer
@@ -206,9 +208,13 @@ class CountVectorsFeaturizer(Featurizer):
     def _get_message_intent(message):
         return ' '.join([t.text for t in message.get("intent_tokens")])
 
-    @staticmethod
-    def _get_text_sequence(text):
-        return text.split()
+    def _get_text_sequence(self, text):
+        seq = text.split()
+
+        if self.shuffle_sequence:
+            np.random.shuffle(seq)
+
+        return seq
 
     # noinspection PyPep8Naming
     def _check_OOV_present(self, examples):
