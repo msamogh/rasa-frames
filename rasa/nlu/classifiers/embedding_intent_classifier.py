@@ -66,7 +66,7 @@ class EmbeddingIntentClassifier(Component):
         "fused_lstm": False,
         "gpu_lstm": False,
         "transformer": False,
-        "pos_encoding": "timing",  # {"timing", "emb"}
+        "pos_encoding": "timing",  # {"timing", "emb", "custom_timing"}
         # introduce phase shift in time encodings between transformers
         # 0.5 - 0.8 works on small dataset
         "pos_max_timescale": 1.0e2,
@@ -195,8 +195,6 @@ class EmbeddingIntentClassifier(Component):
                 raise ValueError("GPU training only supports identical sizes among layers b")
 
         self.pos_encoding = config['pos_encoding']
-        if self.pos_encoding == 'timing':
-            self.pos_encoding = 'custom_timing'
 
         self.pos_max_timescale = config['pos_max_timescale']
         self.max_seq_length = config['max_seq_length']
