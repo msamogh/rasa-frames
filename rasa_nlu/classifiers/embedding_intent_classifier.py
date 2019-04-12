@@ -578,7 +578,8 @@ class EmbeddingIntentClassifier(Component):
     def _tf_sample_neg(emb_b,
                        is_training: Optional['tf.Tensor'],
                        neg_ids=None,
-                       batch_size=None
+                       batch_size=None,
+                       first_only=False
                        ) -> 'tf.Tensor':
 
         all_b = emb_b[tf.newaxis, :, :]
@@ -592,7 +593,12 @@ class EmbeddingIntentClassifier(Component):
             neg_b = tf.batch_gather(all_b, neg_ids)
             return tf.concat([emb_b[:, tf.newaxis, :], neg_b], 1)
 
-        emb_b = tf.cond(tf.logical_and(is_training, tf.shape(neg_ids)[0] > 1), sample_neg_b, lambda: all_b)
+        if first_only:
+            out_b = emb_b[:, tf.newaxis, :]
+        else:
+            out_b = all_b
+
+        emb_b = tf.cond(tf.logical_and(is_training, tf.shape(neg_ids)[0] > 1), sample_neg_b, lambda: out_b)
 
         return emb_b
 
@@ -614,7 +620,7 @@ class EmbeddingIntentClassifier(Component):
 
     def _tf_sim(self,
                 a: 'tf.Tensor',
-                b: 'tf.Tensor') -> Tuple['tf.Tensor', 'tf.Tensor']:
+                b: 'tf.Tensor') -> Tuple['tf.Tensor', 'tf.Tensor', 'tf.Tensor']:
         """Define similarity
 
         in two cases:
@@ -627,18 +633,27 @@ class EmbeddingIntentClassifier(Component):
             a = tf.nn.l2_normalize(a, -1)
             b = tf.nn.l2_normalize(b, -1)
 
-        if self.similarity_type in {'cosine', 'inner'}:
-            sim = tf.reduce_sum(tf.expand_dims(a, 1) * b, -1)
-            sim_emb = tf.reduce_sum(b[:, 0:1, :] * b[:, 1:, :], -1)
+        if len(a.shape) == 3:
+            a_pos = a[:, :1, :]
+        else:
+            a_pos = tf.expand_dims(a, 1)
 
-            return sim, sim_emb
+        if self.similarity_type in {'cosine', 'inner'}:
+            sim = tf.reduce_sum(a_pos * b, -1)
+            sim_intent_emb = tf.reduce_sum(b[:, :1, :] * b[:, 1:, :], -1)
+            if len(a.shape) == 3:
+                sim_input_emb = tf.reduce_sum(a[:, :1, :] * a[:, 1:, :], -1)
+            else:
+                sim_input_emb = None
+
+            return sim, sim_intent_emb, sim_input_emb
 
         else:
             raise ValueError("Wrong similarity type {}, "
                              "should be 'cosine' or 'inner'"
                              "".format(self.similarity_type))
 
-    def _tf_loss(self, sim: 'tf.Tensor', sim_emb: 'tf.Tensor', bad_negs) -> 'tf.Tensor':
+    def _tf_loss(self, sim: 'tf.Tensor', sim_intent_emb: 'tf.Tensor', sim_input_emb: 'tf.Tensor', bad_negs) -> 'tf.Tensor':
         """Define loss"""
 
         # loss for maximizing similarity with correct action
@@ -655,12 +670,17 @@ class EmbeddingIntentClassifier(Component):
             loss += tf.reduce_sum(max_margin, -1)
 
         # penalize max similarity between intent embeddings
-        sim_emb += large_compatible_negative(bad_negs.dtype) * bad_negs
-        max_sim_emb = tf.maximum(0., tf.reduce_max(sim_emb, -1))
-        loss += max_sim_emb * self.C_emb
+        sim_intent_emb += large_compatible_negative(bad_negs.dtype) * bad_negs
+        max_sim_intent_emb = tf.maximum(0., tf.reduce_max(sim_intent_emb, -1))
+        loss += max_sim_intent_emb * self.C_emb
+
+        # penalize max similarity between input embeddings
+        sim_input_emb += large_compatible_negative(bad_negs.dtype) * bad_negs
+        max_sim_input_emb = tf.maximum(0., tf.reduce_max(sim_input_emb, -1))
+        loss += max_sim_input_emb * self.C_emb
 
         # average the loss over the batch and add regularization losses
-        loss = (tf.reduce_mean(loss) + tf.losses.get_regularization_loss())
+        loss = tf.reduce_mean(loss) + tf.losses.get_regularization_loss()
         return loss
 
     # training helpers:
@@ -794,9 +814,10 @@ class EmbeddingIntentClassifier(Component):
             bad_negs = tf.nn.relu(tf.sign(iou_intent - self.iou_threshold))
 
             tiled_intent_embed = self._tf_sample_neg(self.intent_embed, is_training, neg_ids)
+            tiled_word_embed = self._tf_sample_neg(self.word_embed, is_training, neg_ids, first_only=True)
 
-            self.sim_op, sim_emb = self._tf_sim(self.word_embed, tiled_intent_embed)
-            loss = self._tf_loss(self.sim_op, sim_emb, bad_negs)
+            self.sim_op, sim_intent_emb, sim_input_emb = self._tf_sim(tiled_word_embed, tiled_intent_embed)
+            loss = self._tf_loss(self.sim_op, sim_intent_emb, sim_input_emb, bad_negs)
 
             train_op = tf.train.AdamOptimizer().minimize(loss)
 
@@ -843,9 +864,9 @@ class EmbeddingIntentClassifier(Component):
 
                 tiled_intent_embed = self._tf_sample_neg(self.intent_embed, is_training, None, tf.shape(self.word_embed)[0])
 
-                self.sim_op, _ = self._tf_sim(self.word_embed, tiled_intent_embed)
+                self.sim_op, _, _ = self._tf_sim(self.word_embed, tiled_intent_embed)
 
-                self.sim_all, _ = self._tf_sim(self.word_embed, self.all_intents_embed_in)
+                self.sim_all, _, _ = self._tf_sim(self.word_embed, self.all_intents_embed_in)
 
     # noinspection PyPep8Naming
     def _train_tf_dataset(self,
@@ -1200,7 +1221,7 @@ class EmbeddingIntentClassifier(Component):
     @staticmethod
     def _tf_gpu_sim(meta,
                     a: 'tf.Tensor',
-                    b: 'tf.Tensor') -> Tuple['tf.Tensor', 'tf.Tensor']:
+                    b: 'tf.Tensor') -> Tuple['tf.Tensor']:
         """Define similarity
 
         in two cases:
@@ -1215,9 +1236,8 @@ class EmbeddingIntentClassifier(Component):
 
         if meta['similarity_type'] in {'cosine', 'inner'}:
             sim = tf.reduce_sum(tf.expand_dims(a, 1) * b, -1)
-            sim_emb = tf.reduce_sum(b[:, 0:1, :] * b[:, 1:, :], -1)
 
-            return sim, sim_emb
+            return sim
 
         else:
             raise ValueError("Wrong similarity type {}, "
@@ -1274,11 +1294,11 @@ class EmbeddingIntentClassifier(Component):
                     tiled_intent_embed = cls._tf_sample_neg(intent_embed, None, None,
                                                             tf.shape(word_embed)[0])
 
-                    sim_op, _ = cls._tf_gpu_sim(meta, word_embed, tiled_intent_embed)
+                    sim_op = cls._tf_gpu_sim(meta, word_embed, tiled_intent_embed)
 
                     all_intents_embed_in = tf.placeholder(tf.float32, (None, None, meta['embed_dim']),
                                                           name='all_intents_embed')
-                    sim_all, _ = cls._tf_gpu_sim(meta, word_embed, all_intents_embed_in)
+                    sim_all = cls._tf_gpu_sim(meta, word_embed, all_intents_embed_in)
 
                     saver = tf.train.Saver()
 
