@@ -111,7 +111,6 @@ class EmbeddingIntentClassifier(Component):
         "C_emb": 0.8,
         # dropout rate for rnn
         "droprate": 0.2,
-        "C_ewc": 0.0,
 
         # flag: if true, the algorithm will split the intent labels into tokens
         #       and use bag-of-words representations for them
@@ -220,7 +219,6 @@ class EmbeddingIntentClassifier(Component):
         self.C2 = config['C2']
         self.C_emb = config['C_emb']
         self.droprate = config['droprate']
-        self.C_ewc = config["C_ewc"]
 
     def _load_flag_if_tokenize_intents(self, config: Dict[Text, Any]) -> None:
         self.intent_tokenization_flag = config['intent_tokenization_flag']
@@ -820,23 +818,7 @@ class EmbeddingIntentClassifier(Component):
             self.sim_op, sim_intent_emb, sim_input_emb = self._tf_sim(tiled_word_embed, tiled_intent_embed)
             loss = self._tf_loss(self.sim_op, sim_intent_emb, sim_input_emb, bad_negs)
 
-            if self.C_ewc > 0:
-                params = tf.trainable_variables()
-                square_grads = [tf.square(grads) for grads in tf.gradients(loss, params)]
-
-                prev_params = [tf.placeholder(p.dtype, p.shape) for p in params]
-                prev_square_grads = [tf.placeholder(sg.dtype, sg.shape) for sg in square_grads]
-
-                ewc_loss = sum(self.C_ewc * 0.5 * tf.reduce_sum(prev_square_grads[i] * tf.square(params[i] - prev_params[i])) for i in range(len(params)))
-
-                train_op = tf.train.AdamOptimizer().minimize(loss + ewc_loss)
-            else:
-                params = None
-                square_grads = None
-                prev_params = None
-                prev_square_grads = None
-                ewc_loss = None
-                train_op = tf.train.AdamOptimizer().minimize(loss)
+            train_op = tf.train.AdamOptimizer().minimize(loss)
 
             train_init_op = iterator.make_initializer(train_dataset)
             if self.evaluate_on_num_examples:
@@ -851,7 +833,7 @@ class EmbeddingIntentClassifier(Component):
 
             # self._train_tf(X, Y, intents_for_X, negs_in,
             #                loss, is_training, train_op)
-            self._train_tf_dataset(train_init_op, val_init_op, batch_size_in, loss, is_training, train_op, params, square_grads, prev_params, prev_square_grads, ewc_loss)
+            self._train_tf_dataset(train_init_op, val_init_op, batch_size_in, loss, is_training, train_op)
 
             self.all_intents_embed_values = self._create_all_intents_embed(self.encoded_all_intents, iterator)
 
@@ -879,10 +861,7 @@ class EmbeddingIntentClassifier(Component):
                           batch_size_in,
                           loss: 'tf.Tensor',
                           is_training: 'tf.Tensor',
-                          train_op: 'tf.Tensor',
-                          params, square_grads,
-                          prev_params, prev_square_grads,
-                          ewc_loss
+                          train_op: 'tf.Tensor'
                           ) -> None:
         """Train tf graph"""
 
@@ -891,13 +870,6 @@ class EmbeddingIntentClassifier(Component):
         if self.evaluate_on_num_examples:
             logger.info("Accuracy is updated every {} epochs"
                         "".format(self.evaluate_every_num_epochs))
-
-        if self.C_ewc > 0:
-            params_0 = [np.zeros(p.shape) for p in prev_params]
-            square_grads_0 = [np.zeros(p.shape) for p in prev_square_grads]
-        else:
-            params_0 = None
-            square_grads_0 = None
 
         pbar = tqdm(range(self.epochs), desc="Epochs")
         train_acc = 0
@@ -908,42 +880,12 @@ class EmbeddingIntentClassifier(Component):
 
             self.session.run(train_init_op, feed_dict={batch_size_in: batch_size})
 
-            params_ = params_0
-            square_grads_ = square_grads_0
-
             ep_loss = 0
             batches_per_epoch = 0
             while True:
                 try:
-                    if self.C_ewc > 0:
-                        feed_dict = {is_training: True}
-                        feed_dict_params = {p: v for p, v in zip(prev_params, params_)}
-                        square_grads_max = np.max([np.max(sg) for sg in square_grads_])
-                        square_grads_mean = np.max([np.mean(sg) for sg in square_grads_])
-                        # print(square_grads_mean)
-                        if square_grads_max > 0:
-                            square_grads_norm = [sg / square_grads_max / square_grads_mean for sg in square_grads_]
-                        else:
-                            square_grads_norm = square_grads_
-                        feed_dict_square_grads = {p: v for p, v in zip(prev_square_grads, square_grads_norm)}
-
-                        feed_dict.update(feed_dict_params)
-                        feed_dict.update(feed_dict_square_grads)
-
-                        self.session.run(train_op, feed_dict=feed_dict)
-                        _, batch_loss, params_, square_grads_, ewc_loss_, sim_ = self.session.run((train_op, loss, params, square_grads, ewc_loss, self.sim_op),
-                                                                                     feed_dict=feed_dict)
-                        # print(sim_[:2])
-                        # square_grads_ = [sg + nsg for sg, nsg in zip(square_grads_, new_square_grads_)]
-                        # print(np.min([np.min(sg) for sg in square_grads_]))
-                        # print(np.mean([np.mean(sg) for sg in square_grads_]))
-                        # print(np.max([np.max(sg) for sg in square_grads_]))
-                        # print(ewc_loss_)
-
-                    else:
-                        _, batch_loss, sim_ = self.session.run((train_op, loss, self.sim_op),
-                                                         feed_dict={is_training: True})
-                        # print(sim_[:2])
+                    _, batch_loss = self.session.run((train_op, loss),
+                                                     feed_dict={is_training: True})
 
                 except tf.errors.OutOfRangeError:
                     break
