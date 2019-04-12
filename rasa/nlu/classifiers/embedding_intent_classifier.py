@@ -111,6 +111,7 @@ class EmbeddingIntentClassifier(Component):
         "C_emb": 0.8,
         # dropout rate for rnn
         "droprate": 0.2,
+        "C_ewc": 0.0,
 
         # flag: if true, the algorithm will split the intent labels into tokens
         #       and use bag-of-words representations for them
@@ -219,6 +220,7 @@ class EmbeddingIntentClassifier(Component):
         self.C2 = config['C2']
         self.C_emb = config['C_emb']
         self.droprate = config['droprate']
+        self.C_ewc = config["C_ewc"]
 
     def _load_flag_if_tokenize_intents(self, config: Dict[Text, Any]) -> None:
         self.intent_tokenization_flag = config['intent_tokenization_flag']
@@ -637,7 +639,7 @@ class EmbeddingIntentClassifier(Component):
         """Define loss"""
 
         # loss for maximizing similarity with correct action
-        loss = tf.maximum(0., self.mu_pos - sim[:, 0])
+        loss = tf.maximum(0., self.mu_pos - sim[:, 0]) * 2
 
         sim_neg = sim[:, 1:] + large_compatible_negative(bad_negs.dtype) * bad_negs
         if self.use_max_sim_neg:
@@ -742,16 +744,20 @@ class EmbeddingIntentClassifier(Component):
             np.random.seed(self.random_seed)
             tf.set_random_seed(self.random_seed)
 
+            # n = 10000
             X_tensor = self._to_sparse_tensor(X)
             Y_tensor = self._to_sparse_tensor(Y)
 
             batch_size_in = tf.placeholder(tf.int64)
             train_dataset = tf.data.Dataset.from_tensor_slices((X_tensor, Y_tensor))
-            train_dataset = train_dataset.shuffle(buffer_size=len(X))
+            # train_dataset = train_dataset.shuffle(buffer_size=len(X))
             train_dataset = train_dataset.batch(batch_size_in, drop_remainder=self.fused_lstm)
 
             if self.evaluate_on_num_examples:
                 ids = np.random.permutation(len(X))[:self.evaluate_on_num_examples]
+                # ids = [0, 1, 2]
+                # [print(self.inv_intent_dict[intent]) for intent in intents_for_X[ids]]
+                # exit()
                 X_tensor_val = self._to_sparse_tensor(X[ids])
                 Y_tensor_val = self._to_sparse_tensor(Y[ids])
 
@@ -793,7 +799,23 @@ class EmbeddingIntentClassifier(Component):
             self.sim_op, sim_emb = self._tf_sim(self.word_embed, tiled_intent_embed)
             loss = self._tf_loss(self.sim_op, sim_emb, bad_negs)
 
-            train_op = tf.train.AdamOptimizer().minimize(loss)
+            if self.C_ewc > 0:
+                params = tf.trainable_variables()
+                square_grads = [tf.square(grads) for grads in tf.gradients(loss, params)]
+
+                prev_params = [tf.placeholder(p.dtype, p.shape) for p in params]
+                prev_square_grads = [tf.placeholder(sg.dtype, sg.shape) for sg in square_grads]
+
+                ewc_loss = sum(self.C_ewc * 0.5 * tf.reduce_sum(prev_square_grads[i] * tf.square(params[i] - prev_params[i])) for i in range(len(params)))
+
+                train_op = tf.train.AdamOptimizer().minimize(loss + ewc_loss)
+            else:
+                params = None
+                square_grads = None
+                prev_params = None
+                prev_square_grads = None
+                ewc_loss = None
+                train_op = tf.train.AdamOptimizer().minimize(loss)
 
             train_init_op = iterator.make_initializer(train_dataset)
             if self.evaluate_on_num_examples:
@@ -808,7 +830,7 @@ class EmbeddingIntentClassifier(Component):
 
             # self._train_tf(X, Y, intents_for_X, negs_in,
             #                loss, is_training, train_op)
-            self._train_tf_dataset(train_init_op, val_init_op, batch_size_in, loss, is_training, train_op)
+            self._train_tf_dataset(train_init_op, val_init_op, batch_size_in, loss, is_training, train_op, params, square_grads, prev_params, prev_square_grads, ewc_loss)
 
             self.all_intents_embed_values = self._create_all_intents_embed(self.encoded_all_intents, iterator)
 
@@ -836,7 +858,10 @@ class EmbeddingIntentClassifier(Component):
                           batch_size_in,
                           loss: 'tf.Tensor',
                           is_training: 'tf.Tensor',
-                          train_op: 'tf.Tensor'
+                          train_op: 'tf.Tensor',
+                          params, square_grads,
+                          prev_params, prev_square_grads,
+                          ewc_loss
                           ) -> None:
         """Train tf graph"""
 
@@ -846,20 +871,59 @@ class EmbeddingIntentClassifier(Component):
             logger.info("Accuracy is updated every {} epochs"
                         "".format(self.evaluate_every_num_epochs))
 
+        if self.C_ewc > 0:
+            params_0 = [np.zeros(p.shape) for p in prev_params]
+            square_grads_0 = [np.zeros(p.shape) for p in prev_square_grads]
+        else:
+            params_0 = None
+            square_grads_0 = None
+
         pbar = tqdm(range(self.epochs), desc="Epochs")
         train_acc = 0
         last_loss = 0
         for ep in pbar:
 
             batch_size = self._linearly_increasing_batch_size(ep)
+
             self.session.run(train_init_op, feed_dict={batch_size_in: batch_size})
+
+            params_ = params_0
+            square_grads_ = square_grads_0
 
             ep_loss = 0
             batches_per_epoch = 0
             while True:
                 try:
-                    _, batch_loss = self.session.run((train_op, loss),
-                                                     feed_dict={is_training: True})
+                    if self.C_ewc > 0:
+                        feed_dict = {is_training: True}
+                        feed_dict_params = {p: v for p, v in zip(prev_params, params_)}
+                        square_grads_max = np.max([np.max(sg) for sg in square_grads_])
+                        square_grads_mean = np.max([np.mean(sg) for sg in square_grads_])
+                        # print(square_grads_mean)
+                        if square_grads_max > 0:
+                            square_grads_norm = [sg / square_grads_max / square_grads_mean for sg in square_grads_]
+                        else:
+                            square_grads_norm = square_grads_
+                        feed_dict_square_grads = {p: v for p, v in zip(prev_square_grads, square_grads_norm)}
+
+                        feed_dict.update(feed_dict_params)
+                        feed_dict.update(feed_dict_square_grads)
+
+                        self.session.run(train_op, feed_dict=feed_dict)
+                        _, batch_loss, params_, square_grads_, ewc_loss_, sim_ = self.session.run((train_op, loss, params, square_grads, ewc_loss, self.sim_op),
+                                                                                     feed_dict=feed_dict)
+                        # print(sim_[:2])
+                        # square_grads_ = [sg + nsg for sg, nsg in zip(square_grads_, new_square_grads_)]
+                        # print(np.min([np.min(sg) for sg in square_grads_]))
+                        # print(np.mean([np.mean(sg) for sg in square_grads_]))
+                        # print(np.max([np.max(sg) for sg in square_grads_]))
+                        # print(ewc_loss_)
+
+                    else:
+                        _, batch_loss, sim_ = self.session.run((train_op, loss, self.sim_op),
+                                                         feed_dict={is_training: True})
+                        # print(sim_[:2])
+
                 except tf.errors.OutOfRangeError:
                     break
 
@@ -895,8 +959,10 @@ class EmbeddingIntentClassifier(Component):
 
         self.session.run(val_init_op)
         train_sim = self.session.run(self.sim_op)
+        # print(train_sim)
+        # print(np.argmax(train_sim, -1))
 
-        train_acc = np.mean(np.argmax(train_sim, -1) == np.arange(len(train_sim)))
+        train_acc = np.mean(np.max(train_sim, -1) == train_sim.diagonal())
 
         return train_acc
 
