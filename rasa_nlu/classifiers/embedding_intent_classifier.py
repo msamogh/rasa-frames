@@ -935,7 +935,7 @@ class EmbeddingIntentClassifier(Component):
         self.session.run(val_init_op)
         train_sim = self.session.run(self.sim_op)
 
-        train_acc = np.mean(np.argmax(train_sim, -1) == np.arange(len(train_sim)))
+        train_acc = np.mean(np.max(train_sim, -1) == train_sim.diagonal())
 
         return train_acc
 
