@@ -392,12 +392,13 @@ class EmbeddingIntentClassifier(Component):
                     cell_fw = tf.contrib.rnn.LSTMBlockFusedCell(layer_size,
                                                                 reuse=tf.AUTO_REUSE,
                                                                 name='rnn_fw_encoder_{}_{}'.format(name, i))
-                    x_fw, _ = cell_fw(x, dtype=tf.float32)
+                    x_fw, _ = cell_fw(x, dtype=tf.float32, sequence_length=real_length)
 
                     cell_bw = tf.contrib.rnn.LSTMBlockFusedCell(layer_size,
                                                                 reuse=tf.AUTO_REUSE,
                                                                 name='rnn_bw_encoder_{}_{}'.format(name, i))
-                    x_bw, _ = cell_bw(tf.reverse_sequence(x, real_length, seq_axis=0, batch_axis=1), dtype=tf.float32)
+                    cell_bw = tf.contrib.rnn.TimeReversedFusedRNN(cell_bw)
+                    x_bw, _ = cell_bw(x, dtype=tf.float32, sequence_length=real_length)
 
                     x = tf.concat([x_fw, x_bw], -1)
 
@@ -405,7 +406,7 @@ class EmbeddingIntentClassifier(Component):
                     cell = tf.contrib.rnn.LSTMBlockFusedCell(layer_size,
                                                              reuse=tf.AUTO_REUSE,
                                                              name='rnn_encoder_{}_{}'.format(name, i))
-                    x, _ = cell(x, dtype=tf.float32)
+                    x, _ = cell(x, dtype=tf.float32, sequence_length=real_length)
 
             x = tf.transpose(x, [1, 0, 2])
             x = tf.reduce_sum(x * last, 1)
