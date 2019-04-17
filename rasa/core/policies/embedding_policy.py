@@ -139,29 +139,29 @@ class EmbeddingPolicy(Policy):
 
     def __init__(
         self,
-        featurizer: Optional[FullDialogueTrackerFeaturizer] = None,
+        featurizer: Optional['FullDialogueTrackerFeaturizer'] = None,
         priority: int = 1,
-        encoded_all_actions: Optional[np.ndarray] = None,
-        graph: Optional[tf.Graph] = None,
-        session: Optional[tf.Session] = None,
-        intent_placeholder: Optional[tf.Tensor] = None,
-        action_placeholder: Optional[tf.Tensor] = None,
-        slots_placeholder: Optional[tf.Tensor] = None,
-        prev_act_placeholder: Optional[tf.Tensor] = None,
-        dialogue_len: Optional[tf.Tensor] = None,
-        x_for_no_intent: Optional[tf.Tensor] = None,
-        y_for_no_action: Optional[tf.Tensor] = None,
-        y_for_action_listen: Optional[tf.Tensor] = None,
-        similarity_op: Optional[tf.Tensor] = None,
-        alignment_history: Optional[tf.Tensor] = None,
-        user_embed: Optional[tf.Tensor] = None,
-        bot_embed: Optional[tf.Tensor] = None,
-        slot_embed: Optional[tf.Tensor] = None,
-        dial_embed: Optional[tf.Tensor] = None,
-        rnn_embed: Optional[tf.Tensor] = None,
-        attn_embed: Optional[tf.Tensor] = None,
-        copy_attn_debug: Optional[tf.Tensor] = None,
-        all_time_masks: Optional[tf.Tensor] = None,
+        encoded_all_actions: Optional['np.ndarray'] = None,
+        graph: Optional['tf.Graph'] = None,
+        session: Optional['tf.Session'] = None,
+        intent_placeholder: Optional['tf.Tensor'] = None,
+        action_placeholder: Optional['tf.Tensor'] = None,
+        slots_placeholder: Optional['tf.Tensor'] = None,
+        prev_act_placeholder: Optional['tf.Tensor'] = None,
+        dialogue_len: Optional['tf.Tensor'] = None,
+        x_for_no_intent: Optional['tf.Tensor'] = None,
+        y_for_no_action: Optional['tf.Tensor'] = None,
+        y_for_action_listen: Optional['tf.Tensor'] = None,
+        similarity_op: Optional['tf.Tensor'] = None,
+        alignment_history: Optional['tf.Tensor'] = None,
+        user_embed: Optional['tf.Tensor'] = None,
+        bot_embed: Optional['tf.Tensor'] = None,
+        slot_embed: Optional['tf.Tensor'] = None,
+        dial_embed: Optional['tf.Tensor'] = None,
+        rnn_embed: Optional['tf.Tensor'] = None,
+        attn_embed: Optional['tf.Tensor'] = None,
+        copy_attn_debug: Optional['tf.Tensor'] = None,
+        all_time_masks: Optional['tf.Tensor'] = None,
         **kwargs: Any
     ) -> None:
         if featurizer:
@@ -397,11 +397,11 @@ class EmbeddingPolicy(Policy):
 
     def _create_tf_nn(
         self,
-        x_in: tf.Tensor,
+        x_in: 'tf.Tensor',
         layer_sizes: List,
         droprate: float,
         layer_name_suffix: Text,
-    ) -> tf.Tensor:
+    ) -> 'tf.Tensor':
         """Create nn with hidden layers and name suffix."""
 
         reg = tf.contrib.layers.l2_regularizer(self.C2)
@@ -418,7 +418,7 @@ class EmbeddingPolicy(Policy):
             x = tf.layers.dropout(x, rate=droprate, training=self._is_training)
         return x
 
-    def _create_embed(self, x: tf.Tensor, layer_name_suffix: Text) -> tf.Tensor:
+    def _create_embed(self, x: 'tf.Tensor', layer_name_suffix: Text) -> 'tf.Tensor':
         """Create dense embedding layer with a name."""
 
         reg = tf.contrib.layers.l2_regularizer(self.C2)
@@ -432,7 +432,7 @@ class EmbeddingPolicy(Policy):
         )
         return embed_x
 
-    def _create_tf_user_embed(self, a_in: tf.Tensor) -> tf.Tensor:
+    def _create_tf_user_embed(self, a_in: 'tf.Tensor') -> 'tf.Tensor':
         """Create embedding user vector."""
 
         layer_name_suffix = "a_and_b" if self.share_embedding else "a"
@@ -445,7 +445,7 @@ class EmbeddingPolicy(Policy):
         )
         return self._create_embed(a, layer_name_suffix=layer_name_suffix)
 
-    def _create_tf_bot_embed(self, b_in: tf.Tensor) -> tf.Tensor:
+    def _create_tf_bot_embed(self, b_in: 'tf.Tensor') -> 'tf.Tensor':
         """Create embedding bot vector."""
 
         layer_name_suffix = "a_and_b" if self.share_embedding else "b"
@@ -458,7 +458,7 @@ class EmbeddingPolicy(Policy):
         )
         return self._create_embed(b, layer_name_suffix=layer_name_suffix)
 
-    def _create_tf_no_intent_embed(self, x_for_no_intent_i: tf.Tensor) -> tf.Tensor:
+    def _create_tf_no_intent_embed(self, x_for_no_intent_i: 'tf.Tensor') -> 'tf.Tensor':
         """Create embedding user vector for empty intent."""
 
         layer_name_suffix = "a_and_b" if self.share_embedding else "a"
@@ -473,7 +473,7 @@ class EmbeddingPolicy(Policy):
             self._create_embed(x_for_no_intent, layer_name_suffix=layer_name_suffix)
         )
 
-    def _create_tf_no_action_embed(self, y_for_no_action_in: tf.Tensor) -> tf.Tensor:
+    def _create_tf_no_action_embed(self, y_for_no_action_in: 'tf.Tensor') -> 'tf.Tensor':
         """Create embedding bot vector for empty action and action_listen."""
 
         layer_name_suffix = "a_and_b" if self.share_embedding else "b"
@@ -522,11 +522,11 @@ class EmbeddingPolicy(Policy):
         )
 
     @staticmethod
-    def _num_units(memory: tf.Tensor) -> int:
+    def _num_units(memory: 'tf.Tensor') -> int:
         return memory.shape[-1].value
 
     def _create_attn_mech(
-        self, memory: tf.Tensor, real_length: tf.Tensor
+        self, memory: 'tf.Tensor', real_length: 'tf.Tensor'
     ) -> tf.contrib.seq2seq.AttentionMechanism:
 
         return tf.contrib.seq2seq.BahdanauAttention(
@@ -543,10 +543,10 @@ class EmbeddingPolicy(Policy):
 
     def cell_input_fn(
         self,
-        rnn_inputs: tf.Tensor,
-        attention: tf.Tensor,
+        rnn_inputs: 'tf.Tensor',
+        attention: 'tf.Tensor',
         num_cell_input_memory_units: int,
-    ) -> tf.Tensor:
+    ) -> 'tf.Tensor':
         """Combine rnn inputs and attention into cell input.
 
         Args:
@@ -592,8 +592,8 @@ class EmbeddingPolicy(Policy):
             return rnn_inputs
 
     def rnn_and_attn_inputs_fn(
-        self, inputs: tf.Tensor, cell_state: tf.Tensor
-    ) -> Tuple[tf.Tensor, tf.Tensor]:
+        self, inputs: 'tf.Tensor', cell_state: 'tf.Tensor'
+    ) -> Tuple['tf.Tensor', 'tf.Tensor']:
         """Construct rnn input and attention mechanism input.
 
         Args:
@@ -624,12 +624,12 @@ class EmbeddingPolicy(Policy):
     def _create_attn_cell(
         self,
         cell: tf.contrib.rnn.RNNCell,
-        embed_utter: tf.Tensor,
-        embed_prev_action: tf.Tensor,
-        real_length: tf.Tensor,
-        embed_for_no_intent: tf.Tensor,
-        embed_for_no_action: tf.Tensor,
-        embed_for_action_listen: tf.Tensor,
+        embed_utter: 'tf.Tensor',
+        embed_prev_action: 'tf.Tensor',
+        real_length: 'tf.Tensor',
+        embed_for_no_intent: 'tf.Tensor',
+        embed_for_no_action: 'tf.Tensor',
+        embed_for_action_listen: 'tf.Tensor',
     ) -> tf.contrib.rnn.RNNCell:
         """Wrap cell in attention wrapper with given memory."""
 
@@ -711,14 +711,14 @@ class EmbeddingPolicy(Policy):
 
     def _create_tf_dial_embed(
         self,
-        embed_utter: tf.Tensor,
-        embed_slots: tf.Tensor,
-        embed_prev_action: tf.Tensor,
-        mask: tf.Tensor,
-        embed_for_no_intent: tf.Tensor,
-        embed_for_no_action: tf.Tensor,
-        embed_for_action_listen: tf.Tensor,
-    ) -> Tuple[tf.Tensor, Union[tf.Tensor, "TimeAttentionWrapperState"]]:
+        embed_utter: 'tf.Tensor',
+        embed_slots: 'tf.Tensor',
+        embed_prev_action: 'tf.Tensor',
+        mask: 'tf.Tensor',
+        embed_for_no_intent: 'tf.Tensor',
+        embed_for_no_action: 'tf.Tensor',
+        embed_for_action_listen: 'tf.Tensor',
+    ) -> Tuple['tf.Tensor', Union['tf.Tensor', "TimeAttentionWrapperState"]]:
         """Create rnn for dialogue level embedding."""
 
         cell_input = tf.concat([embed_utter, embed_slots, embed_prev_action], -1)
@@ -747,7 +747,7 @@ class EmbeddingPolicy(Policy):
         )
 
     @staticmethod
-    def _alignments_history_from(final_state: "TimeAttentionWrapperState") -> tf.Tensor:
+    def _alignments_history_from(final_state: "TimeAttentionWrapperState") -> 'tf.Tensor':
         """Extract alignments history form final rnn cell state."""
 
         alignments_from_state = final_state.alignment_history
@@ -762,14 +762,14 @@ class EmbeddingPolicy(Policy):
         return tf.concat(alignment_history, -1)
 
     @staticmethod
-    def _all_time_masks_from(final_state: "TimeAttentionWrapperState") -> tf.Tensor:
+    def _all_time_masks_from(final_state: "TimeAttentionWrapperState") -> 'tf.Tensor':
         """Extract all time masks form final rnn cell state."""
 
         # reshape to (batch, time, memory_time) and ignore last time
         # because time_mask is created for the next time step
         return tf.transpose(final_state.all_time_masks.stack(), [1, 0, 2])[:, :-1, :]
 
-    def _sims_rnn_to_max_from(self, cell_output: tf.Tensor) -> List[tf.Tensor]:
+    def _sims_rnn_to_max_from(self, cell_output: 'tf.Tensor') -> List['tf.Tensor']:
         """Save intermediate tensors for debug purposes."""
 
         if self.attn_after_rnn:
@@ -784,7 +784,7 @@ class EmbeddingPolicy(Policy):
         else:
             return []
 
-    def _embed_dialogue_from(self, cell_output: tf.Tensor) -> tf.Tensor:
+    def _embed_dialogue_from(self, cell_output: 'tf.Tensor') -> 'tf.Tensor':
         """Extract or calculate dialogue level embedding from cell_output."""
 
         if self.attn_after_rnn:
@@ -812,10 +812,10 @@ class EmbeddingPolicy(Policy):
 
     def _tf_sim(
         self,
-        embed_dialogue: tf.Tensor,
-        embed_action: tf.Tensor,
-        mask: Optional[tf.Tensor],
-    ) -> Tuple[tf.Tensor, tf.Tensor]:
+        embed_dialogue: 'tf.Tensor',
+        embed_action: 'tf.Tensor',
+        mask: Optional['tf.Tensor'],
+    ) -> Tuple['tf.Tensor', 'tf.Tensor']:
         """Define similarity.
 
         This method has two roles:
@@ -875,7 +875,7 @@ class EmbeddingPolicy(Policy):
             )
 
     def _regularization_loss(self):
-        # type: () -> Union[tf.Tensor, int]
+        # type: () -> Union['tf.Tensor', int]
         """Add regularization to the embed layer inside rnn cell."""
 
         if self.attn_after_rnn:
@@ -891,11 +891,11 @@ class EmbeddingPolicy(Policy):
 
     def _tf_loss(
         self,
-        sim: tf.Tensor,
-        sim_act: tf.Tensor,
-        sims_rnn_to_max: List[tf.Tensor],
-        mask: tf.Tensor,
-    ) -> tf.Tensor:
+        sim: 'tf.Tensor',
+        sim_act: 'tf.Tensor',
+        sims_rnn_to_max: List['tf.Tensor'],
+        mask: 'tf.Tensor',
+    ) -> 'tf.Tensor':
         """Define loss."""
 
         # loss for maximizing similarity with correct action
@@ -941,8 +941,8 @@ class EmbeddingPolicy(Policy):
 
     def train(
         self,
-        training_trackers: List[DialogueStateTracker],
-        domain: Domain,
+        training_trackers: List['DialogueStateTracker'],
+        domain: 'Domain',
         **kwargs: Any
     ) -> None:
         """Train the policy on given training trackers."""
@@ -1165,7 +1165,7 @@ class EmbeddingPolicy(Policy):
             return [[None]]
 
     def _train_tf(
-        self, session_data: SessionData, loss: tf.Tensor, mask: tf.Tensor
+        self, session_data: SessionData, loss: 'tf.Tensor', mask: 'tf.Tensor'
     ) -> None:
         """Train tf graph."""
 
@@ -1259,7 +1259,7 @@ class EmbeddingPolicy(Policy):
                 "".format(last_loss, train_acc)
             )
 
-    def _calc_train_acc(self, session_data: SessionData, mask: tf.Tensor) -> np.float32:
+    def _calc_train_acc(self, session_data: SessionData, mask: 'tf.Tensor') -> np.float32:
         """Calculate training accuracy."""
 
         # choose n examples to calculate train accuracy
@@ -1382,7 +1382,7 @@ class EmbeddingPolicy(Policy):
 
         return result.tolist()
 
-    def _persist_tensor(self, name: Text, tensor: tf.Tensor) -> None:
+    def _persist_tensor(self, name: Text, tensor: 'tf.Tensor') -> None:
         if tensor is not None:
             self.graph.clear_collection(name)
             self.graph.add_to_collection(name, tensor)
@@ -1448,7 +1448,7 @@ class EmbeddingPolicy(Policy):
             pickle.dump(self._tf_config, f)
 
     @staticmethod
-    def load_tensor(name: Text) -> Optional[tf.Tensor]:
+    def load_tensor(name: Text) -> Optional['tf.Tensor']:
         tensor_list = tf.get_collection(name)
         return tensor_list[0] if tensor_list else None
 

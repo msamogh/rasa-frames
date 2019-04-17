@@ -763,13 +763,12 @@ class EmbeddingIntentClassifier(Component):
             np.random.seed(self.random_seed)
             tf.set_random_seed(self.random_seed)
 
-            # n = 10000
             X_tensor = self._to_sparse_tensor(X)
             Y_tensor = self._to_sparse_tensor(Y)
 
             batch_size_in = tf.placeholder(tf.int64)
             train_dataset = tf.data.Dataset.from_tensor_slices((X_tensor, Y_tensor))
-            # train_dataset = train_dataset.shuffle(buffer_size=len(X))
+            train_dataset = train_dataset.shuffle(buffer_size=len(X))
             train_dataset = train_dataset.batch(batch_size_in, drop_remainder=self.fused_lstm)
 
             if self.evaluate_on_num_examples:
