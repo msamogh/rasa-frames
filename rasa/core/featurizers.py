@@ -248,7 +248,7 @@ class LabelTokenizerSingleStateFeaturizer(SingleStateFeaturizer):
         """Create matrix with all actions from domain
             encoded in rows as bag of words."""
         encoded_all_actions = np.zeros(
-            (domain.num_actions, len(self.bot_vocab)), dtype=int
+            (domain.num_actions, len(self.bot_vocab)), dtype=np.int32
         )
         for idx, name in enumerate(domain.action_names):
             for t in name.split(self.split_symbol):

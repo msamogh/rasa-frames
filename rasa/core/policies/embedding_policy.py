@@ -22,6 +22,8 @@ from rasa.core.featurizers import (
 from rasa.core.policies.policy import Policy
 
 import tensorflow as tf
+from tensor2tensor.layers.common_attention import large_compatible_negative
+
 from rasa.core.policies.tf_utils import (
     TimeAttentionWrapper,
     ChronoBiasLayerNormBasicLSTMCell,
@@ -393,8 +395,7 @@ class EmbeddingPolicy(Policy):
             all_Y_d=all_Y_d,
         )
 
-        # tf helpers:
-
+    # tf helpers:
     def _create_tf_nn(
         self,
         x_in: 'tf.Tensor',
@@ -810,12 +811,53 @@ class EmbeddingPolicy(Policy):
 
         return embed_dialogue
 
+    def _tf_sample_neg(self,
+                       emb_b,
+                       neg_ids=None,
+                       batch_size=None,
+                       first_only=False
+                       ) -> 'tf.Tensor':
+
+        all_b = emb_b[tf.newaxis, :, :]
+        if batch_size is None:
+            batch_size = tf.shape(emb_b)[0]
+        all_b = tf.tile(all_b, [batch_size, 1, 1])
+        if neg_ids is None:
+            return all_b
+
+        def sample_neg_b():
+            neg_b = tf.batch_gather(all_b, neg_ids)
+            return tf.concat([emb_b[:, tf.newaxis, :], neg_b], 1)
+
+        if first_only:
+            out_b = emb_b[:, tf.newaxis, :]
+        else:
+            out_b = all_b
+
+        emb_b = tf.cond(tf.logical_and(self._is_training, tf.shape(neg_ids)[0] > 1), sample_neg_b, lambda: out_b)
+
+        return emb_b
+
+    def _tf_calc_iou(self,
+                     b_raw,
+                     neg_ids,
+                     ) -> 'tf.Tensor':
+
+        tiled_intent_raw = self._tf_sample_neg(b_raw, neg_ids)
+        pos_b_raw = tiled_intent_raw[:, :1, :]
+        neg_b_raw = tiled_intent_raw[:, 1:, :]
+        intersection_b_raw = tf.minimum(neg_b_raw, pos_b_raw)
+        union_b_raw = tf.maximum(neg_b_raw, pos_b_raw)
+
+        return tf.reduce_sum(intersection_b_raw, -1) / tf.reduce_sum(union_b_raw, -1)
+
     def _tf_sim(
         self,
         embed_dialogue: 'tf.Tensor',
         embed_action: 'tf.Tensor',
         mask: Optional['tf.Tensor'],
-    ) -> Tuple['tf.Tensor', 'tf.Tensor']:
+    ) -> Union[Tuple['tf.Tensor', 'tf.Tensor'],
+               Tuple['tf.Tensor', 'tf.Tensor', 'tf.Tensor']]:
         """Define similarity.
 
         This method has two roles:
@@ -837,7 +879,7 @@ class EmbeddingPolicy(Policy):
 
         if self.similarity_type in {"cosine", "inner"}:
 
-            if len(embed_dialogue.shape) == len(embed_action.shape):
+            if len(embed_dialogue.shape) == 2 and len(embed_action.shape) == 2:
                 # calculate similarity between
                 # two embedding vectors of the same size
                 sim = tf.reduce_sum(embed_dialogue * embed_action, -1, keepdims=True)
@@ -853,19 +895,30 @@ class EmbeddingPolicy(Policy):
             else:
                 # calculate similarity with several
                 # embedded actions for the loss
-                sim = tf.reduce_sum(
-                    tf.expand_dims(embed_dialogue, -2) * embed_action, -1
-                )
-                sim *= tf.expand_dims(mask, 2)
 
-                sim_act = tf.reduce_sum(
+                if len(embed_dialogue.shape) == 4:
+                    embed_dialogue_pos = embed_dialogue[:, :, :1, :]
+                else:
+                    embed_dialogue_pos = tf.expand_dims(embed_dialogue, -2)
+
+                sim = tf.reduce_sum(
+                    embed_dialogue_pos * embed_action, -1
+                ) * tf.expand_dims(mask, 2)
+
+                sim_bot_emb = tf.reduce_sum(
                     embed_action[:, :, :1, :] * embed_action[:, :, 1:, :], -1
-                )
-                sim_act *= tf.expand_dims(mask, 2)
+                ) * tf.expand_dims(mask, 2)
+
+                if len(embed_dialogue.shape) == 4:
+                    sim_dial_emb = tf.reduce_sum(
+                        embed_dialogue[:, :, :1, :] * embed_dialogue[:, :, 1:, :], -1
+                    ) * tf.expand_dims(mask, 2)
+                else:
+                    sim_dial_emb = None
 
                 # output similarities between user input and bot actions
                 # and similarities between bot actions
-                return sim, sim_act
+                return sim,  sim_bot_emb, sim_dial_emb
 
         else:
             raise ValueError(
@@ -873,6 +926,36 @@ class EmbeddingPolicy(Policy):
                 "should be 'cosine' or 'inner'"
                 "".format(self.similarity_type)
             )
+
+    # noinspection PyPep8Naming
+    def _scale_loss_by_count_actions(
+        self,
+        X,
+        Y,
+        slots,
+        previous_actions,
+    ) -> Union[np.ndarray, List[List]]:
+        """Calculate inverse proportionality of repeated actions."""
+
+        if self.scale_loss_by_action_counts:
+            full_X = tf.concat(
+                [X, Y, slots, previous_actions], -1
+            )
+            full_X = tf.reshape(full_X, (-1, full_X.shape[-1]))
+
+            y, i, c = tf.unique_with_counts(full_X)
+            print(y.shape)
+            print(i.shape)
+            print(c.shape)
+            exit()
+            counts = tf.reshape(c[i], (tf.shape(full_X)[0], tf.shape(full_X)[1]))
+            print(counts.shape)
+            exit()
+            # do not include [-1 -1 ... -1 0] in averaging
+            # and smooth it by taking sqrt
+            return tf.maximum(tf.sqrt(tf.reduce_mean(c[1:]) / counts), 1)
+        else:
+            return [[None]]
 
     def _regularization_loss(self):
         # type: () -> Union['tf.Tensor', int]
@@ -892,32 +975,41 @@ class EmbeddingPolicy(Policy):
     def _tf_loss(
         self,
         sim: 'tf.Tensor',
-        sim_act: 'tf.Tensor',
+        sim_bot_emb: 'tf.Tensor',
+        sim_dial_emb: 'tf.Tensor',
         sims_rnn_to_max: List['tf.Tensor'],
+        bad_negs,
         mask: 'tf.Tensor',
     ) -> 'tf.Tensor':
         """Define loss."""
 
         # loss for maximizing similarity with correct action
-        loss = tf.maximum(0.0, self.mu_pos - sim[:, :, 0])
+        loss = tf.maximum(0., self.mu_pos - sim[:, :, 0])
 
         # loss for minimizing similarity with `num_neg` incorrect actions
+        sim_neg = sim[:, :, 1:] + large_compatible_negative(bad_negs.dtype) * bad_negs
         if self.use_max_sim_neg:
             # minimize only maximum similarity over incorrect actions
-            max_sim_neg = tf.reduce_max(sim[:, :, 1:], -1)
-            loss += tf.maximum(0.0, self.mu_neg + max_sim_neg)
+            max_sim_neg = tf.reduce_max(sim_neg, -1)
+            loss += tf.maximum(0., self.mu_neg + max_sim_neg)
         else:
             # minimize all similarities with incorrect actions
-            max_margin = tf.maximum(0.0, self.mu_neg + sim[:, :, 1:])
+            max_margin = tf.maximum(0., self.mu_neg + sim_neg)
             loss += tf.reduce_sum(max_margin, -1)
 
         if self.scale_loss_by_action_counts:
             # scale loss inverse proportionally to number of action counts
             loss *= self._loss_scales
 
-        # penalize max similarity between intent embeddings
-        loss_act = tf.maximum(0.0, tf.reduce_max(sim_act, -1))
+        # penalize max similarity between bot embeddings
+        sim_bot_emb += large_compatible_negative(bad_negs.dtype) * bad_negs
+        loss_act = tf.maximum(0., tf.reduce_max(sim_bot_emb, -1))
         loss += loss_act * self.C_emb
+
+        # penalize max similarity between dial embeddings
+        sim_dial_emb += large_compatible_negative(bad_negs.dtype) * bad_negs
+        max_sim_input_emb = tf.maximum(0., tf.reduce_max(sim_dial_emb, -1))
+        loss += max_sim_input_emb * self.C_emb
 
         # maximize similarity returned by time attention wrapper
         for sim_to_add in sims_rnn_to_max:
@@ -984,50 +1076,60 @@ class EmbeddingPolicy(Policy):
             # set random seed in tf
             tf.set_random_seed(self.random_seed)
 
-            dialogue_len = None  # use dynamic time for rnn
-            # create placeholders
-            self.a_in = tf.placeholder(
+            batch_size_in = tf.placeholder(tf.int64)
+            train_dataset = tf.data.Dataset.from_tensor_slices((session_data.X,
+                                                                session_data.Y,
+                                                                session_data.slots,
+                                                                session_data.previous_actions))
+            train_dataset = train_dataset.shuffle(buffer_size=len(session_data.X))
+            train_dataset = train_dataset.batch(batch_size_in)
+
+            if self.evaluate_on_num_examples:
+                ids = np.random.permutation(len(session_data.X))[:self.evaluate_on_num_examples]
+
+                val_dataset = tf.data.Dataset.from_tensor_slices((session_data.X[ids],
+                                                                  session_data.Y[ids],
+                                                                  session_data.slots[ids],
+                                                                  session_data.previous_actions[ids])
+                                                                 ).batch(self.evaluate_on_num_examples)
+            else:
+                val_dataset = None
+
+            # make sequence length dynamic
+            output_shapes = tuple([(None, None, output_shape[-1]) for output_shape in train_dataset.output_shapes])
+
+            iterator = tf.data.Iterator.from_structure(train_dataset.output_types,
+                                                       output_shapes,
+                                                       output_classes=train_dataset.output_classes)
+
+            self.a_in, self.b_in, self.c_in, self.b_prev_in = iterator.get_next()
+
+            self.a_in = tf.cast(self.a_in, tf.float32)
+            self.b_in = tf.cast(self.b_in, tf.float32)
+            self.c_in = tf.cast(self.c_in, tf.float32)
+            self.b_prev_in = tf.cast(self.b_prev_in, tf.float32)
+
+            # they don't change
+            self._x_for_no_intent_in = tf.constant(
+                session_data.x_for_no_intent,
                 dtype=tf.float32,
-                shape=(None, dialogue_len, session_data.X.shape[-1]),
-                name="a",
-            )
-            self.b_in = tf.placeholder(
-                dtype=tf.float32,
-                shape=(None, dialogue_len, None, session_data.Y.shape[-1]),
-                name="b",
-            )
-            self.c_in = tf.placeholder(
-                dtype=tf.float32,
-                shape=(None, dialogue_len, session_data.slots.shape[-1]),
-                name="slt",
-            )
-            self.b_prev_in = tf.placeholder(
-                dtype=tf.float32,
-                shape=(None, dialogue_len, session_data.Y.shape[-1]),
-                name="b_prev",
-            )
-            self._dialogue_len = tf.placeholder(
-                dtype=tf.int32, shape=(), name="dialogue_len"
-            )
-            self._x_for_no_intent_in = tf.placeholder(
-                dtype=tf.float32,
-                shape=(1, session_data.X.shape[-1]),
                 name="x_for_no_intent",
             )
-            self._y_for_no_action_in = tf.placeholder(
+            self._y_for_no_action_in = tf.constant(
+                session_data.y_for_no_action,
                 dtype=tf.float32,
-                shape=(1, session_data.Y.shape[-1]),
                 name="y_for_no_action",
             )
-            self._y_for_action_listen_in = tf.placeholder(
+            self._y_for_action_listen_in = tf.constant(
+                session_data.y_for_action_listen,
                 dtype=tf.float32,
-                shape=(1, session_data.Y.shape[-1]),
                 name="y_for_action_listen",
             )
-            self._is_training = tf.placeholder_with_default(False, shape=())
 
-            self._loss_scales = tf.placeholder(
-                dtype=tf.float32, shape=(None, dialogue_len)
+            # dynamic variables
+            self._is_training = tf.placeholder_with_default(False, shape=())
+            self._dialogue_len = tf.placeholder(
+                dtype=tf.int32, shape=(), name="dialogue_len"
             )
 
             # create embedding vectors
@@ -1070,9 +1172,34 @@ class EmbeddingPolicy(Policy):
             self.dial_embed = self._embed_dialogue_from(cell_output)
 
             # calculate similarities
-            self.sim_op, sim_act = self._tf_sim(self.dial_embed, self.bot_embed, mask)
+            b_raw = tf.reshape(self.b_in, (-1, self.b_in.shape[-1]))
+
+            neg_ids = tf.random.categorical(tf.log(1. - tf.eye(tf.shape(b_raw)[0])), self.num_neg)
+
+            iou_bot = self._tf_calc_iou(b_raw, neg_ids)
+            bad_negs = 1. - tf.nn.relu(tf.sign(1. - iou_bot))
+
+            dial_embed_flat = tf.reshape(self.dial_embed, (-1, self.dial_embed.shape[-1]))
+            bot_embed_flat = tf.reshape(self.bot_embed, (-1, self.bot_embed.shape[-1]))
+            tiled_dial_embed = self._tf_sample_neg(dial_embed_flat, neg_ids, first_only=True)
+            tiled_bot_embed = self._tf_sample_neg(bot_embed_flat, neg_ids)
+
+            tiled_dial_embed = tf.reshape(tiled_dial_embed, (tf.shape(self.dial_embed)[0],
+                                                             tf.shape(self.dial_embed)[1],
+                                                             -1,
+                                                             self.dial_embed.shape[-1]))
+            tiled_bot_embed = tf.reshape(tiled_bot_embed, (tf.shape(self.bot_embed)[0],
+                                                           tf.shape(self.bot_embed)[1],
+                                                           -1,
+                                                           self.bot_embed.shape[-1]))
+            bad_negs = tf.reshape(bad_negs, (tf.shape(self.bot_embed)[0],
+                                             tf.shape(self.bot_embed)[1],
+                                             -1))
+
+            self.sim_op, sim_bot_emb, sim_dial_emb = self._tf_sim(tiled_dial_embed, tiled_bot_embed, mask)
             # construct loss
-            loss = self._tf_loss(self.sim_op, sim_act, sims_rnn_to_max, mask)
+            self._loss_scales = self._scale_loss_by_count_actions(self.a_in, self.b_in, self.c_in, self.b_prev_in)
+            loss = self._tf_loss(self.sim_op, sim_bot_emb, sim_dial_emb, sims_rnn_to_max, bad_negs, mask)
 
             # define which optimizer to use
             self._train_op = tf.train.AdamOptimizer(
@@ -1082,6 +1209,29 @@ class EmbeddingPolicy(Policy):
             self.session = tf.Session(config=self._tf_config)
 
             self._train_tf(session_data, loss, mask)
+
+            dialogue_len = None  # use dynamic time for rnn
+            # create placeholders
+            self.a_in = tf.placeholder(
+                dtype=tf.float32,
+                shape=(None, dialogue_len, session_data.X.shape[-1]),
+                name="a",
+            )
+            self.b_in = tf.placeholder(
+                dtype=tf.float32,
+                shape=(None, dialogue_len, None, session_data.Y.shape[-1]),
+                name="b",
+            )
+            self.c_in = tf.placeholder(
+                dtype=tf.float32,
+                shape=(None, dialogue_len, session_data.slots.shape[-1]),
+                name="slt",
+            )
+            self.b_prev_in = tf.placeholder(
+                dtype=tf.float32,
+                shape=(None, dialogue_len, session_data.Y.shape[-1]),
+                name="b_prev",
+            )
 
     # training helpers
     def _linearly_increasing_batch_size(self, epoch: int) -> int:
@@ -1137,32 +1287,6 @@ class EmbeddingPolicy(Policy):
                 batch_neg_b[b, h] = self.encoded_all_actions[negs]
 
         return np.concatenate([batch_pos_b, batch_neg_b], -2)
-
-    # noinspection PyPep8Naming
-    def _scale_loss_by_count_actions(
-        self,
-        X: np.ndarray,
-        slots: np.ndarray,
-        previous_actions: np.ndarray,
-        actions_for_Y: np.ndarray,
-    ) -> Union[np.ndarray, List[List]]:
-        """Calculate inverse proportionality of repeated actions."""
-
-        if self.scale_loss_by_action_counts:
-            full_X = np.concatenate(
-                [X, slots, previous_actions, actions_for_Y[:, :, np.newaxis]], -1
-            )
-            full_X = full_X.reshape((-1, full_X.shape[-1]))
-
-            _, i, c = np.unique(full_X, return_inverse=True, return_counts=True, axis=0)
-
-            counts = c[i].reshape((X.shape[0], X.shape[1]))
-
-            # do not include [-1 -1 ... -1 0] in averaging
-            # and smooth it by taking sqrt
-            return np.maximum(np.sqrt(np.mean(c[1:]) / counts), 1)
-        else:
-            return [[None]]
 
     def _train_tf(
         self, session_data: SessionData, loss: 'tf.Tensor', mask: 'tf.Tensor'

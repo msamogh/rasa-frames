@@ -810,10 +810,10 @@ class EmbeddingIntentClassifier(Component):
             neg_ids = tf.random.categorical(tf.log(1. - tf.eye(tf.shape(b_raw)[0])), self.num_neg)
 
             iou_intent = self._tf_calc_iou(b_raw, is_training, neg_ids)
-            bad_negs = tf.nn.relu(tf.sign(iou_intent - self.iou_threshold))
+            bad_negs = 1. - tf.nn.relu(tf.sign(self.iou_threshold - iou_intent))
 
-            tiled_intent_embed = self._tf_sample_neg(self.intent_embed, is_training, neg_ids)
             tiled_word_embed = self._tf_sample_neg(self.word_embed, is_training, neg_ids, first_only=True)
+            tiled_intent_embed = self._tf_sample_neg(self.intent_embed, is_training, neg_ids)
 
             self.sim_op, sim_intent_emb, sim_input_emb = self._tf_sim(tiled_word_embed, tiled_intent_embed)
             loss = self._tf_loss(self.sim_op, sim_intent_emb, sim_input_emb, bad_negs)
