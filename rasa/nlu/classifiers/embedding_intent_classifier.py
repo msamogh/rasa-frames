@@ -854,7 +854,6 @@ class EmbeddingIntentClassifier(Component):
 
                 self.sim_all, _, _ = self._tf_sim(self.word_embed, self.all_intents_embed_in)
 
-    # noinspection PyPep8Naming
     def _train_tf_dataset(self,
                           train_init_op,
                           val_init_op,
@@ -916,14 +915,11 @@ class EmbeddingIntentClassifier(Component):
                         "loss={:.3f}, train accuracy={:.3f}"
                         "".format(last_loss, train_acc))
 
-    # noinspection PyPep8Naming
     def _output_training_stat_dataset(self, val_init_op) -> np.ndarray:
         """Output training statistics"""
 
         self.session.run(val_init_op)
         train_sim = self.session.run(self.sim_op)
-        # print(train_sim)
-        # print(np.argmax(train_sim, -1))
 
         train_acc = np.mean(np.max(train_sim, -1) == train_sim.diagonal())
 

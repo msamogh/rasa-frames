@@ -1077,8 +1077,9 @@ def main():
 
 
 if __name__ == "__main__":
-    raise RuntimeError(
-        "Calling `rasa.nlu.test` directly is "
-        "no longer supported. "
-        "Please use `rasa test nlu` instead."
-    )
+    main()
+    # raise RuntimeError(
+    #     "Calling `rasa.nlu.test` directly is "
+    #     "no longer supported. "
+    #     "Please use `rasa test nlu` instead."
+    # )

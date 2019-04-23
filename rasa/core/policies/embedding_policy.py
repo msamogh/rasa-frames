@@ -637,7 +637,8 @@ class EmbeddingPolicy(Policy):
         if self.attn_before_rnn:
             # create attention over previous user input
             num_memory_units_before_rnn = self._num_units(embed_utter)
-            attn_mech = self._create_attn_mech(embed_utter, real_length)
+            with tf.variable_scope('before', reuse=tf.AUTO_REUSE):
+                attn_mech = self._create_attn_mech(embed_utter, real_length)
 
             # create mask for empty user input not to pay attention to it
             ignore_mask = tf.reduce_all(
@@ -654,7 +655,8 @@ class EmbeddingPolicy(Policy):
 
         if self.attn_after_rnn:
             # create attention over previous bot actions
-            attn_mech_after_rnn = self._create_attn_mech(embed_prev_action, real_length)
+            with tf.variable_scope('after', reuse=tf.AUTO_REUSE):
+                attn_mech_after_rnn = self._create_attn_mech(embed_prev_action, real_length)
 
             # create mask for empty bot action or action_listen
             # not to pay attention to them
@@ -739,13 +741,13 @@ class EmbeddingPolicy(Policy):
                 embed_for_action_listen,
             )
 
-        return tf.nn.dynamic_rnn(
-            cell,
-            cell_input,
-            dtype=tf.float32,
-            sequence_length=real_length,
-            scope="rnn_decoder",
-        )
+        with tf.variable_scope('rnn_decoder', reuse=tf.AUTO_REUSE):
+            return tf.nn.dynamic_rnn(
+                cell,
+                cell_input,
+                dtype=tf.float32,
+                sequence_length=real_length,
+            )
 
     @staticmethod
     def _alignments_history_from(final_state: "TimeAttentionWrapperState") -> 'tf.Tensor':
@@ -938,19 +940,20 @@ class EmbeddingPolicy(Policy):
         """Calculate inverse proportionality of repeated actions."""
 
         if self.scale_loss_by_action_counts:
+            from tensorflow.python.ops import gen_array_ops
+
             full_X = tf.concat(
-                [X, Y, slots, previous_actions], -1
+                [X, slots, previous_actions, Y], -1
             )
             full_X = tf.reshape(full_X, (-1, full_X.shape[-1]))
+            # include [-1 -1 ... -1 0] as first
+            full_X = tf.concat([full_X[-1:], full_X], 0)
 
-            y, i, c = tf.unique_with_counts(full_X)
-            print(y.shape)
-            print(i.shape)
-            print(c.shape)
-            exit()
-            counts = tf.reshape(c[i], (tf.shape(full_X)[0], tf.shape(full_X)[1]))
-            print(counts.shape)
-            exit()
+            y, i, c = gen_array_ops.unique_with_counts_v2(full_X, axis=[0])
+            c = tf.cast(c, tf.float32)
+
+            counts = tf.reshape(tf.gather(c, i)[1:], (tf.shape(X)[0], tf.shape(X)[1]))
+
             # do not include [-1 -1 ... -1 0] in averaging
             # and smooth it by taking sqrt
             return tf.maximum(tf.sqrt(tf.reduce_mean(c[1:]) / counts), 1)
@@ -1003,8 +1006,8 @@ class EmbeddingPolicy(Policy):
 
         # penalize max similarity between bot embeddings
         sim_bot_emb += large_compatible_negative(bad_negs.dtype) * bad_negs
-        loss_act = tf.maximum(0., tf.reduce_max(sim_bot_emb, -1))
-        loss += loss_act * self.C_emb
+        max_sim_bot_emb = tf.maximum(0., tf.reduce_max(sim_bot_emb, -1))
+        loss += max_sim_bot_emb * self.C_emb
 
         # penalize max similarity between dial embeddings
         sim_dial_emb += large_compatible_negative(bad_negs.dtype) * bad_negs
@@ -1205,10 +1208,18 @@ class EmbeddingPolicy(Policy):
             self._train_op = tf.train.AdamOptimizer(
                 learning_rate=0.001, epsilon=1e-16
             ).minimize(loss)
+
+            train_init_op = iterator.make_initializer(train_dataset)
+            if self.evaluate_on_num_examples:
+                val_init_op = iterator.make_initializer(val_dataset)
+            else:
+                val_init_op = None
+
             # train tensorflow graph
             self.session = tf.Session(config=self._tf_config)
 
-            self._train_tf(session_data, loss, mask)
+            # self._train_tf(session_data, loss, mask)
+            self._train_tf_dataset(train_init_op, val_init_op, batch_size_in, loss, mask, session_data.X.shape[1])
 
             dialogue_len = None  # use dynamic time for rnn
             # create placeholders
@@ -1232,6 +1243,35 @@ class EmbeddingPolicy(Policy):
                 shape=(None, dialogue_len, session_data.Y.shape[-1]),
                 name="b_prev",
             )
+            self.user_embed = self._create_tf_user_embed(self.a_in)
+            self.bot_embed = self._create_tf_bot_embed(self.b_in)
+            self.slot_embed = self._create_embed(self.c_in, layer_name_suffix="slt")
+
+            embed_prev_action = self._create_tf_bot_embed(self.b_prev_in)
+
+            # mask different length sequences
+            # if there is at least one `-1` it should be masked
+            mask = tf.sign(tf.reduce_max(self.a_in, -1) + 1)
+
+            # get rnn output
+            cell_output, final_state = self._create_tf_dial_embed(
+                self.user_embed,
+                self.slot_embed,
+                embed_prev_action,
+                mask,
+                embed_for_no_intent,
+                embed_for_no_action,
+                embed_for_action_listen,
+            )
+            # process rnn output
+            if self.is_using_attention():
+                self.alignment_history = self._alignments_history_from(final_state)
+
+                self.all_time_masks = self._all_time_masks_from(final_state)
+
+            self.dial_embed = self._embed_dialogue_from(cell_output)
+
+            self.sim_op, _, _ = self._tf_sim(self.dial_embed, self.bot_embed, mask)
 
     # training helpers
     def _linearly_increasing_batch_size(self, epoch: int) -> int:
@@ -1251,165 +1291,83 @@ class EmbeddingPolicy(Policy):
         else:
             return int(self.batch_size[0])
 
-    def _create_batch_b(
-        self, batch_pos_b: np.ndarray, intent_ids: np.ndarray
-    ) -> np.ndarray:
-        """Create batch of actions.
-
-        The first is correct action
-        and the rest are wrong actions sampled randomly.
-        """
-
-        batch_pos_b = batch_pos_b[:, :, np.newaxis, :]
-
-        # sample negatives
-        batch_neg_b = np.zeros(
-            (
-                batch_pos_b.shape[0],
-                batch_pos_b.shape[1],
-                self.num_neg,
-                batch_pos_b.shape[-1],
-            ),
-            dtype=int,
-        )
-        for b in range(batch_pos_b.shape[0]):
-            for h in range(batch_pos_b.shape[1]):
-                # create negative indexes out of possible ones
-                # except for correct index of b
-                negative_indexes = [
-                    i
-                    for i in range(self.encoded_all_actions.shape[0])
-                    if i != intent_ids[b, h]
-                ]
-
-                negs = np.random.choice(negative_indexes, size=self.num_neg)
-
-                batch_neg_b[b, h] = self.encoded_all_actions[negs]
-
-        return np.concatenate([batch_pos_b, batch_neg_b], -2)
-
-    def _train_tf(
-        self, session_data: SessionData, loss: 'tf.Tensor', mask: 'tf.Tensor'
-    ) -> None:
-        """Train tf graph."""
+    def _train_tf_dataset(self,
+                          train_init_op,
+                          val_init_op,
+                          batch_size_in,
+                          loss: 'tf.Tensor',
+                          mask,
+                          dialogue_len
+                          ) -> None:
+        """Train tf graph"""
 
         self.session.run(tf.global_variables_initializer())
 
         if self.evaluate_on_num_examples:
-            logger.info(
-                "Accuracy is updated every {} epochs"
-                "".format(self.evaluate_every_num_epochs)
-            )
+            logger.info("Accuracy is updated every {} epochs"
+                        "".format(self.evaluate_every_num_epochs))
+
         pbar = tqdm(range(self.epochs), desc="Epochs")
         train_acc = 0
         last_loss = 0
         for ep in pbar:
-            # randomize training data for the current epoch
-            ids = np.random.permutation(session_data.X.shape[0])
 
-            # calculate batch size for the current epoch
             batch_size = self._linearly_increasing_batch_size(ep)
-            # calculate number of batches in the current epoch
-            batches_per_epoch = session_data.X.shape[0] // batch_size + int(
-                session_data.X.shape[0] % batch_size > 0
-            )
 
-            # collect average loss over the batches
+            self.session.run(train_init_op, feed_dict={batch_size_in: batch_size})
+
             ep_loss = 0
-            for i in range(batches_per_epoch):
-                start_idx = i * batch_size
-                end_idx = (i + 1) * batch_size
-                batch_ids = ids[start_idx:end_idx]
+            batches_per_epoch = 0
+            while True:
+                try:
+                    _, batch_loss = self.session.run((self._train_op, loss),
+                                                     feed_dict={self._is_training: True,
+                                                                self._dialogue_len: dialogue_len})
 
-                # get randomized data for current batch
-                batch_a = session_data.X[batch_ids]
-                batch_pos_b = session_data.Y[batch_ids]
-                actions_for_b = session_data.actions_for_Y[batch_ids]
+                except tf.errors.OutOfRangeError:
+                    break
 
-                # add negatives - incorrect bot actions predictions
-                batch_b = self._create_batch_b(batch_pos_b, actions_for_b)
+                batches_per_epoch += 1
+                ep_loss += batch_loss
 
-                batch_c = session_data.slots[batch_ids]
-                batch_b_prev = session_data.previous_actions[batch_ids]
+            ep_loss /= batches_per_epoch
 
-                # calculate how much the loss from each action
-                # should be scaled based on action rarity
-                batch_loss_scales = self._scale_loss_by_count_actions(
-                    batch_a, batch_c, batch_b_prev, actions_for_b
-                )
-
-                # minimize and calculate loss
-                _loss, _ = self.session.run(
-                    [loss, self._train_op],
-                    feed_dict={
-                        self.a_in: batch_a,
-                        self.b_in: batch_b,
-                        self.c_in: batch_c,
-                        self.b_prev_in: batch_b_prev,
-                        self._dialogue_len: session_data.X.shape[1],
-                        self._x_for_no_intent_in: session_data.x_for_no_intent,
-                        self._y_for_no_action_in: session_data.y_for_no_action,
-                        self._y_for_action_listen_in: session_data.y_for_action_listen,
-                        self._is_training: True,
-                        self._loss_scales: batch_loss_scales,
-                    },
-                )
-                # collect average loss over the batches
-                ep_loss += _loss / batches_per_epoch
-
-            # calculate train accuracy
-            if self.evaluate_on_num_examples:
-                if (
-                    (ep + 1) == 1
-                    or (ep + 1) % self.evaluate_every_num_epochs == 0
-                    or (ep + 1) == self.epochs
-                ):
-                    train_acc = self._calc_train_acc(session_data, mask)
+            if self.evaluate_on_num_examples and val_init_op is not None:
+                if (ep == 0 or
+                        (ep + 1) % self.evaluate_every_num_epochs == 0 or
+                        (ep + 1) == self.epochs):
+                    train_acc = self._output_training_stat_dataset(val_init_op, mask, dialogue_len)
                     last_loss = ep_loss
 
-                pbar.set_postfix(
-                    {
-                        "loss": "{:.3f}".format(ep_loss),
-                        "acc": "{:.3f}".format(train_acc),
-                    }
-                )
+                pbar.set_postfix({
+                    "loss": "{:.3f}".format(ep_loss),
+                    "acc": "{:.3f}".format(train_acc)
+                })
             else:
-                pbar.set_postfix({"loss": "{:.3f}".format(ep_loss)})
+                pbar.set_postfix({
+                    "loss": "{:.3f}".format(ep_loss)
+                })
 
         if self.evaluate_on_num_examples:
-            logger.info(
-                "Finished training embedding policy, "
-                "loss={:.3f}, train accuracy={:.3f}"
-                "".format(last_loss, train_acc)
-            )
+            logger.info("Finished training embedding classifier, "
+                        "loss={:.3f}, train accuracy={:.3f}"
+                        "".format(last_loss, train_acc))
 
-    def _calc_train_acc(self, session_data: SessionData, mask: 'tf.Tensor') -> np.float32:
-        """Calculate training accuracy."""
+    def _output_training_stat_dataset(self, val_init_op, mask, dialogue_len) -> np.ndarray:
+        """Output training statistics"""
 
-        # choose n examples to calculate train accuracy
-        n = self.evaluate_on_num_examples
-        ids = np.random.permutation(len(session_data.X))[:n]
-        # noinspection PyPep8Naming
-        all_Y_d_x = np.stack(
-            [session_data.all_Y_d for _ in range(session_data.X[ids].shape[0])]
-        )
+        self.session.run(val_init_op)
 
-        _sim, _mask = self.session.run(
-            [self.sim_op, mask],
-            feed_dict={
-                self.a_in: session_data.X[ids],
-                self.b_in: all_Y_d_x,
-                self.c_in: session_data.slots[ids],
-                self.b_prev_in: session_data.previous_actions[ids],
-                self._dialogue_len: session_data.X.shape[1],
-                self._x_for_no_intent_in: session_data.x_for_no_intent,
-                self._y_for_no_action_in: session_data.y_for_no_action,
-                self._y_for_action_listen_in: session_data.y_for_action_listen,
-            },
-        )
-        return np.sum(
-            (np.argmax(_sim, -1) == session_data.actions_for_Y[ids]) * _mask
-        ) / np.sum(_mask)
+        sim_, mask_ = self.session.run([self.sim_op, mask],
+                                       feed_dict={self._is_training: False,
+                                                  self._dialogue_len: dialogue_len})
+        sim_ = sim_.reshape((-1, sim_.shape[-1]))
+        mask_ = mask_.reshape((-1,))
+
+        train_acc = np.sum(
+            (np.max(sim_, -1) == sim_.diagonal()) * mask_) / np.sum(mask_)
+
+        return train_acc
 
     def continue_training(
         self,
@@ -1489,9 +1447,6 @@ class EmbeddingPolicy(Policy):
                 self.c_in: session_data.slots,
                 self.b_prev_in: session_data.previous_actions,
                 self._dialogue_len: session_data.X.shape[1],
-                self._x_for_no_intent_in: session_data.x_for_no_intent,
-                self._y_for_no_action_in: session_data.y_for_no_action,
-                self._y_for_action_listen_in: session_data.y_for_action_listen,
             },
         )
 
