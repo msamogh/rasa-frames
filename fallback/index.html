@@ -36,10 +36,14 @@
   <meta property="og:image" content="https://rasa.com/assets/img/facebook-og.png" />
   <meta property="og:url" content="https://rasa.com/docs/nlu/fallback" />
   
-    <meta name="description" content="Fallback and default actions in Rasa" />
-    <meta itemprop="description" content="Fallback and default actions in Rasa">
-    <meta name="twitter:description" content="Fallback and default actions in Rasa" />
-    <meta property="og:description" content="Fallback and default actions in Rasa" />
+    <meta name="description" content="Choose smart fallback thresholds and actions to ensure accuracy and
+performance of your bot responses using Rasa NLU for conversational bots." />
+    <meta itemprop="description" content="Choose smart fallback thresholds and actions to ensure accuracy and
+performance of your bot responses using Rasa NLU for conversational bots.">
+    <meta name="twitter:description" content="Choose smart fallback thresholds and actions to ensure accuracy and
+performance of your bot responses using Rasa NLU for conversational bots." />
+    <meta property="og:description" content="Choose smart fallback thresholds and actions to ensure accuracy and
+performance of your bot responses using Rasa NLU for conversational bots." />
   
   <meta name="twitter:card" content="summary_large_image">
   <meta name="twitter:site" content="@Rasa_HQ">
@@ -144,12 +148,13 @@
     <div class="versions-content">
       <div>
         <span class="current-version">
-          viewing: 0.14.6
+          viewing: 0.15.0
         </span>
       </div>
       <div class="other-versions">
           <p>tags</p>
           <div class="dropdown-content">
+              <a href=".././0.15.0/fallback/">0.15.0</a>
               <a href=".././0.14.6/fallback/">0.14.6</a>
               <a href=".././0.14.5/fallback/">0.14.5</a>
               <a href=".././0.14.4/fallback/">0.14.4</a>
@@ -166,6 +171,7 @@
               <a href=".././0.13.2/fallback/">0.13.2</a>
               <a href=".././0.13.1/fallback/">0.13.1</a>
               <a href=".././0.13.0/fallback/">0.13.0</a>
+              <a href=".././0.12.4/index/">0.12.4</a>
               <a href=".././0.12.3/index/">0.12.3</a>
               <a href=".././0.12.2/index/">0.12.2</a>
               <a href=".././0.12.1/index/">0.12.1</a>
@@ -175,10 +181,6 @@
               <a href=".././0.9.2/index/">0.9.2</a>
               <a href=".././0.8.12/index/">0.8.12</a>
               <a href=".././0.7.4/index/">0.7.4</a>
-          </div>
-          <p>branches</p>
-          <div class="dropdown-content">
-              <a href=".././master/fallback/">master</a>
           </div>
       </div>
     </div>
@@ -202,7 +204,7 @@
 <div class="section" id="confidence-and-fallback-intents">
 <span id="section-fallback"></span><h1>Confidence and Fallback Intents<a class="headerlink" href="#confidence-and-fallback-intents" title="Permalink to this headline">¶</a></h1>
 <p>Each of the pipelines will report a <code class="docutils literal notranslate"><span class="pre">confidence</span></code> score along with the predicted intent,
-and the <code class="docutils literal notranslate"><span class="pre">ner_crf</span></code> component will do the same for the extracted entities.</p>
+and the <code class="docutils literal notranslate"><span class="pre">CRFEntityExtractor</span></code> component will do the same for the extracted entities.</p>
 <p>You can use the confidence score to choose when to ignore Rasa NLU’s prediction and trigger
 fallback behaviour, for example asking the user to rephrase. If you are using Rasa Core,
 you can do this using a <a class="reference external" href="/docs/core/fallbacks/">Fallback Policy</a>.</p>
@@ -216,8 +218,8 @@ and compare the confidence values on the correctly and incorrectly predicted exa
 <p>Always keep in mind that the confidence score is not a true probability that the prediction
 is correct, it’s just a metric defined by the model that approximately describes how similar
 your input was to the training data.</p>
-<p>The intent classifier in the <code class="docutils literal notranslate"><span class="pre">spacy_sklearn</span></code> pipeline, for example, usually reports very low
-confidence numbers, whereas the <code class="docutils literal notranslate"><span class="pre">tensorflow_embedding</span></code> pipeline usually provides very high confidences.
+<p>The intent classifier in the <code class="docutils literal notranslate"><span class="pre">pretrained_embeddings_spacy</span></code> pipeline, for example, usually reports very low
+confidence numbers, whereas the <code class="docutils literal notranslate"><span class="pre">supervised_embeddings</span></code> pipeline usually provides very high confidences.
 One common misconception is that if your model reports high confidence on your training examples,
 it is a “better” model. In fact, this usually means that your model is overfitting.</p>
 <div class="section" id="have-questions-or-feedback">
@@ -251,7 +253,7 @@ suggestion for improving the docs, feel free to share it by creating an issue on
             </div>
 
             <div class="copyright small">
-            &copy;2018, Rasa Technologies GmbH | <a href="https://rasa.com/imprint/" target="_blank">Imprint</a> | <a href="https://rasa.com/privacy-policy/" target="_blank">Privacy Policy</a>
+            &copy;2019, Rasa Technologies GmbH | <a href="https://rasa.com/imprint/" target="_blank">Imprint</a> | <a href="https://rasa.com/privacy-policy/" target="_blank">Privacy Policy</a>
             
             </div>
 

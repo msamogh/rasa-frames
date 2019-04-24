@@ -36,10 +36,14 @@
   <meta property="og:image" content="https://rasa.com/assets/img/facebook-og.png" />
   <meta property="og:url" content="https://rasa.com/docs/nlu/quickstart" />
   
-    <meta name="description" content="Try out Rasa NLU in the browser." />
-    <meta itemprop="description" content="Try out Rasa NLU in the browser.">
-    <meta name="twitter:description" content="Try out Rasa NLU in the browser." />
-    <meta property="og:description" content="Try out Rasa NLU in the browser." />
+    <meta name="description" content="Check out the tutorial for open source NLP library as an on premise
+solution for on premise intent recognition and entity extraction." />
+    <meta itemprop="description" content="Check out the tutorial for open source NLP library as an on premise
+solution for on premise intent recognition and entity extraction.">
+    <meta name="twitter:description" content="Check out the tutorial for open source NLP library as an on premise
+solution for on premise intent recognition and entity extraction." />
+    <meta property="og:description" content="Check out the tutorial for open source NLP library as an on premise
+solution for on premise intent recognition and entity extraction." />
   
   <meta name="twitter:card" content="summary_large_image">
   <meta name="twitter:site" content="@Rasa_HQ">
@@ -144,12 +148,13 @@
     <div class="versions-content">
       <div>
         <span class="current-version">
-          viewing: 0.14.6
+          viewing: 0.15.0
         </span>
       </div>
       <div class="other-versions">
           <p>tags</p>
           <div class="dropdown-content">
+              <a href=".././0.15.0/quickstart/">0.15.0</a>
               <a href=".././0.14.6/quickstart/">0.14.6</a>
               <a href=".././0.14.5/quickstart/">0.14.5</a>
               <a href=".././0.14.4/quickstart/">0.14.4</a>
@@ -166,6 +171,7 @@
               <a href=".././0.13.2/quickstart/">0.13.2</a>
               <a href=".././0.13.1/quickstart/">0.13.1</a>
               <a href=".././0.13.0/quickstart/">0.13.0</a>
+              <a href=".././0.12.4/quickstart/">0.12.4</a>
               <a href=".././0.12.3/index/">0.12.3</a>
               <a href=".././0.12.2/index/">0.12.2</a>
               <a href=".././0.12.1/index/">0.12.1</a>
@@ -175,10 +181,6 @@
               <a href=".././0.9.2/index/">0.9.2</a>
               <a href=".././0.8.12/index/">0.8.12</a>
               <a href=".././0.7.4/index/">0.7.4</a>
-          </div>
-          <p>branches</p>
-          <div class="dropdown-content">
-              <a href=".././master/quickstart/">master</a>
           </div>
       </div>
     </div>
@@ -296,13 +298,13 @@ and save it in a file called <code class="docutils literal notranslate"><span cl
   </script></div>
 <div class="section" id="define-your-machine-learning-model">
 <h2>2. Define your Machine Learning Model<a class="headerlink" href="#define-your-machine-learning-model" title="Permalink to this headline">¶</a></h2>
-<p>Rasa NLU has a number of different components, which together make a pipeline. Create a markdown file with the pipeline you want to use. In this case, we’re using the pre-defined <code class="docutils literal notranslate"><span class="pre">tensorflow_embedding</span></code> pipeline. If you are running this locally instead of here in the docs, copy the text between the (<code class="docutils literal notranslate"><span class="pre">&quot;&quot;&quot;</span></code>)
+<p>Rasa NLU has a number of different components, which together make a pipeline. Create a markdown file with the pipeline you want to use. In this case, we’re using the pre-defined <code class="docutils literal notranslate"><span class="pre">supervised_embeddings</span></code> pipeline. If you are running this locally instead of here in the docs, copy the text between the (<code class="docutils literal notranslate"><span class="pre">&quot;&quot;&quot;</span></code>)
 and save it in a file called <code class="docutils literal notranslate"><span class="pre">nlu_config.yml</span></code>.</p>
 
 
   <pre data-executable>nlu_config = """
 language: en
-pipeline: tensorflow_embedding
+pipeline: supervised_embeddings
 """
 %store nlu_config > nlu_config.yml</pre>
   <script src="https://storage.googleapis.com/docs-theme/juniper.min.js"></script>
@@ -359,7 +361,7 @@ pipeline: tensorflow_embedding
 <div class="section" id="try-it-out">
 <span id="tutorial-using-your-model"></span><h2>4. Try it out!<a class="headerlink" href="#try-it-out" title="Permalink to this headline">¶</a></h2>
 <p>There are two ways you can use your model, directly from python, or by starting a http server.
-Details of running the Rasa NLU HTTP server are in <span class="xref std std-ref">config</span>.</p>
+Details of running the Rasa NLU HTTP server are in <a class="reference internal" href="../config/#section-configuration"><span class="std std-ref">Server Configuration</span></a>.</p>
 <p>To use your new model in python, create an <code class="docutils literal notranslate"><span class="pre">Interpreter</span></code> object and pass a message to its <code class="docutils literal notranslate"><span class="pre">parse()</span></code> method:</p>
 <p><strong>This will not work if you haven’t run the cells above!</strong></p>
 
@@ -456,7 +458,7 @@ suggestion for improving the docs, feel free to share it by creating an issue on
             </div>
 
             <div class="copyright small">
-            &copy;2018, Rasa Technologies GmbH | <a href="https://rasa.com/imprint/" target="_blank">Imprint</a> | <a href="https://rasa.com/privacy-policy/" target="_blank">Privacy Policy</a>
+            &copy;2019, Rasa Technologies GmbH | <a href="https://rasa.com/imprint/" target="_blank">Imprint</a> | <a href="https://rasa.com/privacy-policy/" target="_blank">Privacy Policy</a>
             
             </div>
 
