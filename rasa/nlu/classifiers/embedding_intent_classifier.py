@@ -257,12 +257,15 @@ class EmbeddingIntentClassifier(Component):
     ) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
         """Prepare data for training"""
 
+        # Matrix n_examples x n_text_features
         X = np.stack([e.get("text_features") for e in training_data.intent_examples])
 
+        # intent names
         intents_for_X = np.array(
             [intent_dict[e.get("intent")] for e in training_data.intent_examples]
         )
 
+        # Matrix n_examples x n_intents
         Y = np.stack(
             [self.encoded_all_intents[intent_idx] for intent_idx in intents_for_X]
         )
@@ -373,12 +376,14 @@ class EmbeddingIntentClassifier(Component):
         and the rest are wrong intents sampled randomly
         """
 
+        # new dimensions: batch_size x 1 x n_features
         batch_pos_b = batch_pos_b[:, np.newaxis, :]
 
-        # sample negatives
+        # sample negatives: batch_size x num_negatives x n_features
         batch_neg_b = np.zeros(
             (batch_pos_b.shape[0], self.num_neg, batch_pos_b.shape[-1])
         )
+        # per entry in batch
         for b in range(batch_pos_b.shape[0]):
             # create negative indexes out of possible ones
             # except for correct index of b
@@ -387,10 +392,13 @@ class EmbeddingIntentClassifier(Component):
                 for i in range(self.encoded_all_intents.shape[0])
                 if i != intent_ids[b]
             ]
+
+            # get num_neg
             negs = np.random.choice(negative_indexes, size=self.num_neg)
 
+            # get_encoded
             batch_neg_b[b] = self.encoded_all_intents[negs]
-
+        # batch_size x (1 + num_negatives) x featurzes
         return np.concatenate([batch_pos_b, batch_neg_b], 1)
 
     def _linearly_increasing_batch_size(self, epoch: int) -> int:
@@ -443,7 +451,10 @@ class EmbeddingIntentClassifier(Component):
             for i in range(batches_per_epoch):
                 end_idx = (i + 1) * batch_size
                 start_idx = i * batch_size
+                # batch of text features
                 batch_a = X[indices[start_idx:end_idx]]
+
+                # batch of intent_labels
                 batch_pos_b = Y[indices[start_idx:end_idx]]
                 intents_for_b = intents_for_X[indices[start_idx:end_idx]]
                 # add negatives
@@ -512,6 +523,7 @@ class EmbeddingIntentClassifier(Component):
     ) -> None:
         """Train the embedding intent classifier on a data set."""
 
+        # {"intent_name": intent_id}
         intent_dict = self._create_intent_dict(training_data)
         if len(intent_dict) < 2:
             logger.error(
@@ -521,7 +533,10 @@ class EmbeddingIntentClassifier(Component):
             )
             return
 
+        # {intent_id: "intent_name"}
         self.inv_intent_dict = {v: k for k, v in intent_dict.items()}
+
+        # if not tokenization: identity matrix
         self.encoded_all_intents = self._create_encoded_intents(intent_dict)
 
         # noinspection PyPep8Naming
@@ -544,11 +559,16 @@ class EmbeddingIntentClassifier(Component):
             np.random.seed(self.random_seed)
             tf.set_random_seed(self.random_seed)
 
+            # placeholder for text features
             self.a_in = tf.placeholder(tf.float32, (None, X.shape[-1]), name="a")
+
+            # placeholder for intent labels (including negatives)
             self.b_in = tf.placeholder(tf.float32, (None, None, Y.shape[-1]), name="b")
 
             is_training = tf.placeholder_with_default(False, shape=())
 
+            # A couple for dense layers including last dense layer with dimensions of
+            # embeddings
             (self.word_embed, self.intent_embed) = self._create_tf_embed(
                 self.a_in, self.b_in, is_training
             )
