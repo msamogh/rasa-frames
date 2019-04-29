@@ -1,10 +1,7 @@
-import io
 import logging
-import math
 
 import numpy as np
 import os
-import pickle
 import typing
 
 from tensorflow.python.keras.utils import Sequence
@@ -277,7 +274,9 @@ class EmbeddingIntentClassifier(Component):
                 name="Hidden_Layer_{}_{}".format(name, i),
             )(layer)
             layer = layers.Dropout(
-                rate=self.droprate, name="Dropout_Layer_{}_{}".format(name, i)
+                noise_shape=None,
+                rate=self.droprate,
+                name="Dropout_Layer_{}_{}".format(name, i),
             )(layer)
 
         return layers.Dense(
@@ -501,20 +500,17 @@ class EmbeddingIntentClassifier(Component):
         num_neg = min(self.num_neg, self.encoded_all_intents.shape[0] - 1)
 
         self.model = self.create_model(X.shape[-1], Y.shape[-1])
+
         self.model.compile(
-            optimizer=tf.train.AdamOptimizer(), loss=self.loss(), metrics=[]
+            optimizer=tf.keras.optimizers.Adam(), loss=self.loss(), metrics=[]
+        )
+
+        sequence = FeatureSequence(
+            X, Y, intents_for_X, self.encoded_all_intents, 0, num_negatives=num_neg
         )
 
         for i in range(self.epochs):
-            batch_size = self._linearly_increasing_batch_size(i)
-            sequence = FeatureSequence(
-                X,
-                Y,
-                intents_for_X,
-                self.encoded_all_intents,
-                batch_size,
-                num_negatives=num_neg,
-            )
+            sequence.on_epoch_end(self._linearly_increasing_batch_size(i))
             self.model.fit(sequence, epochs=1, verbose=1, use_multiprocessing=True)
 
     def process(self, message: "Message", **kwargs: Any) -> None:
@@ -633,20 +629,26 @@ class FeatureSequence(Sequence):
         self.encoded_all_intents = encoded_all_intents
         self.batch_size = batch_size
         self.num_negatives = num_negatives
+        self.indices = np.random.permutation(len(self.feature_x))
 
     def __len__(self):
-        return math.ceil(len(self.feature_x) / self.batch_size)
+        return len(self.feature_x) // self.batch_size
 
     def __getitem__(self, idx):
         start = idx * self.batch_size
-        end = (idx + 1) * self.batch_size
-
-        batch_features = self.feature_x[start:end]
-        batch_labels = self.Y[start:end]
-        intents_for_b = self.intents_for_X[start:end]
+        end = start + self.batch_size
+        slice = self.indices[start:end]
+        batch_features = self.feature_x[slice]
+        batch_labels = self.Y[slice]
+        intents_for_b = self.intents_for_X[slice]
         batch_labels = self._create_batch_b(batch_labels, intents_for_b)
 
-        return [batch_features, batch_labels], np.empty((batch_features.shape[0], 0))
+        return [batch_features, batch_labels], self.empty_y
+
+    def on_epoch_end(self, batch_size=10):
+        self.indices = np.random.permutation(len(self.feature_x))
+        self.batch_size = batch_size
+        self.empty_y = np.empty((batch_size, 0))
 
     def _create_batch_b(
         self, batch_pos_b: np.ndarray, intent_ids: np.ndarray

@@ -9,7 +9,9 @@ import typing
 from typing import Any, Dict, List, Optional, Text, Type
 
 from rasa.nlu import utils
-from rasa.nlu.classifiers.embedding_intent_classifier import EmbeddingIntentClassifier
+
+# from rasa.nlu.classifiers.embedding_intent_classifier import EmbeddingIntentClassifier
+from rasa.nlu.classifiers.embedding_intent_classifier2 import EmbeddingIntentClassifier
 from rasa.nlu.classifiers.keyword_intent_classifier import KeywordIntentClassifier
 from rasa.nlu.classifiers.mitie_intent_classifier import MitieIntentClassifier
 from rasa.nlu.classifiers.sklearn_intent_classifier import SklearnIntentClassifier
