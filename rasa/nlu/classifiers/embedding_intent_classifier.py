@@ -92,6 +92,7 @@ class EmbeddingIntentClassifier(Component):
         "mu_neg": -0.4,  # should be -1.0 < ... < 1.0 for 'cosine'
         # the type of the similarity
         "similarity_type": 'cosine',  # string 'cosine' or 'inner'
+        "loss_type": 'margin',  # string 'softmax' or 'margin'
         # the number of incorrect intents, the algorithm will minimize
         # their similarity to the input words during training
         "num_neg": 20,
@@ -210,6 +211,7 @@ class EmbeddingIntentClassifier(Component):
         self.mu_pos = config['mu_pos']
         self.mu_neg = config['mu_neg']
         self.similarity_type = config['similarity_type']
+        self.loss_type = config['loss_type']
         self.num_neg = config['num_neg']
         self.iou_threshold = config['iou_threshold']
         self.use_max_sim_neg = config['use_max_sim_neg']
@@ -571,32 +573,30 @@ class EmbeddingIntentClassifier(Component):
         return emb_b
 
     @staticmethod
-    def _tf_sample_neg(emb_b,
+    def _tf_sample_neg(b,
                        is_training: 'tf.Tensor',
                        neg_ids=None,
                        batch_size=None,
                        first_only=False
                        ) -> 'tf.Tensor':
 
-        all_b = emb_b[tf.newaxis, :, :]
+        all_b = b[tf.newaxis, :, :]
         if batch_size is None:
-            batch_size = tf.shape(emb_b)[0]
+            batch_size = tf.shape(b)[0]
         all_b = tf.tile(all_b, [batch_size, 1, 1])
         if neg_ids is None:
             return all_b
 
         def sample_neg_b():
             neg_b = tf.batch_gather(all_b, neg_ids)
-            return tf.concat([emb_b[:, tf.newaxis, :], neg_b], 1)
+            return tf.concat([b[:, tf.newaxis, :], neg_b], 1)
 
         if first_only:
-            out_b = emb_b[:, tf.newaxis, :]
+            out_b = b[:, tf.newaxis, :]
         else:
             out_b = all_b
 
-        emb_b = tf.cond(tf.logical_and(is_training, tf.shape(neg_ids)[0] > 1), sample_neg_b, lambda: out_b)
-
-        return emb_b
+        return tf.cond(tf.logical_and(is_training, tf.shape(neg_ids)[0] > 1), sample_neg_b, lambda: out_b)
 
     def _tf_calc_iou(self,
                      b_raw,
@@ -649,7 +649,7 @@ class EmbeddingIntentClassifier(Component):
                              "should be 'cosine' or 'inner'"
                              "".format(self.similarity_type))
 
-    def _tf_loss(self, sim: 'tf.Tensor', sim_intent_emb: 'tf.Tensor', sim_input_emb: 'tf.Tensor', bad_negs) -> 'tf.Tensor':
+    def _tf_loss_margin(self, sim: 'tf.Tensor', sim_intent_emb: 'tf.Tensor', sim_input_emb: 'tf.Tensor', bad_negs) -> 'tf.Tensor':
         """Define loss"""
 
         # loss for maximizing similarity with correct action
@@ -677,6 +677,24 @@ class EmbeddingIntentClassifier(Component):
 
         # average the loss over the batch and add regularization losses
         loss = tf.reduce_mean(loss) + tf.losses.get_regularization_loss()
+        return loss
+
+    def _tf_loss_softmax(self, sim: 'tf.Tensor', sim_intent_emb: 'tf.Tensor', sim_input_emb: 'tf.Tensor', bad_negs) -> 'tf.Tensor':
+        """Define loss."""
+
+        logits = tf.concat([sim[:, :1],
+                            sim[:, 1:] + large_compatible_negative(bad_negs.dtype) * bad_negs,
+                            sim_intent_emb + large_compatible_negative(bad_negs.dtype) * bad_negs,
+                            sim_input_emb + large_compatible_negative(bad_negs.dtype) * bad_negs
+                            ], -1)
+        pos_labels = tf.ones_like(logits[:, :1])
+        neg_labels = tf.zeros_like(logits[:, 1:])
+        labels = tf.concat([pos_labels, neg_labels], -1)
+
+        loss = tf.losses.softmax_cross_entropy(labels,
+                                               logits)
+        # add regularization losses
+        loss += tf.losses.get_regularization_loss()
         return loss
 
     # training helpers:
@@ -816,7 +834,12 @@ class EmbeddingIntentClassifier(Component):
             tiled_intent_embed = self._tf_sample_neg(self.intent_embed, is_training, neg_ids)
 
             self.sim_op, sim_intent_emb, sim_input_emb = self._tf_sim(tiled_word_embed, tiled_intent_embed)
-            loss = self._tf_loss(self.sim_op, sim_intent_emb, sim_input_emb, bad_negs)
+            if self.loss_type == 'margin':
+                loss = self._tf_loss_margin(self.sim_op, sim_intent_emb, sim_input_emb, bad_negs)
+            elif self.loss_type == 'softmax':
+                loss = self._tf_loss_softmax(self.sim_op, sim_intent_emb, sim_input_emb, bad_negs)
+            else:
+                raise
 
             train_op = tf.train.AdamOptimizer().minimize(loss)
 
