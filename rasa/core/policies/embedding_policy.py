@@ -23,7 +23,9 @@ from rasa.core.policies.policy import Policy
 
 import tensorflow as tf
 from tensorflow.python.ops import gen_array_ops
-from tensor2tensor.layers.common_attention import large_compatible_negative
+from tensor2tensor.layers import common_attention
+from tensor2tensor.layers import common_layers
+from tensor2tensor.models.transformer import transformer_small, transformer_prepare_encoder, transformer_encoder
 
 from rasa.core.policies.tf_utils import (
     TimeAttentionWrapper,
@@ -75,8 +77,17 @@ class EmbeddingPolicy(Policy):
         # a list of hidden layers sizes before bot embed layer
         # number of hidden layers is equal to the length of this list
         "hidden_layers_sizes_b": [],
+
+        "transformer": False,
+        "pos_encoding": "timing",  # {"timing", "emb", "custom_timing"}
+        # introduce phase shift in time encodings between transformers
+        # 0.5 - 0.8 works on small dataset
+        "pos_max_timescale": 1.0e2,
+        "max_seq_length": 256,
+        "num_heads": 4,
         # number of units in rnn cell
         "rnn_size": 64,
+        "num_rnn_layers": 2,
         # training parameters
         # flag if to turn on layer normalization for lstm cell
         "layer_norm": True,
@@ -165,6 +176,7 @@ class EmbeddingPolicy(Policy):
         attn_embed: Optional['tf.Tensor'] = None,
         copy_attn_debug: Optional['tf.Tensor'] = None,
         all_time_masks: Optional['tf.Tensor'] = None,
+        attention_weights=None,
         **kwargs: Any
     ) -> None:
         if featurizer:
@@ -219,7 +231,7 @@ class EmbeddingPolicy(Policy):
         self.copy_attn_debug = copy_attn_debug
 
         self.all_time_masks = all_time_masks
-
+        self.attention_weights = attention_weights
         # internal tf instances
         self._train_op = None
         self._is_training = None
@@ -244,8 +256,14 @@ class EmbeddingPolicy(Policy):
                         self.hidden_layer_sizes["a"], self.hidden_layer_sizes["b"]
                     )
                 )
+        self.transformer = config['transformer']
+        self.pos_encoding = config['pos_encoding']
+        self.pos_max_timescale = config['pos_max_timescale']
+        self.max_seq_length = config['max_seq_length']
+        self.num_heads = config['num_heads']
 
         self.rnn_size = config["rnn_size"]
+        self.num_rnn_layers = config["num_rnn_layers"]
         self.layer_norm = config["layer_norm"]
 
         self.batch_size = config["batch_size"]
@@ -750,6 +768,205 @@ class EmbeddingPolicy(Policy):
                 sequence_length=real_length,
             )
 
+    def _create_transformer_encoder(self, a_in, c_in, b_prev_in, mask, attention_weights):
+        x_in = tf.concat([a_in, c_in, b_prev_in], -1)
+        x = x_in
+        hparams = transformer_small()
+
+        hparams.num_hidden_layers = self.num_rnn_layers
+        hparams.hidden_size = self.rnn_size
+        # it seems to be factor of 4 for transformer architectures in t2t
+        hparams.filter_size = self.rnn_size * 4
+        hparams.num_heads = self.num_heads
+        # hparams.relu_dropout = self.droprate
+        hparams.pos = self.pos_encoding
+
+        hparams.max_length = self.max_seq_length
+
+        hparams.unidirectional_encoder = True
+
+        # When not in training mode, set all forms of dropout to zero.
+        for key, value in hparams.values().items():
+            if key.endswith("dropout") or key == "label_smoothing":
+                setattr(hparams, key, value * tf.cast(self._is_training, tf.float32))
+        reg = tf.contrib.layers.l2_regularizer(self.C2)
+        x = tf.layers.dense(inputs=x,
+                            units=hparams.hidden_size,
+                            use_bias=False,
+                            kernel_initializer=tf.random_normal_initializer(0.0, hparams.hidden_size ** -0.5),
+                            kernel_regularizer=reg,
+                            name='transformer_embed_layer',
+                            reuse=tf.AUTO_REUSE)
+        x = tf.layers.dropout(x, rate=hparams.layer_prepostprocess_dropout, training=self._is_training)
+
+        if hparams.multiply_embedding_mode == "sqrt_depth":
+            x *= hparams.hidden_size ** 0.5
+
+        x *= tf.expand_dims(mask, -1)
+
+        with tf.variable_scope('transformer', reuse=tf.AUTO_REUSE):
+            (x,
+             self_attention_bias,
+             encoder_decoder_attention_bias
+             ) = transformer_prepare_encoder(x, None, hparams)
+
+            if hparams.pos == 'custom_timing':
+                x = common_attention.add_timing_signal_1d(x, max_timescale=self.pos_max_timescale)
+
+            x *= tf.expand_dims(mask, -1)
+
+            x = tf.nn.dropout(x, 1.0 - hparams.layer_prepostprocess_dropout)
+
+            attn_bias_for_padding = None
+            # Otherwise the encoder will just use encoder_self_attention_bias.
+            if hparams.unidirectional_encoder:
+                attn_bias_for_padding = encoder_decoder_attention_bias
+
+            x = transformer_encoder(
+                x,
+                self_attention_bias,
+                hparams,
+                nonpadding=mask,
+                save_weights_to=attention_weights,
+                attn_bias_for_padding=attn_bias_for_padding,
+            )
+
+        x *= tf.expand_dims(mask, -1)
+
+        return x, self_attention_bias, x_in
+
+    @staticmethod
+    def _rearrange_fn(list_tensor_1d_mask_1d):
+        """Rearranges tensor_1d to put all the values
+            where mask_1d=1 to the right and
+            where mask_1d=0 to the left"""
+        tensor_1d, mask_1d = list_tensor_1d_mask_1d
+
+        partitioned_tensor = tf.dynamic_partition(tensor_1d, mask_1d, 2)
+
+        return tf.concat(partitioned_tensor, 0)
+
+    @staticmethod
+    def _arrange_back_fn(list_tensor_1d_mask_1d):
+        """Arranges back tensor_1d to restore original order
+            modified by `_rearrange_fn` according to mask_1d:
+            - number of 0s in mask_1d values on the left are set to
+              their corresponding places where mask_1d=0,
+            - number of 1s in mask_1d values on the right are set to
+              their corresponding places where mask_1d=1"""
+        tensor_1d, mask_1d = list_tensor_1d_mask_1d
+
+        mask_indices = tf.dynamic_partition(
+            tf.range(tf.shape(tensor_1d)[0]), mask_1d, 2
+        )
+
+        mask_sum = tf.reduce_sum(mask_1d, axis=0)
+        partitioned_tensor = [
+            tf.zeros_like(tensor_1d[:-mask_sum]),
+            tensor_1d[-mask_sum:],
+        ]
+
+        return tf.dynamic_stitch(mask_indices, partitioned_tensor)
+
+    def _action_to_copy(self, x_in, x, self_attention_bias, embed_prev_action, embed_for_action_listen, embed_for_no_action):
+        with tf.variable_scope('copy', reuse=tf.AUTO_REUSE):
+            ignore_mask_listen = tf.to_float(tf.logical_or(
+                tf.reduce_all(
+                    tf.equal(tf.expand_dims(embed_for_no_action, 0), embed_prev_action),
+                    -1,
+                ),
+                tf.reduce_all(
+                    tf.equal(tf.expand_dims(embed_for_action_listen, 0), embed_prev_action),
+                    -1,
+                ),
+            ))
+
+            triag_mask = tf.expand_dims(
+                common_attention.attention_bias_to_padding(self_attention_bias[0, 0, :, tf.newaxis, tf.newaxis, :]), 0)
+            diag_mask = 1 - (1 - triag_mask) * tf.cumprod(triag_mask, axis=-1, exclusive=True, reverse=True)
+
+            bias = self_attention_bias + common_attention.attention_bias_ignore_padding(ignore_mask_listen) * tf.expand_dims(diag_mask, 1)
+
+            copy_weights = {}
+            common_attention.multihead_attention(x_in,
+                                                 embed_prev_action,
+                                                 bias,
+                                                 self.rnn_size,
+                                                 self.embed_dim,
+                                                 self.embed_dim,
+                                                 1,
+                                                 0,
+                                                 save_weights_to=copy_weights)
+
+        copy_weights = copy_weights['copy/multihead_attention/dot_product_attention'][:, 0, :, :]
+        bias = bias[:, 0, :, :]
+        shape = tf.shape(copy_weights)
+        copy_weights = tf.reshape(copy_weights, (-1, shape[-1]))
+        x_flat = tf.reshape(x_in, (-1, x_in.shape[-1]))
+        bias = tf.reshape(bias, (-1, shape[-1]))
+        ignore_mask = common_attention.attention_bias_to_padding(bias[:, tf.newaxis, tf.newaxis, :], tf.to_int32)
+
+        s_w = tf.layers.dense(
+            inputs=x_flat,
+            units=2 * self.attn_shift_range + 1,
+            activation=tf.nn.softmax,
+            name="shift_weight",
+            reuse=tf.AUTO_REUSE
+        )
+        mask = 1 - ignore_mask
+        conv_weights = tf.map_fn(
+            self._rearrange_fn, [copy_weights, mask], dtype=copy_weights.dtype
+        )
+
+        conv_weights = tf.reverse(conv_weights, axis=[1])
+
+        # preare probs for tf.nn.depthwise_conv2d
+        # [in_width, in_channels=batch]
+        conv_weights = tf.transpose(conv_weights, [1, 0])
+        # [batch=1, in_height=1, in_width=time+1, in_channels=batch]
+        conv_weights = conv_weights[tf.newaxis, tf.newaxis, :, :]
+
+        # [filter_height=1, filter_width=2*attn_shift_range+1,
+        #   in_channels=batch, channel_multiplier=1]
+        conv_s_w = tf.transpose(s_w, [1, 0])
+        conv_s_w = conv_s_w[tf.newaxis, :, :, tf.newaxis]
+
+        # perform 1d convolution
+        # [batch=1, out_height=1, out_width=time+1, out_channels=batch]
+        conv_weights = tf.nn.depthwise_conv2d_native(
+            conv_weights, conv_s_w, [1, 1, 1, 1], "SAME"
+        )
+        conv_weights = conv_weights[0, 0, :, :]
+        conv_weights = tf.transpose(conv_weights, [1, 0])
+
+        conv_weights = tf.reverse(conv_weights, axis=[1])
+
+        # arrange probs back to their original time order
+        copy_weights = tf.map_fn(
+            self._arrange_back_fn, [conv_weights, mask], dtype=conv_weights.dtype
+        )
+
+        # sharpening parameter
+        g_sh = tf.layers.dense(
+            inputs=x_flat,
+            units=1,
+            activation=lambda a: tf.nn.softplus(a) + 1,
+            bias_initializer=tf.constant_initializer(1),
+            name="gamma_sharp",
+            reuse=tf.AUTO_REUSE
+        )
+
+        powed_weights = tf.pow(copy_weights, g_sh)
+        copy_weights = powed_weights / (tf.reduce_sum(powed_weights, 1, keepdims=True) + 1e-32)
+
+        copy_weights = tf.reshape(copy_weights, shape)
+
+        # remove current time
+        copy_prev = copy_weights * diag_mask
+        keep_current = copy_weights * (1 - diag_mask)
+        dial_embed = self._create_embed(x, layer_name_suffix="out")
+        return tf.matmul(copy_prev, embed_prev_action) + tf.matmul(keep_current, dial_embed), copy_weights
+
     @staticmethod
     def _alignments_history_from(final_state: "TimeAttentionWrapperState") -> 'tf.Tensor':
         """Extract alignments history form final rnn cell state."""
@@ -980,15 +1197,15 @@ class EmbeddingPolicy(Policy):
         """Add regularization to the embed layer inside rnn cell."""
 
         if self.attn_after_rnn:
-            return self.C2 * tf.add_n(
-                [
-                    tf.nn.l2_loss(tf_var)
-                    for tf_var in tf.trainable_variables()
-                    if "cell/out_layer/kernel" in tf_var.name
-                ]
-            )
-        else:
-            return 0
+            vars_to_reg = [
+                tf.nn.l2_loss(tf_var)
+                for tf_var in tf.trainable_variables()
+                if "cell/out_layer/kernel" in tf_var.name
+            ]
+            if vars_to_reg:
+                return self.C2 * tf.add_n(vars_to_reg)
+
+        return 0
 
     def _tf_loss(
         self,
@@ -1005,7 +1222,7 @@ class EmbeddingPolicy(Policy):
         loss = tf.maximum(0., self.mu_pos - sim[:, :, 0])
 
         # loss for minimizing similarity with `num_neg` incorrect actions
-        sim_neg = sim[:, :, 1:] + large_compatible_negative(bad_negs.dtype) * bad_negs
+        sim_neg = sim[:, :, 1:] + common_attention.large_compatible_negative(bad_negs.dtype) * bad_negs
         if self.use_max_sim_neg:
             # minimize only maximum similarity over incorrect actions
             max_sim_neg = tf.reduce_max(sim_neg, -1)
@@ -1020,13 +1237,13 @@ class EmbeddingPolicy(Policy):
             loss *= self._loss_scales
 
         # penalize max similarity between bot embeddings
-        sim_bot_emb += large_compatible_negative(bad_negs.dtype) * bad_negs
+        sim_bot_emb += common_attention.large_compatible_negative(bad_negs.dtype) * bad_negs
         max_sim_bot_emb = tf.maximum(0., tf.reduce_max(sim_bot_emb, -1))
         loss += max_sim_bot_emb * self.C_emb
 
         # penalize max similarity between dial embeddings
         if sim_dial_emb is not None:
-            sim_dial_emb += large_compatible_negative(bad_negs.dtype) * bad_negs
+            sim_dial_emb += common_attention.large_compatible_negative(bad_negs.dtype) * bad_negs
             max_sim_input_emb = tf.maximum(0., tf.reduce_max(sim_dial_emb, -1))
             loss += max_sim_input_emb * self.C_emb
 
@@ -1061,11 +1278,11 @@ class EmbeddingPolicy(Policy):
         """Define loss."""
 
         all_sim = [sim[:, :, :1],
-                   sim[:, :, 1:] + large_compatible_negative(bad_negs.dtype) * bad_negs,
-                   sim_bot_emb + large_compatible_negative(bad_negs.dtype) * bad_negs,
+                   sim[:, :, 1:] + common_attention.large_compatible_negative(bad_negs.dtype) * bad_negs,
+                   sim_bot_emb + common_attention.large_compatible_negative(bad_negs.dtype) * bad_negs,
                    ]
         if sim_dial_emb is not None:
-            all_sim.append(sim_dial_emb + large_compatible_negative(batch_bad_negs.dtype) * batch_bad_negs)
+            all_sim.append(sim_dial_emb + common_attention.large_compatible_negative(batch_bad_negs.dtype) * batch_bad_negs)
 
         logits = tf.concat(all_sim, -1)
         pos_labels = tf.ones_like(logits[:, :, :1])
@@ -1200,17 +1417,14 @@ class EmbeddingPolicy(Policy):
                 dtype=tf.int32, shape=(), name="dialogue_len"
             )
 
-            # create embedding vectors
-            self.user_embed = self._create_tf_user_embed(self.a_in)
-            self.bot_embed = self._create_tf_bot_embed(self.b_in)
-            self.slot_embed = self._create_embed(self.c_in, layer_name_suffix="slt")
+            # mask different length sequences
+            # if there is at least one `-1` it should be masked
+            mask = tf.sign(tf.reduce_max(self.a_in, -1) + 1)
 
+            self.bot_embed = self._create_tf_bot_embed(self.b_in)
             all_actions_embed = self._create_tf_bot_embed(all_actions)
 
             embed_prev_action = self._create_tf_bot_embed(self.b_prev_in)
-            embed_for_no_intent = self._create_tf_no_intent_embed(
-                self._x_for_no_intent_in
-            )
             embed_for_no_action = self._create_tf_no_action_embed(
                 self._y_for_no_action_in
             )
@@ -1218,28 +1432,39 @@ class EmbeddingPolicy(Policy):
                 self._y_for_action_listen_in
             )
 
-            # mask different length sequences
-            # if there is at least one `-1` it should be masked
-            mask = tf.sign(tf.reduce_max(self.a_in, -1) + 1)
+            if self.transformer:
+                self.attention_weights = {}
+                tr_out, self_attention_bias, tr_in = self._create_transformer_encoder(self.a_in, self.c_in, self.b_prev_in, mask, self.attention_weights)
+                # self.dial_embed, self.attention_weights = self._action_to_copy(tr_in, tr_out, self_attention_bias, embed_prev_action, embed_for_action_listen, embed_for_no_action)
+                self.dial_embed = self._create_embed(tr_out, layer_name_suffix="out")
+                sims_rnn_to_max = []
+            else:
+                # create embedding vectors
+                self.user_embed = self._create_tf_user_embed(self.a_in)
+                self.slot_embed = self._create_embed(self.c_in, layer_name_suffix="slt")
 
-            # get rnn output
-            cell_output, final_state = self._create_tf_dial_embed(
-                self.user_embed,
-                self.slot_embed,
-                embed_prev_action,
-                mask,
-                embed_for_no_intent,
-                embed_for_no_action,
-                embed_for_action_listen,
-            )
-            # process rnn output
-            if self.is_using_attention():
-                self.alignment_history = self._alignments_history_from(final_state)
+                embed_for_no_intent = self._create_tf_no_intent_embed(
+                    self._x_for_no_intent_in
+                )
 
-                self.all_time_masks = self._all_time_masks_from(final_state)
+                # get rnn output
+                cell_output, final_state = self._create_tf_dial_embed(
+                    self.user_embed,
+                    self.slot_embed,
+                    embed_prev_action,
+                    mask,
+                    embed_for_no_intent,
+                    embed_for_no_action,
+                    embed_for_action_listen,
+                )
+                # process rnn output
+                if self.is_using_attention():
+                    self.alignment_history = self._alignments_history_from(final_state)
 
-            sims_rnn_to_max = self._sims_rnn_to_max_from(cell_output)
-            self.dial_embed = self._embed_dialogue_from(cell_output)
+                    self.all_time_masks = self._all_time_masks_from(final_state)
+
+                sims_rnn_to_max = self._sims_rnn_to_max_from(cell_output)
+                self.dial_embed = self._embed_dialogue_from(cell_output)
 
             # calculate similarities
             b_raw = tf.reshape(self.b_in, (-1, self.b_in.shape[-1]))
@@ -1327,35 +1552,51 @@ class EmbeddingPolicy(Policy):
                 shape=(None, dialogue_len, session_data.Y.shape[-1]),
                 name="b_prev",
             )
-            self.user_embed = self._create_tf_user_embed(self.a_in)
-            self.bot_embed = self._create_tf_bot_embed(self.b_in)
-            self.slot_embed = self._create_embed(self.c_in, layer_name_suffix="slt")
-
-            embed_prev_action = self._create_tf_bot_embed(self.b_prev_in)
 
             # mask different length sequences
             # if there is at least one `-1` it should be masked
             mask = tf.sign(tf.reduce_max(self.a_in, -1) + 1)
 
-            # get rnn output
-            cell_output, final_state = self._create_tf_dial_embed(
-                self.user_embed,
-                self.slot_embed,
-                embed_prev_action,
-                mask,
-                embed_for_no_intent,
-                embed_for_no_action,
-                embed_for_action_listen,
-            )
-            # process rnn output
-            if self.is_using_attention():
-                self.alignment_history = self._alignments_history_from(final_state)
+            self.bot_embed = self._create_tf_bot_embed(self.b_in)
+            embed_prev_action = self._create_tf_bot_embed(self.b_prev_in)
 
-                self.all_time_masks = self._all_time_masks_from(final_state)
+            if self.transformer:
+                self.attention_weights = {}
+                tr_out, self_attention_bias, tr_in = self._create_transformer_encoder(self.a_in, self.c_in, self.b_prev_in, mask,
+                                                                            self.attention_weights)
+                # self.dial_embed, self.attention_weights = self._action_to_copy(tr_in, tr_out, self_attention_bias,
+                #                                                               embed_prev_action,
+                #                                                               embed_for_action_listen,
+                #                                                               embed_for_no_action)
+                self.dial_embed = self._create_embed(tr_out, layer_name_suffix="out")
 
-            self.dial_embed = self._embed_dialogue_from(cell_output)
+            else:
+                self.user_embed = self._create_tf_user_embed(self.a_in)
+                self.slot_embed = self._create_embed(self.c_in, layer_name_suffix="slt")
+
+                # get rnn output
+                cell_output, final_state = self._create_tf_dial_embed(
+                    self.user_embed,
+                    self.slot_embed,
+                    embed_prev_action,
+                    mask,
+                    embed_for_no_intent,
+                    embed_for_no_action,
+                    embed_for_action_listen,
+                )
+                # process rnn output
+                if self.is_using_attention():
+                    self.alignment_history = self._alignments_history_from(final_state)
+
+                    self.all_time_masks = self._all_time_masks_from(final_state)
+
+                self.dial_embed = self._embed_dialogue_from(cell_output)
 
             self.sim_op, _, _ = self._tf_sim(self.dial_embed, self.bot_embed, mask)
+
+            self.attention_weights = tf.concat([tf.expand_dims(t, 0)
+                                                for name, t in self.attention_weights.items()
+                                                if name.endswith('multihead_attention/dot_product_attention')], 0)
 
     # training helpers
     def _linearly_increasing_batch_size(self, epoch: int) -> int:
@@ -1499,6 +1740,22 @@ class EmbeddingPolicy(Policy):
                 },
             )
 
+    def tf_feed_dict_for_prediction(self,
+                                    tracker: DialogueStateTracker,
+                                    domain: Domain) -> Dict:
+        # noinspection PyPep8Naming
+        data_X = self.featurizer.create_X([tracker], domain)
+        session_data = self._create_tf_session_data(domain, data_X)
+        # noinspection PyPep8Naming
+        all_Y_d_x = np.stack([session_data.all_Y_d
+                              for _ in range(session_data.X.shape[0])])
+
+        return {self.a_in: session_data.X,
+                self.b_in: all_Y_d_x,
+                self.c_in: session_data.slots,
+                self.b_prev_in: session_data.previous_actions,
+                self._dialogue_len: session_data.X.shape[1]}
+
     def predict_action_probabilities(
         self, tracker: DialogueStateTracker, domain: Domain
     ) -> List[float]:
@@ -1522,7 +1779,9 @@ class EmbeddingPolicy(Policy):
         all_Y_d_x = np.stack(
             [session_data.all_Y_d for _ in range(session_data.X.shape[0])]
         )
-
+        # self.similarity_type = 'cosine'
+        # mask = tf.sign(tf.reduce_max(self.a_in, -1) + 1)
+        # self.sim_op, _, _ = self._tf_sim(self.dial_embed, self.bot_embed, mask)
         _sim = self.session.run(
             self.sim_op,
             feed_dict={
@@ -1596,6 +1855,8 @@ class EmbeddingPolicy(Policy):
             self._persist_tensor("copy_attn_debug", self.copy_attn_debug)
 
             self._persist_tensor("all_time_masks", self.all_time_masks)
+
+            self._persist_tensor("attention_weights", self.attention_weights)
 
             saver = tf.train.Saver()
             saver.save(self.session, checkpoint)
@@ -1674,6 +1935,8 @@ class EmbeddingPolicy(Policy):
 
             all_time_masks = cls.load_tensor("all_time_masks")
 
+            attention_weights = cls.load_tensor("attention_weights")
+
         encoded_actions_file = os.path.join(
             path, "{}.encoded_all_actions.pkl".format(file_name)
         )
@@ -1705,4 +1968,5 @@ class EmbeddingPolicy(Policy):
             attn_embed=attn_embed,
             copy_attn_debug=copy_attn_debug,
             all_time_masks=all_time_masks,
+            attention_weights=attention_weights
         )

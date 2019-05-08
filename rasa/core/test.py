@@ -376,8 +376,20 @@ def _predict_tracker_actions(
 
     tracker_actions = []
 
-    for event in events[1:]:
+    for i, event in enumerate(events[1:]):
         if isinstance(event, ActionExecuted):
+            # TODO remove
+            if i == len(events[1:]) - 1:
+                policy = processor.policy_ensemble.policies[0]
+                feed_dict = policy.tf_feed_dict_for_prediction(partial_tracker, agent.domain)
+                attention_weights = policy.session.run(policy.attention_weights, feed_dict=feed_dict)
+                try:
+                    import cPickle as pickle
+                except ImportError:
+                    import pickle
+                with open('attention_weights.pkl', "wb") as f:
+                    pickle.dump(attention_weights, f)
+            # ---
             action_executed_result, policy, confidence = _collect_action_executed_predictions(
                 processor, partial_tracker, event, fail_on_prediction_errors
             )
@@ -451,6 +463,8 @@ def collect_story_predictions(
             correct_dialogues.append(0)
         else:
             correct_dialogues.append(1)
+
+
 
     logger.info("Finished collecting predictions.")
     with warnings.catch_warnings():
