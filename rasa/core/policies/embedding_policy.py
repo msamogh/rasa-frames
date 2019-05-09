@@ -25,7 +25,8 @@ import tensorflow as tf
 from tensorflow.python.ops import gen_array_ops
 from tensor2tensor.layers import common_attention
 from tensor2tensor.layers import common_layers
-from tensor2tensor.models.transformer import transformer_small, transformer_prepare_encoder, transformer_encoder
+from tensor2tensor.models.transformer import transformer_base, transformer_prepare_encoder, transformer_encoder
+from tensor2tensor.models.evolved_transformer import evolved_transformer_encoder
 
 from rasa.core.policies.tf_utils import (
     TimeAttentionWrapper,
@@ -771,7 +772,7 @@ class EmbeddingPolicy(Policy):
     def _create_transformer_encoder(self, a_in, c_in, b_prev_in, mask, attention_weights):
         x_in = tf.concat([a_in, c_in, b_prev_in], -1)
         x = x_in
-        hparams = transformer_small()
+        hparams = transformer_base()
 
         hparams.num_hidden_layers = self.num_rnn_layers
         hparams.hidden_size = self.rnn_size
@@ -784,6 +785,8 @@ class EmbeddingPolicy(Policy):
         hparams.max_length = self.max_seq_length
 
         hparams.unidirectional_encoder = True
+
+        # hparams.proximity_bias = True
 
         # When not in training mode, set all forms of dropout to zero.
         for key, value in hparams.values().items():
@@ -1179,16 +1182,16 @@ class EmbeddingPolicy(Policy):
             )
             full_X = tf.reshape(full_X, (-1, full_X.shape[-1]))
             # include [-1 -1 ... -1 0] as first
-            full_X = tf.concat([full_X[-1:], full_X], 0)
+            # full_X = tf.concat([full_X[-1:], full_X], 0)
 
             _, i, c = gen_array_ops.unique_with_counts_v2(full_X, axis=[0])
             c = tf.cast(c, tf.float32)
 
-            counts = tf.reshape(tf.gather(c, i)[1:], (tf.shape(X)[0], tf.shape(X)[1]))
+            counts = tf.reshape(tf.gather(c, i), (tf.shape(X)[0], tf.shape(X)[1]))
 
             # do not include [-1 -1 ... -1 0] in averaging
             # and smooth it by taking sqrt
-            return tf.maximum(tf.sqrt(tf.reduce_mean(c[1:]) / counts), 1)
+            return tf.maximum(tf.sqrt(tf.reduce_mean(c) / counts), 1)
         else:
             return [[None]]
 
@@ -1289,9 +1292,15 @@ class EmbeddingPolicy(Policy):
         neg_labels = tf.zeros_like(logits[:, :, 1:])
         labels = tf.concat([pos_labels, neg_labels], -1)
 
+        if self.scale_loss_by_action_counts:
+            # TODO seems to be useless
+            scale_mask = self._loss_scales * mask
+        else:
+            scale_mask = mask
+
         loss = tf.losses.softmax_cross_entropy(labels,
                                                logits,
-                                               self._loss_scales * mask)
+                                               scale_mask)
         # add regularization losses
         loss += self._regularization_loss() + tf.losses.get_regularization_loss()
 
