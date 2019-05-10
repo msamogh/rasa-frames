@@ -360,8 +360,10 @@ class TrackerFeaturizer(object):
 
             labels.append(story_labels)
 
+        y = np.array(labels)
         # if it is MaxHistoryFeaturizer, squeeze out time axis
-        y = np.array(labels).squeeze()
+        if y.shape[1] == 1 and isinstance(self, MaxHistoryTrackerFeaturizer):
+            y = y[:, 0, :]
 
         return y
 

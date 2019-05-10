@@ -1293,7 +1293,6 @@ class EmbeddingPolicy(Policy):
         labels = tf.concat([pos_labels, neg_labels], -1)
 
         if self.scale_loss_by_action_counts:
-            # TODO seems to be useless
             scale_mask = self._loss_scales * mask
         else:
             scale_mask = mask
@@ -1698,8 +1697,7 @@ class EmbeddingPolicy(Policy):
         sim_ = sim_.reshape((-1, sim_.shape[-1]))
         mask_ = mask_.reshape((-1,))
 
-        train_acc = np.sum(
-            (np.max(sim_, -1) == sim_.diagonal()) * mask_) / np.sum(mask_)
+        train_acc = np.sum((np.max(sim_, -1) == sim_.diagonal()) * mask_) / np.sum(mask_)
 
         return train_acc
 
