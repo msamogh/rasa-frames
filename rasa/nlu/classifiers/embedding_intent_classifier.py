@@ -381,6 +381,10 @@ class EmbeddingIntentClassifier(Component):
 
         x = tf.nn.relu(x_in)
 
+        if len(layer_sizes) == 0:
+            # return simple bag of words
+            return tf.reduce_sum(x, 1)
+
         if self.fused_lstm:
             x = tf.transpose(x, [1, 0, 2])
 
