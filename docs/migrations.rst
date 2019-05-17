@@ -8,9 +8,9 @@ Migration Guide
 This page contains information about changes between major versions and
 how you can migrate from one version to another.
 
-.. _migration-to-0-15-0:
+.. _migration-to-rasa-1.0:
 
-0.14.x to 0.15.0
+0.14.x to Rasa 1.0
 
 General
 ~~~~~~~
@@ -21,17 +21,28 @@ General
   should use instead.
   Mapping of old scripts to new commands:
   ``rasa.core.run`` -> ``rasa shell``
-  ``rasa.core.server`` -> ``rasa run core``
+  ``rasa.core.server`` -> ``rasa run``
   ``rasa.core.test`` -> ``rasa test core``
   ``rasa.core.train`` -> ``rasa train core``
-  ``rasa.core.visualize`` -> ``rasa show``
+  ``rasa.core.visualize`` -> ``rasa visualize``
   ``rasa.nlu.convert`` -> ``rasa data``
   ``rasa.nlu.evaluate`` -> ``rasa test nlu``
   ``rasa.nlu.run`` -> ``rasa shell``
-  ``rasa.nlu.server`` -> ``rasa run nlu``
+  ``rasa.nlu.server`` -> ``rasa run``
   ``rasa.nlu.test`` -> ``rasa test nlu``
   ``rasa.nlu.train`` -> ``rasa train nlu``
 
+- If you have written a custom output channel, all ``send_`` methods subclassed
+  from the ``OutputChannel`` class need to take an additional ``**kwargs``
+  argument. You can use these keyword args from your custom action code or the
+  templates in your domain file to send any extra parameters used in your
+  channel's send methods.
+
+- If you were importing the ``Button`` or ``Element`` classes from
+  ``rasa_core.dispatcher``, these are now to be imported from ``rasa_sdk.utils``.
+
+Script parameters
+~~~~~~~~~~~~~~~~~
 - All script parameter names have been unified to follow the same schema.
   Any underscores (``_``) in arguments have been replaced with dashes (``-``).
   Due to change the following argument names changed:
@@ -53,9 +64,13 @@ General
   ``--skip_visualization`` -> ``--skip-visualization``
   ``--training_fraction`` -> ``--training-fraction``
 
-Script parameters
-~~~~~~~~~~~~~~~~~
 - the ``--num_threads`` parameter got removed from the ``run`` command. The
   server will always run single threaded, but in an async way. If you want to
   make use of multiple processes, feel free to check out the sanic server
   documentation https://sanic.readthedocs.io/en/latest/sanic/deploying.html#running-via-gunicorn
+
+- To avoid conflicts in the script parameter names, connectors in the ``run`` command now need to be specified with
+  ``--connector``. ``-c`` is no longer supported. The maximum history in the ``rasa visualize`` command need to be
+  defined with ``--max-history``. Output paths and log files cannot be specified with ``-o`` anymore. ``--out`` and
+  ``--log-file`` should be used. Furthermore, we standardized the name of NLU data to be ``--nlu`` and the name of
+  any kind of data files or directory to be ``--data``.

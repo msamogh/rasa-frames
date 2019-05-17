@@ -33,6 +33,7 @@ from rasa.core.policies.tf_utils import (
     ChronoBiasLayerNormBasicLSTMCell,
 )
 from rasa.core.trackers import DialogueStateTracker
+from rasa.utils.common import is_logging_disabled
 
 if typing.TYPE_CHECKING:
     from rasa.core.policies.tf_utils import TimeAttentionWrapperState
@@ -41,6 +42,7 @@ try:
     import cPickle as pickle
 except ImportError:
     import pickle
+
 
 logger = logging.getLogger(__name__)
 
@@ -1637,10 +1639,12 @@ class EmbeddingPolicy(Policy):
         self.session.run(tf.global_variables_initializer())
 
         if self.evaluate_on_num_examples:
-            logger.info("Accuracy is updated every {} epochs"
-                        "".format(self.evaluate_every_num_epochs))
+            logger.info(
+                "Accuracy is updated every {} epochs"
+                "".format(self.evaluate_every_num_epochs)
+            )
+        pbar = tqdm(range(self.epochs), desc="Epochs", disable=is_logging_disabled())
 
-        pbar = tqdm(range(self.epochs), desc="Epochs")
         train_acc = 0
         last_loss = 0
         for ep in pbar:

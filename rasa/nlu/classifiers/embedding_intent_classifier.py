@@ -13,6 +13,7 @@ from tensor2tensor.layers.common_attention import add_timing_signal_1d, large_co
 
 from rasa.nlu.classifiers import INTENT_RANKING_LENGTH
 from rasa.nlu.components import Component
+from rasa.utils.common import is_logging_disabled
 
 logger = logging.getLogger(__name__)
 
@@ -897,7 +898,7 @@ class EmbeddingIntentClassifier(Component):
             logger.info("Accuracy is updated every {} epochs"
                         "".format(self.evaluate_every_num_epochs))
 
-        pbar = tqdm(range(self.epochs), desc="Epochs")
+        pbar = tqdm(range(self.epochs), desc="Epochs", disable=is_logging_disabled())
         train_acc = 0
         last_loss = 0
         for ep in pbar:

@@ -16,6 +16,7 @@ from tests.core.conftest import MOODBOT_MODEL_PATH
 
 # this is needed so that the tests included as code examples look better
 from tests.utilities import json_of_latest_request, latest_request
+import os
 
 MODEL_PATH = MOODBOT_MODEL_PATH
 
@@ -25,6 +26,49 @@ logger = logging.getLogger(__name__)
 def fake_sanic_run(*args, **kwargs):
     """Used to replace `run` method of a Sanic server to avoid hanging."""
     logger.info("Rabatnic: Take this and find Sanic! I want him here by supper time.")
+
+
+async def test_send_response(default_channel, default_tracker):
+    text_only_message = {"text": "hey"}
+    image_only_message = {"image": "https://i.imgur.com/nGF1K8f.jpg"}
+    text_and_image_message = {
+        "text": "look at this",
+        "image": "https://i.imgur.com/T5xVo.jpg",
+    }
+    custom_json_message = {
+        "text": "look at this",  # this value will be ignored
+        "custom": {"some_random_arg": "value", "another_arg": "value2"},
+    }
+
+    await default_channel.send_response(default_tracker.sender_id, text_only_message)
+    await default_channel.send_response(default_tracker.sender_id, image_only_message)
+    await default_channel.send_response(
+        default_tracker.sender_id, text_and_image_message
+    )
+    await default_channel.send_response(default_tracker.sender_id, custom_json_message)
+    collected = default_channel.messages
+
+    assert len(collected) == 5
+
+    # text only message
+    assert collected[0] == {"recipient_id": "my-sender", "text": "hey"}
+
+    # image only message
+    assert collected[1] == {
+        "recipient_id": "my-sender",
+        "image": "https://i.imgur.com/nGF1K8f.jpg",
+    }
+
+    # text & image combined - will result in two messages
+    assert collected[2] == {"recipient_id": "my-sender", "text": "look at this"}
+    assert collected[3] == {
+        "recipient_id": "my-sender",
+        "image": "https://i.imgur.com/T5xVo.jpg",
+    }
+    assert collected[4] == {
+        "recipient_id": "my-sender",
+        "custom": {"some_random_arg": "value", "another_arg": "value2"},
+    }
 
 
 async def test_console_input():
@@ -616,41 +660,38 @@ async def test_slackbot_send_attachment_only():
     httpretty.enable()
 
     bot = SlackBot("DummyToken", "General")
-    attachment = json.dumps(
-        [
+    attachment = {
+        "fallback": "Financial Advisor Summary",
+        "color": "#36a64f",
+        "author_name": "ABE",
+        "title": "Financial Advisor Summary",
+        "title_link": "http://tenfactorialrocks.com",
+        "image_url": "https://r.com/cancel/r12",
+        "thumb_url": "https://r.com/cancel/r12",
+        "actions": [
             {
-                "fallback": "Financial Advisor Summary",
-                "color": "#36a64f",
-                "author_name": "ABE",
-                "title": "Financial Advisor Summary",
-                "title_link": "http://tenfactorialrocks.com",
-                "image_url": "https://r.com/cancel/r12",
-                "thumb_url": "https://r.com/cancel/r12",
-                "actions": [
-                    {
-                        "type": "button",
-                        "text": "\ud83d\udcc8 Dashboard",
-                        "url": "https://r.com/cancel/r12",
-                        "style": "primary",
-                    },
-                    {
-                        "type": "button",
-                        "text": "\ud83d\udccb Download XL",
-                        "url": "https://r.com/cancel/r12",
-                        "style": "danger",
-                    },
-                    {
-                        "type": "button",
-                        "text": "\ud83d\udce7 E-Mail",
-                        "url": "https://r.com/cancel/r12",
-                        "style": "danger",
-                    },
-                ],
-                "footer": "Powered by 1010rocks",
-                "ts": 1531889719,
-            }
-        ]
-    )
+                "type": "button",
+                "text": "\ud83d\udcc8 Dashboard",
+                "url": "https://r.com/cancel/r12",
+                "style": "primary",
+            },
+            {
+                "type": "button",
+                "text": "\ud83d\udccb Download XL",
+                "url": "https://r.com/cancel/r12",
+                "style": "danger",
+            },
+            {
+                "type": "button",
+                "text": "\ud83d\udce7 E-Mail",
+                "url": "https://r.com/cancel/r12",
+                "style": "danger",
+            },
+        ],
+        "footer": "Powered by 1010rocks",
+        "ts": 1531889719,
+    }
+
     await bot.send_attachment("ID", attachment)
 
     httpretty.disable()
@@ -660,7 +701,7 @@ async def test_slackbot_send_attachment_only():
     assert r.parsed_body == {
         "channel": ["General"],
         "as_user": ["True"],
-        "attachments": [attachment],
+        "attachments": [json.dumps([attachment])],
     }
 
 
@@ -677,44 +718,40 @@ async def test_slackbot_send_attachment_withtext():
     httpretty.enable()
 
     bot = SlackBot("DummyToken", "General")
-    text = "Sample text"
-    attachment = json.dumps(
-        [
+    kwargs = {"text": "Sample text"}
+    attachment = {
+        "fallback": "Financial Advisor Summary",
+        "color": "#36a64f",
+        "author_name": "ABE",
+        "title": "Financial Advisor Summary",
+        "title_link": "http://tenfactorialrocks.com",
+        "image_url": "https://r.com/cancel/r12",
+        "thumb_url": "https://r.com/cancel/r12",
+        "actions": [
             {
-                "fallback": "Financial Advisor Summary",
-                "color": "#36a64f",
-                "author_name": "ABE",
-                "title": "Financial Advisor Summary",
-                "title_link": "http://tenfactorialrocks.com",
-                "image_url": "https://r.com/cancel/r12",
-                "thumb_url": "https://r.com/cancel/r12",
-                "actions": [
-                    {
-                        "type": "button",
-                        "text": "\ud83d\udcc8 Dashboard",
-                        "url": "https://r.com/cancel/r12",
-                        "style": "primary",
-                    },
-                    {
-                        "type": "button",
-                        "text": "\ud83d\udccb XL",
-                        "url": "https://r.com/cancel/r12",
-                        "style": "danger",
-                    },
-                    {
-                        "type": "button",
-                        "text": "\ud83d\udce7 E-Mail",
-                        "url": "https://r.com/cancel/r123",
-                        "style": "danger",
-                    },
-                ],
-                "footer": "Powered by 1010rocks",
-                "ts": 1531889719,
-            }
-        ]
-    )
+                "type": "button",
+                "text": "\ud83d\udcc8 Dashboard",
+                "url": "https://r.com/cancel/r12",
+                "style": "primary",
+            },
+            {
+                "type": "button",
+                "text": "\ud83d\udccb XL",
+                "url": "https://r.com/cancel/r12",
+                "style": "danger",
+            },
+            {
+                "type": "button",
+                "text": "\ud83d\udce7 E-Mail",
+                "url": "https://r.com/cancel/r123",
+                "style": "danger",
+            },
+        ],
+        "footer": "Powered by 1010rocks",
+        "ts": 1531889719,
+    }
 
-    await bot.send_attachment("ID", attachment, text)
+    await bot.send_attachment("ID", attachment, **kwargs)
 
     httpretty.disable()
 
@@ -724,7 +761,7 @@ async def test_slackbot_send_attachment_withtext():
         "channel": ["General"],
         "as_user": ["True"],
         "text": ["Sample text"],
-        "attachments": [attachment],
+        "attachments": [json.dumps([attachment])],
     }
 
 
@@ -741,7 +778,7 @@ async def test_slackbot_send_image_url():
     httpretty.enable()
 
     bot = SlackBot("DummyToken", "General")
-    url = json.dumps([{"URL": "http://www.rasa.net"}])
+    url = "http://www.rasa.net"
     await bot.send_image_url("ID", url)
 
     httpretty.disable()
@@ -750,12 +787,10 @@ async def test_slackbot_send_image_url():
 
     assert r.parsed_body["as_user"] == ["True"]
     assert r.parsed_body["channel"] == ["General"]
-    assert len(r.parsed_body["attachments"]) == 1
-    assert '"text": ""' in r.parsed_body["attachments"][0]
-    assert (
-        '"image_url": "[{\\"URL\\": \\"http://www.rasa.net\\"}]"'
-        in r.parsed_body["attachments"][0]
-    )
+    assert len(r.parsed_body["blocks"]) == 1
+    assert '"type": "image"' in r.parsed_body["blocks"][0]
+    assert '"alt_text": "http://www.rasa.net"' in r.parsed_body["blocks"][0]
+    assert '"image_url": "http://www.rasa.net"' in r.parsed_body["blocks"][0]
 
 
 @pytest.mark.filterwarnings("ignore:unclosed.*:ResourceWarning")
@@ -776,11 +811,12 @@ async def test_slackbot_send_text():
 
     r = httpretty.latest_requests[-1]
 
-    assert r.parsed_body == {
-        "as_user": ["True"],
-        "channel": ["General"],
-        "text": ["my message"],
-    }
+    assert r.parsed_body["as_user"] == ["True"]
+    assert r.parsed_body["channel"] == ["General"]
+    assert len(r.parsed_body["blocks"]) == 1
+    assert '"type": "section"' in r.parsed_body["blocks"][0]
+    assert '"type": "plain_text"' in r.parsed_body["blocks"][0]
+    assert '"text": "my message"' in r.parsed_body["blocks"][0]
 
 
 @pytest.mark.filterwarnings("ignore:unclosed.*:ResourceWarning")
@@ -825,7 +861,7 @@ def test_int_message_id_in_user_message():
     assert message.message_id == "987654321"
 
 
-async def test_send_custom_messages_without_buttons():
+async def test_send_elements_without_buttons():
     from rasa.core.channels.channel import OutputChannel
 
     async def test_message(sender, message):
@@ -834,7 +870,7 @@ async def test_send_custom_messages_without_buttons():
 
     channel = OutputChannel()
     channel.send_text_message = test_message
-    await channel.send_custom_message("user", [{"title": "a", "subtitle": "b"}])
+    await channel.send_elements("user", [{"title": "a", "subtitle": "b"}])
 
 
 def test_newsline_strip():
@@ -850,8 +886,6 @@ def test_register_channel_without_route():
     from rasa.core.channels import RestInput
     import rasa.core
 
-    # load your trained agent
-    agent = Agent.load(MODEL_PATH, interpreter=RegexInterpreter())
     input_channel = RestInput()
 
     app = Sanic(__name__)
