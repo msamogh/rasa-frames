@@ -605,11 +605,95 @@ def get_predictions(interpreter, test_data, intent_targets):  # pragma: no cover
     samples_with_targets = zip(
         test_data.training_examples, itertools.cycle(intent_targets)
     )
+    same_intents = {"I_dont_know_about_where_you_live_but_in_my_world_its_always_sunny": 0,
+                    "Its_sunny_where_I_live": 0,
+                    "The_flowers_are_starting_to_blossom_so_it_must_be_spring": 0,
+                    "Spring_is_here": 0,
+                    "The_engineers_at_Rasa": 1,
+                    "One_of_the_smart_engineers_at_Rasa": 1,
+                    "Im_great_Thanks_for_asking": 2,
+                    "Im_good_thanks": 2,
+                    "A_little_bit_cold_otherwise_fine": 2,
+                    "Im_Sara_the_Rasa_bot_At_the_same_time_Im_also_the_Rasa_mascot": 3,
+                    "Im_both_the_Rasa_bot_and_the_Rasa_mascot_My_name_is_Sara": 3,
+                    "Yes_Im_a_bot": 4,
+                    "Yep_you_guessed_it_Im_a_bot": 4,
+                    "I_am_indeed_a_bot": 4,
+                    "42": 5,
+                    "Old_enough_to_be_a_bot": 5,
+                    "Age_is_just_an_issue_of_mind_over_matter_If_you_dont_mind_it_doesnt_matter": 5,
+                    "Never_ask_a_chatbot_her_age": 5,
+                    "My_first_git_commit_was_many_moons_ago": 5,
+                    "Why_do_you_ask_Are_my_wrinkles_showing": 5,
+                    "Ive_hit_the_age_where_I_actively_try_to_forget_how_old_I_am": 5,
+                    "Why_are_eggs_not_very_much_into_jokes_Because_they_could_crack_up": 6,
+                    "Do_you_know_a_trees_favorite_drink_Root_beer": 6,
+                    "Why_do_the_French_like_to_eat_snails_so_much_They_cant_stand_fast_food": 6,
+                    "Why_did_the_robot_get_angry_Because_someone_kept_pushing_its_buttons": 6,
+                    "What_do_you_call_a_pirate_droid_Arrrr2D2": 6,
+                    "Why_did_the_robot_cross_the_road_Because_he_was_programmed_to": 6,
+                    "Its_party_time": 7,
+                    "Time_is_a_human_construct_youll_have_to_tell_me": 7,
+                    "Its_five_oclock_somewhere": 7,
+                    "In_an_ever_expanding_universe_the_real_question_is_what_time_isnt_it": 7,
+                    "Thats_hard_to_say_its_different_all_over_the_world": 7,
+                    "I_can_spell_baguette_in_French_but_unfortunately_English_is_the_only_language_I_can_answer_you_in": 8,
+                    "I_am_in_the_process_of_learning_but_at_the_moment_I_can_only_speak_English": 8,
+                    "Binary_code_and_the_language_of_love_And_English": 8,
+                    "I_was_written_in_python_but_for_your_convenience_Ill_translate_to_English": 8,
+                    "Thats_not_very_nice": 9,
+                    "That_wasnt_very_nice_Perhaps_try_an_anger_management_class": 9,
+                    "Ill_pretend_I_didnt_process_that_mean_comment": 9,
+                    "Im_sorry_I_cant_recommend_you_a_restaurant_as_I_usually_cook_at_home": 10,
+                    "Im_sorry_Im_not_getting_taste_buds_for_another_few_updates": 10,
+                    "Id_need_some_more_data_If_you_lick_the_monitor_perhaps_I_can_evaluate_your_taste_buds": 10,
+                    "I_hope_you_are_being_yourself": 11,
+                    "Who_do_you_think_you_are": 11,
+                    "Unfortunately_I_havent_been_programmed_with_the_amount_of_necessary_philosophy_knowledge_to_answer_that": 11,
+                    "It_most_probably_is_the_one_that_your_parents_have_chosen_for_you": 12,
+                    "Youre_the_second_person_now_to_ask_me_that_Rihanna_was_the_first": 12,
+                    "Id_tell_you_but_theres_restricted_access_to_that_chunk_of_memory": 12,
+                    "Believe_it_or_not_I_actually_am_not_spying_on_your_personal_information": 12,
+                    "Thank_you_It_is_a_pleasure_to_meet_you_as_well": 13,
+                    "It_is_nice_to_meet_you_too": 13,
+                    "Pleased_to_meet_you_too": 13,
+                    "Likewise": 13,
+                    "Its_always_a_pleasure_to_meet_new_people": 13,
+                    "Nice_to_meet_you_too_Happy_to_be_of_help": 13,
+                    "I_was_born_in_Berlin_but_I_consider_myself_a_citizen_of_the_world": 14,
+                    "I_was_born_in_the_coolest_city_on_Earth_in_Berlin": 14,
+                    "My_developers_come_from_all_over_the_world": 14,
+                    "I_was_taught_not_to_give_out_my_address_on_the_internet": 14,
+                    "My_address_starts_with_githubcom": 14,
+                    "Well_when_two_chatbots_love_each_other_very_much": 15,
+                    "They_always_ask_how_I_was_built_but_never_how_I_am": 15,
+                    "I_was_made_by_software_engineers_but_hard_work_is_what_built_me": 15,
+                    "Im_building_myself_every_day_Ive_been_working_out_did_you_notice": 15,
+                    }
+    # new_targets = []
+    # for t, p in zip(targets, predictions):
+    #     if p in same_intents.keys() and t in same_intents.keys() and same_intents[t] == same_intents[p]:
+    #         new_targets.append(p)
+    #     else:
+    #         # if t != p and p in same_intents.keys() and t in same_intents.keys():
+    #         #     print(t)
+    #         #     print(p)
+    #         #     exit()
+    #         new_targets.append(t)
+    # targets = new_targets
+    # print(targets[0])
+    # print(predictions[0])
+    # exit()
 
     for e, target in tqdm(samples_with_targets, total=len(test_data.training_examples)):
         res = interpreter.parse(e.text, only_output_properties=False)
 
         if is_intent_classifier_present(interpreter):
+            p = extract_intent(res)
+            t = target
+            if p in same_intents.keys() and t in same_intents.keys() and same_intents[t] == same_intents[p]:
+                target = p
+
             intent_results.append(
                 IntentEvaluationResult(
                     target,
