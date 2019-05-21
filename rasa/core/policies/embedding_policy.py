@@ -18,6 +18,7 @@ from rasa.core.featurizers import (
     TrackerFeaturizer,
     FullDialogueTrackerFeaturizer,
     LabelTokenizerSingleStateFeaturizer,
+    MaxHistoryTrackerFeaturizer
 )
 from rasa.core.policies.policy import Policy
 
@@ -150,9 +151,12 @@ class EmbeddingPolicy(Policy):
 
     # end default properties (DOC MARKER - don't remove)
 
-    @classmethod
-    def _standard_featurizer(cls):
-        return FullDialogueTrackerFeaturizer(LabelTokenizerSingleStateFeaturizer())
+    @staticmethod
+    def _standard_featurizer(max_history=None):
+        if max_history is None:
+            return FullDialogueTrackerFeaturizer(LabelTokenizerSingleStateFeaturizer())
+        else:
+            return MaxHistoryTrackerFeaturizer(LabelTokenizerSingleStateFeaturizer(), max_history=max_history)
 
     def __init__(
         self,
@@ -180,15 +184,18 @@ class EmbeddingPolicy(Policy):
         copy_attn_debug: Optional['tf.Tensor'] = None,
         all_time_masks: Optional['tf.Tensor'] = None,
         attention_weights=None,
+        max_history: Optional[int] = None,
         **kwargs: Any
     ) -> None:
-        if featurizer:
-            if not isinstance(featurizer, FullDialogueTrackerFeaturizer):
-                raise TypeError(
-                    "Passed tracker featurizer of type {}, "
-                    "should be FullDialogueTrackerFeaturizer."
-                    "".format(type(featurizer).__name__)
-                )
+        # if featurizer:
+        #     if not isinstance(featurizer, FullDialogueTrackerFeaturizer):
+        #         raise TypeError(
+        #             "Passed tracker featurizer of type {}, "
+        #             "should be FullDialogueTrackerFeaturizer."
+        #             "".format(type(featurizer).__name__)
+        #         )
+        if not featurizer:
+            featurizer = self._standard_featurizer(max_history)
         super(EmbeddingPolicy, self).__init__(featurizer, priority)
 
         # flag if to use the same embeddings for user and bot
@@ -350,14 +357,21 @@ class EmbeddingPolicy(Policy):
     def _action_features_for_Y(self, actions_for_Y: np.ndarray) -> np.ndarray:
         """Prepare Y data for training: features for action labels."""
 
-        return np.stack(
-            [
-                np.stack(
-                    [self.encoded_all_actions[action_idx] for action_idx in action_ids]
-                )
-                for action_ids in actions_for_Y
-            ]
-        )
+        if len(actions_for_Y.shape) == 2:
+            return np.stack(
+                [
+                    np.stack(
+                        [self.encoded_all_actions[action_idx] for action_idx in action_ids]
+                    )
+                    for action_ids in actions_for_Y
+                ]
+            )
+        else:
+            return np.stack(
+                [
+                    self.encoded_all_actions[action_idx] for action_idx in actions_for_Y
+                ]
+            )
 
     # noinspection PyPep8Naming
     @staticmethod
@@ -403,7 +417,11 @@ class EmbeddingPolicy(Policy):
         y_for_action_listen = self._create_y_for_action_listen(domain)
 
         # is needed to calculate train accuracy
-        all_Y_d = self._create_all_Y_d(X.shape[1])
+        if isinstance(self.featurizer, FullDialogueTrackerFeaturizer):
+            dial_len = X.shape[1]
+        else:
+            dial_len = 1
+        all_Y_d = self._create_all_Y_d(dial_len)
 
         return SessionData(
             X=X,
@@ -1294,10 +1312,13 @@ class EmbeddingPolicy(Policy):
         neg_labels = tf.zeros_like(logits[:, :, 1:])
         labels = tf.concat([pos_labels, neg_labels], -1)
 
-        if self.scale_loss_by_action_counts:
-            scale_mask = self._loss_scales * mask
+        if isinstance(self.featurizer, FullDialogueTrackerFeaturizer):
+            if self.scale_loss_by_action_counts:
+                scale_mask = self._loss_scales * mask
+            else:
+                scale_mask = mask
         else:
-            scale_mask = mask
+            scale_mask = 1.0
 
         loss = tf.losses.softmax_cross_entropy(labels,
                                                logits,
@@ -1387,11 +1408,8 @@ class EmbeddingPolicy(Policy):
             else:
                 val_dataset = None
 
-            # make sequence length dynamic
-            output_shapes = tuple([(None, None, output_shape[-1]) for output_shape in train_dataset.output_shapes])
-
             iterator = tf.data.Iterator.from_structure(train_dataset.output_types,
-                                                       output_shapes,
+                                                       train_dataset.output_shapes,
                                                        output_classes=train_dataset.output_classes)
 
             self.a_in, self.b_in, self.c_in, self.b_prev_in = iterator.get_next()
@@ -1477,6 +1495,12 @@ class EmbeddingPolicy(Policy):
                 self.dial_embed = self._embed_dialogue_from(cell_output)
 
             # calculate similarities
+            if isinstance(self.featurizer, MaxHistoryTrackerFeaturizer):
+                self.b_in = tf.expand_dims(self.b_in, 1)
+                self.bot_embed = tf.expand_dims(self.bot_embed, 1)
+                self.dial_embed = self.dial_embed[:, -1:, :]
+                mask = mask[:, -1:]
+
             b_raw = tf.reshape(self.b_in, (-1, self.b_in.shape[-1]))
 
             _, i, c = gen_array_ops.unique_with_counts_v2(b_raw, axis=[0])
@@ -1485,8 +1509,8 @@ class EmbeddingPolicy(Policy):
 
             batch_iou_bot = self._tf_calc_iou(b_raw, neg_ids=batch_neg_ids)
             batch_bad_negs = 1. - tf.nn.relu(tf.sign(1. - batch_iou_bot))
-            batch_bad_negs = tf.reshape(batch_bad_negs, (tf.shape(self.bot_embed)[0],
-                                                         tf.shape(self.bot_embed)[1],
+            batch_bad_negs = tf.reshape(batch_bad_negs, (tf.shape(self.dial_embed)[0],
+                                                         tf.shape(self.dial_embed)[1],
                                                          -1))
 
             neg_ids = tf.random.categorical(tf.log(tf.ones((tf.shape(b_raw)[0], tf.shape(all_actions)[0]))), self.num_neg)
@@ -1500,6 +1524,7 @@ class EmbeddingPolicy(Policy):
                                              -1))
 
             dial_embed_flat = tf.reshape(self.dial_embed, (-1, self.dial_embed.shape[-1]))
+
             tiled_dial_embed = self._tf_sample_neg(dial_embed_flat, neg_ids=batch_neg_ids, first_only=True)
             tiled_dial_embed = tf.reshape(tiled_dial_embed, (tf.shape(self.dial_embed)[0],
                                                              tf.shape(self.dial_embed)[1],
@@ -1519,7 +1544,10 @@ class EmbeddingPolicy(Policy):
             self.sim_op, sim_bot_emb, sim_dial_emb = self._tf_sim(tiled_dial_embed, tiled_bot_embed, mask)
 
             # construct loss
-            self._loss_scales = self._scale_loss_by_count_actions(self.a_in, self.b_in, self.c_in, self.b_prev_in)
+            if isinstance(self.featurizer, FullDialogueTrackerFeaturizer) and self.scale_loss_by_action_counts:
+                self._loss_scales = self._scale_loss_by_count_actions(self.a_in, self.b_in, self.c_in, self.b_prev_in)
+            else:
+                self._loss_scales = None
             # loss = self._tf_loss_2(self.sim_op, sim_bot_emb, sim_dial_emb, sims_rnn_to_max, bad_negs, mask)
             loss = self._tf_loss_2(self.sim_op, sim_bot_emb, sim_dial_emb, sims_rnn_to_max, bad_negs, mask, batch_bad_negs)
 
@@ -1601,6 +1629,9 @@ class EmbeddingPolicy(Policy):
                     self.all_time_masks = self._all_time_masks_from(final_state)
 
                 self.dial_embed = self._embed_dialogue_from(cell_output)
+
+            if isinstance(self.featurizer, MaxHistoryTrackerFeaturizer):
+                self.dial_embed = self.dial_embed[:, -1:, :]
 
             self.sim_op, _, _ = self._tf_sim(self.dial_embed, self.bot_embed, mask)
 
