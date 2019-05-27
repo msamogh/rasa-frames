@@ -91,7 +91,7 @@ class EmbeddingPolicy(Policy):
         "num_heads": 4,
         # number of units in rnn cell
         "rnn_size": 64,
-        "num_rnn_layers": 2,
+        "num_rnn_layers": 1,
         # training parameters
         # flag if to turn on layer normalization for lstm cell
         "layer_norm": True,
@@ -799,7 +799,7 @@ class EmbeddingPolicy(Policy):
         # it seems to be factor of 4 for transformer architectures in t2t
         hparams.filter_size = self.rnn_size * 4
         hparams.num_heads = self.num_heads
-        # hparams.relu_dropout = self.droprate
+        hparams.relu_dropout = self.droprate["rnn"]
         hparams.pos = self.pos_encoding
 
         hparams.max_length = self.max_seq_length
@@ -1835,12 +1835,17 @@ class EmbeddingPolicy(Policy):
             },
         )
 
+        # TODO assume we used inner:
+        self.similarity_type = "inner"
+
         result = _sim[0, -1, :]
         if self.similarity_type == "cosine":
             # clip negative values to zero
             result[result < 0] = 0
         elif self.similarity_type == "inner":
-            # normalize result to [0, 1] with softmax
+            # normalize result to [0, 1] with softmax but only over 3*num_neg+1 values
+            low_ids = result.argsort()[::-1][3*self.num_neg+1:]
+            result[low_ids] += -np.inf
             result = np.exp(result)
             result /= np.sum(result)
 

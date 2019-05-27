@@ -177,7 +177,7 @@ class LabelTokenizerSingleStateFeaturizer(SingleStateFeaturizer):
         """Creates internal vocabularies for user intents
         and bot actions to use for featurization"""
         self.user_labels = domain.intent_states + domain.entity_states
-        self.slot_labels = domain.slot_states
+        self.slot_labels = domain.slot_states + domain.form_states
         self.bot_labels = domain.action_names
 
         if self.use_shared_vocab:

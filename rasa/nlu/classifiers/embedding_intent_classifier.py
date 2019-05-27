@@ -1040,7 +1040,8 @@ class EmbeddingIntentClassifier(Component):
             # clip negative values to zero
             message_sim[message_sim < 0] = 0
         elif self.similarity_type == 'inner':
-            # normalize result to [0, 1] with softmax
+            # normalize result to [0, 1] with softmax but only over 3*num_neg+1 values
+            message_sim[3*self.num_neg+1:] += -np.inf
             message_sim = np.exp(message_sim)
             message_sim /= np.sum(message_sim)
 
