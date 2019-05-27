@@ -1,10 +1,8 @@
 import copy
 import logging
-import typing
 from collections import deque
 from enum import Enum
-from typing import Generator, Dict, Text, Any, Optional, Iterator, Type
-from typing import List
+from typing import Dict, Text, Any, Optional, Iterator, Type, List
 
 from rasa.core import events
 from rasa.core.actions.action import ACTION_LISTEN_NAME
@@ -20,12 +18,10 @@ from rasa.core.events import (
     BotUttered,
     Form,
 )
+from rasa.core.domain import Domain
 from rasa.core.slots import Slot
 
 logger = logging.getLogger(__name__)
-
-if typing.TYPE_CHECKING:
-    from rasa.core.domain import Domain
 
 
 class EventVerbosity(Enum):
@@ -148,7 +144,7 @@ class DialogueStateTracker(object):
             "latest_action_name": self.latest_action_name,
         }
 
-    def past_states(self, domain: "Domain") -> deque:
+    def past_states(self, domain) -> deque:
         """Generate the past states of this tracker based on the history."""
 
         generated_states = domain.states_for_tracker_history(self)
@@ -400,13 +396,18 @@ class DialogueStateTracker(object):
 
         return Dialogue(self.sender_id, list(self.events))
 
-    def update(self, event: Event) -> None:
+    def update(self, event: Event, domain: Optional[Domain] = None) -> None:
         """Modify the state of the tracker according to an ``Event``. """
         if not isinstance(event, Event):  # pragma: no cover
             raise ValueError("event to log must be an instance of a subclass of Event.")
 
         self.events.append(event)
         event.apply_to(self)
+
+        if domain and isinstance(event, UserUttered):
+            # store all entities as slots
+            for e in domain.slots_for_entities(event.parse_data["entities"]):
+                self.update(e)
 
     def export_stories(self, e2e=False) -> Text:
         """Dump the tracker as a story in the Rasa Core story format.
