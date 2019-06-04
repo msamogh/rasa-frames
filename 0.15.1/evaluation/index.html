@@ -1,0 +1,547 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>Evaluating and Improving Models</title>
+    <link rel="stylesheet" href="../_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/banner.css" type="text/css" />
+    <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+    <script type="text/javascript" src="../_static/jquery.js"></script>
+    <script type="text/javascript" src="../_static/underscore.js"></script>
+    <script type="text/javascript" src="../_static/doctools.js"></script>
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <link rel="index" title="Index" href="../genindex/" />
+    <link rel="search" title="Search" href="../search/" />
+    <link rel="next" title="Confidence and Fallback Intents" href="../fallback/" />
+    <link rel="prev" title="Entity Extraction" href="../entities/" />
+
+ <!-- Google Tag Manager -->
+    <script type="opt-in" data-type="application/javascript" data-name="googletagmanager">(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
+      new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
+      j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
+      'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
+      })(window,document,'script','dataLayer','GTM-MMHSZCS');</script>
+    <!-- End Google Tag Manager -->
+   
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+  <meta itemprop="image" content="https://rasa.com/assets/img/facebook-og.png">
+  <meta property="og:title" content="Evaluating and Improving Models" />
+  <meta property="og:type" content="website" />
+  <meta property="og:image" content="https://rasa.com/assets/img/facebook-og.png" />
+  <meta property="og:url" content="https://legacy-docs.rasa.com/docs/nlu/evaluation" />
+  
+    <meta name="description" content="Evaluate and validate your machine learning models for open source
+library Rasa NLU to improve intent recognition and entity extraction." />
+    <meta itemprop="description" content="Evaluate and validate your machine learning models for open source
+library Rasa NLU to improve intent recognition and entity extraction.">
+    <meta name="twitter:description" content="Evaluate and validate your machine learning models for open source
+library Rasa NLU to improve intent recognition and entity extraction." />
+    <meta property="og:description" content="Evaluate and validate your machine learning models for open source
+library Rasa NLU to improve intent recognition and entity extraction." />
+  
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:site" content="@Rasa_HQ">
+  <meta name="twitter:title" content="Evaluating and Improving Models">
+  <meta name="twitter:creator" content="@Rasa_HQ">
+  <meta name="twitter:image" content="https://rasa.com/assets/img/facebook-og.png">
+
+  <link rel="stylesheet" href="../_static/xq-light.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/fontawesome/css/fontawesome-all.css" type="text/css" />
+  <script defer type="text/javascript" src="../_static/config.js"></script>
+  <script defer type="text/javascript" src="../_static/klaro.js"></script>
+  <script type="text/javascript" src="https://storage.googleapis.com/docs-theme/clipboard.min.js"></script>
+  
+  
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/docsearch.js@2/dist/cdn/docsearch.min.css" />
+
+
+  </head><body>
+
+<!-- Google Tag Manager (noscript) -->
+<noscript><iframe data-name="googletagmanager" data-src="https://www.googletagmanager.com/ns.html?id=GTM-MMHSZCS" height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
+<!-- End Google Tag Manager (noscript) -->
+
+<div class="nav-top">
+  <div class="nav-container">
+    <a href="/docs" class="brand-link">
+        <h1 class="brand">
+            <img src="../_static/rasa_logo.svg" width="80px" height="40px" title="Rasa logo" alt="Rasa logo">
+        </h1>
+        <span class="logo extension">docs</span>
+    </a>
+
+    <ul class="nav">
+      <input type="text" class="search" placeholder="Search">
+      
+        
+          <li class="active"><a href=/docs/nlu/>NLU</a></li>
+        
+      
+        
+          <li><a href=/docs/core/>Core</a></li>
+        
+      
+        
+          <li><a href=/docs/platform/>Platform</a></li>
+        
+      
+
+      <li>
+        <a href="https://github.com/rasaHQ/" target="_blank"><button class="button btn-ghost btn-small"> <i class="fab fa-github"></i>GitHub</button></a>
+      </li>
+
+      <li>
+        <a href="https://forum.rasa.com" target="_blank"><button class="button btn-small">Ask the Community</button></a>
+      </li>
+
+    </ul>
+  </div>
+</div>
+
+  <div class="sidebar-extended"></div>
+  <div class="document">
+
+    
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper"><p class="caption"><span class="caption-text">Getting Started</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../quickstart/">Try It Out</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../installation/">Installation</a></li>
+</ul>
+<p class="caption"><span class="caption-text">User Guide</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../choosing_pipeline/">Choosing a Rasa NLU Pipeline</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../languages/">Language Support</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../entities/">Entity Extraction</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Evaluating and Improving Models</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../fallback/">Confidence and Fallback Intents</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../faq/">Frequently Asked Questions</a></li>
+</ul>
+<p class="caption"><span class="caption-text">API Reference</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../dataformat/">Training Data Format</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../components/">Component Configuration</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../config/">Server Configuration</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../http/">HTTP API</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../python/">Python API</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../persist/">Storing Models in the Cloud</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../endpoint_configuration/">Endpoint Configuration</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../docker/">Running in Docker</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Developer Documentation</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../customcomponents/">Custom Components</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../migrations/">Migration Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../license/">License</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../changelog/">Change Log</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../support/">Getting Support</a></li>
+</ul>
+
+<div class="versions">
+    <p class="caption">Versions</p>
+    <div class="versions-content">
+      <div>
+        <span class="current-version">
+          viewing: 0.15.1
+        </span>
+      </div>
+      <div class="other-versions">
+          <p>tags</p>
+          <div class="dropdown-content">
+              <a href="../../0.15.1/evaluation/">0.15.1</a>
+              <a href="../../0.15.0/evaluation/">0.15.0</a>
+              <a href="../../0.14.6/evaluation/">0.14.6</a>
+              <a href="../../0.14.5/evaluation/">0.14.5</a>
+              <a href="../../0.14.4/evaluation/">0.14.4</a>
+              <a href="../../0.14.3/evaluation/">0.14.3</a>
+              <a href="../../0.14.2/evaluation/">0.14.2</a>
+              <a href="../../0.14.1/evaluation/">0.14.1</a>
+              <a href="../../0.14.0/evaluation/">0.14.0</a>
+              <a href="../../0.13.8/evaluation/">0.13.8</a>
+              <a href="../../0.13.7/evaluation/">0.13.7</a>
+              <a href="../../0.13.6/evaluation/">0.13.6</a>
+              <a href="../../0.13.5/evaluation/">0.13.5</a>
+              <a href="../../0.13.4/evaluation/">0.13.4</a>
+              <a href="../../0.13.3/evaluation/">0.13.3</a>
+              <a href="../../0.13.2/evaluation/">0.13.2</a>
+              <a href="../../0.13.1/evaluation/">0.13.1</a>
+              <a href="../../0.13.0/evaluation/">0.13.0</a>
+              <a href="../../0.12.4/evaluation/">0.12.4</a>
+              <a href="../../0.12.3/evaluation/">0.12.3</a>
+              <a href="../../0.12.2/evaluation/">0.12.2</a>
+              <a href="../../0.12.1/evaluation/">0.12.1</a>
+              <a href="../../0.12.0/evaluation/">0.12.0</a>
+              <a href="../../0.11.4/evaluation/">0.11.4</a>
+              <a href="../../0.10.6/index/">0.10.6</a>
+              <a href="../../0.9.2/index/">0.9.2</a>
+              <a href="../../0.8.12/index/">0.8.12</a>
+              <a href="../../0.7.4/index/">0.7.4</a>
+          </div>
+      </div>
+    </div>
+</div>
+
+
+        </div>
+      </div>
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  
+
+
+
+
+
+<div class="section" id="evaluating-and-improving-models">
+<span id="section-evaluation"></span><h1>Evaluating and Improving Models<a class="headerlink" href="#evaluating-and-improving-models" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="improving-your-models-from-feedback">
+<h2>Improving your models from feedback<a class="headerlink" href="#improving-your-models-from-feedback" title="Permalink to this headline">¶</a></h2>
+<p>Once you have a version of your bot running, the Rasa NLU server will log
+every request made to the <code class="docutils literal notranslate"><span class="pre">/parse</span></code> endpoint to a file. By default
+these are saved in the folder <code class="docutils literal notranslate"><span class="pre">logs</span></code>.</p>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="p">{</span>
+  <span class="s2">&quot;user_input&quot;</span><span class="o">:</span><span class="p">{</span>
+    <span class="s2">&quot;entities&quot;</span><span class="o">:</span><span class="p">[]</span>   <span class="p">],</span>
+    <span class="s2">&quot;intent&quot;</span><span class="o">:</span><span class="p">{</span>
+      <span class="s2">&quot;confidence&quot;</span><span class="o">:</span><span class="mf">0.32584617693743012</span><span class="p">,</span>
+      <span class="s2">&quot;name&quot;</span><span class="o">:</span><span class="s2">&quot;restaurant_search&quot;</span>
+    <span class="p">},</span>
+    <span class="s2">&quot;text&quot;</span><span class="o">:</span><span class="s2">&quot;nice thai places&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;intent_ranking&quot;</span><span class="o">:</span><span class="p">[</span> <span class="p">...</span> <span class="p">]</span>
+  <span class="p">},</span>
+  <span class="p">...</span>
+  <span class="s2">&quot;model&quot;</span><span class="o">:</span><span class="s2">&quot;default&quot;</span><span class="p">,</span>
+  <span class="s2">&quot;log_time&quot;</span><span class="o">:</span><span class="mf">1504092543.036279</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p>The things your users say are the best source of training data for refining your models.
+Of course your model won’t be perfect, so you will have to manually go through
+each of these predictions and correct any mistakes before adding them to your training data.
+In this case, the entity ‘thai’ was not picked up as a cuisine.</p>
+</div>
+<div class="section" id="evaluating-models">
+<h2>Evaluating Models<a class="headerlink" href="#evaluating-models" title="Permalink to this headline">¶</a></h2>
+<p>How is your model performing? Do you have enough data? Are your intents and entities well-designed?</p>
+<p>Rasa NLU has an <code class="docutils literal notranslate"><span class="pre">evaluate</span></code> mode which helps you answer these questions.
+A standard technique in machine learning is to keep some data separate as a <em>test set</em>.
+If you’ve done this, you can see how well your model predicts the test cases using this command:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>python -m rasa_nlu.evaluate <span class="se">\</span>
+    --data data/examples/rasa/demo-rasa.json <span class="se">\</span>
+    --model projects/default/model_20180323-145833
+</pre></div>
+</div>
+<p>Where the <code class="docutils literal notranslate"><span class="pre">--data</span></code> argument points to your test data, and <code class="docutils literal notranslate"><span class="pre">--model</span></code> points to your trained model.</p>
+<p>If you don’t have a separate test set, you can
+still estimate how well your model generalises using cross-validation.
+To do this, run the evaluation script with the <code class="docutils literal notranslate"><span class="pre">--mode</span> <span class="pre">crossvalidation</span></code> flag:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>python -m rasa_nlu.evaluate <span class="se">\</span>
+    --data data/examples/rasa/demo-rasa.json <span class="se">\</span>
+    --config sample_configs/config_pretrained_embeddings_spacy.yml <span class="se">\</span>
+    --mode crossvalidation
+</pre></div>
+</div>
+<p>You cannot specify a model in this mode because
+a new model will be trained on part of the data
+for every cross-validation fold.</p>
+</div>
+<div class="section" id="intent-classification">
+<h2>Intent Classification<a class="headerlink" href="#intent-classification" title="Permalink to this headline">¶</a></h2>
+<p>The evaluation script will produce a report, confusion matrix
+and confidence histogram for your model.</p>
+<p>The report logs precision, recall and f1 measure for
+each intent and entity, as well as provide an overall average.
+You can save these reports as JSON files using the <cite>–report</cite> flag.</p>
+<p>The confusion matrix shows you which
+intents are mistaken for others; any samples which have been
+incorrectly predicted are logged and saved to a file
+called <code class="docutils literal notranslate"><span class="pre">errors.json</span></code> for easier debugging.</p>
+<p>The histogram that the script produces allows you to visualise the
+confidence distribution for all predictions,
+with the volume of correct and incorrect predictions being displayed by
+blue and red bars respectively.
+Improving the quality of your training data will move the blue
+histogram bars to the right and the red histogram bars
+to the left of the plot.</p>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">A confusion matrix will <strong>only</strong> be created if you are evaluating a model on a test set.
+In cross-validation mode, the confusion matrix will not be generated.</p>
+</div>
+<div class="admonition warning">
+<p class="first admonition-title">Warning</p>
+<p class="last">If any of your entities are incorrectly annotated, your evaluation may fail. One common problem
+is that an entity cannot stop or start inside a token.
+For example, if you have an example for a <code class="docutils literal notranslate"><span class="pre">name</span></code> entity
+like <code class="docutils literal notranslate"><span class="pre">[Brian](name)'s</span> <span class="pre">house</span></code>, this is only valid if your tokenizer splits <code class="docutils literal notranslate"><span class="pre">Brian's</span></code> into
+multiple tokens. A whitespace tokenizer would not work in this case.</p>
+</div>
+</div>
+<div class="section" id="entity-extraction">
+<h2>Entity Extraction<a class="headerlink" href="#entity-extraction" title="Permalink to this headline">¶</a></h2>
+<p>The <code class="docutils literal notranslate"><span class="pre">CRFEntityExtractor</span></code> is the only entity extractor which you train using your own data,
+and so is the only one which will be evaluated. If you use the spaCy or duckling
+pre-trained entity extractors, Rasa NLU will not include these in the evaluation.</p>
+<p>Rasa NLU will report recall, precision, and f1 measure for each entity type that
+<code class="docutils literal notranslate"><span class="pre">CRFEntityExtractor</span></code> is trained to recognize.</p>
+<div class="section" id="entity-scoring">
+<h3>Entity Scoring<a class="headerlink" href="#entity-scoring" title="Permalink to this headline">¶</a></h3>
+<p>To evaluate entity extraction we apply a simple tag-based approach. We don’t consider BILOU tags, but only the
+entity type tags on a per token basis. For location entity like “near Alexanderplatz” we
+expect the labels <code class="docutils literal notranslate"><span class="pre">LOC</span> <span class="pre">LOC</span></code> instead of the BILOU-based <code class="docutils literal notranslate"><span class="pre">B-LOC</span> <span class="pre">L-LOC</span></code>. Our approach is more lenient
+when it comes to evaluation, as it rewards partial extraction and does not punish the splitting of entities.
+For example, the given the aforementioned entity “near Alexanderplatz” and a system that extracts
+“Alexanderplatz”, this reward the extraction of “Alexanderplatz” and punish the missed out word “near”.
+The BILOU-based approach, however, would label this as a complete failure since it expects Alexanderplatz
+to be labeled as a last token in an entity (<code class="docutils literal notranslate"><span class="pre">L-LOC</span></code>) instead of a single token entity (<code class="docutils literal notranslate"><span class="pre">U-LOC</span></code>). Also note,
+a split extraction of “near” and “Alexanderplatz” would get full scores on our approach and zero on the
+BILOU-based one.</p>
+<p>Here’s a comparison between the two scoring mechanisms for the phrase “near Alexanderplatz tonight”:</p>
+<table border="1" class="docutils">
+<colgroup>
+<col width="50%" />
+<col width="24%" />
+<col width="27%" />
+</colgroup>
+<thead valign="bottom">
+<tr class="row-odd"><th class="head">extracted</th>
+<th class="head">Simple tags (score)</th>
+<th class="head">BILOU tags (score)</th>
+</tr>
+</thead>
+<tbody valign="top">
+<tr class="row-even"><td>[near Alexanderplatz](loc) [tonight](time)</td>
+<td>loc loc time (3)</td>
+<td>B-loc L-loc U-time (3)</td>
+</tr>
+<tr class="row-odd"><td>[near](loc) [Alexanderplatz](loc) [tonight](time)</td>
+<td>loc loc time (3)</td>
+<td>U-loc U-loc U-time (1)</td>
+</tr>
+<tr class="row-even"><td>near [Alexanderplatz](loc) [tonight](time)</td>
+<td>O   loc time (2)</td>
+<td>O     U-loc U-time (1)</td>
+</tr>
+<tr class="row-odd"><td>[near](loc) Alexanderplatz [tonight](time)</td>
+<td>loc O   time (2)</td>
+<td>U-loc O     U-time (1)</td>
+</tr>
+<tr class="row-even"><td>[near Alexanderplatz tonight](loc)</td>
+<td>loc loc loc  (2)</td>
+<td>B-loc I-loc L-loc  (1)</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<div class="section" id="evaluation-parameters">
+<h2>Evaluation Parameters<a class="headerlink" href="#evaluation-parameters" title="Permalink to this headline">¶</a></h2>
+<p>There are a number of parameters you can pass to the evaluation script. To see all options,
+run:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>$ python -m rasa_nlu.evaluate --help
+</pre></div>
+</div>
+<p>Which will produce the following output:</p>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>Calling `rasa_nlu.evaluate` is deprecated. Please use `rasa_nlu.test` instead.
+usage: evaluate.py [-h] [--debug] [-v] -d DATA [--mode MODE] [-c CONFIG]
+                   [-m MODEL] [-f FOLDS] [--report [REPORT]]
+                   [--successes [SUCCESSES]] [--errors ERRORS]
+                   [--histogram HISTOGRAM] [--confmat CONFMAT]
+
+evaluate a Rasa NLU pipeline with cross validation or on external data
+
+optional arguments:
+  -h, --help            show this help message and exit
+  --debug               Print lots of debugging statements. Sets logging level
+                        to DEBUG
+  -v, --verbose         Be verbose. Sets logging level to INFO
+  -d DATA, --data DATA  file containing training/evaluation data
+  --mode MODE           evaluation|crossvalidation (evaluate pretrained model
+                        or train model by crossvalidation)
+  -c CONFIG, --config CONFIG
+                        model configuration file (crossvalidation only)
+  -m MODEL, --model MODEL
+                        path to model (evaluation only)
+  -f FOLDS, --folds FOLDS
+                        number of CV folds (crossvalidation only)
+  --report [REPORT]     output path to save the intent/entitymetrics report
+  --successes [SUCCESSES]
+                        output path to save successful predictions
+  --errors ERRORS       output path to save model errors
+  --histogram HISTOGRAM
+                        output path for the confidence histogram
+  --confmat CONFMAT     output path for the confusion matrix plot
+</pre></div>
+</div>
+</div>
+<div class="section" id="have-questions-or-feedback">
+<h2>Have questions or feedback?<a class="headerlink" href="#have-questions-or-feedback" title="Permalink to this headline">¶</a></h2>
+<p>We have a very active support community on <a class="reference external" href="https://forum.rasa.com">Rasa Community Forum</a>
+that is happy to help you with your questions. If you have any feedback for us or a specific
+suggestion for improving the docs, feel free to share it by creating an issue on Rasa NLU
+<a class="reference external" href="https://github.com/RasaHQ/rasa_nlu">GitHub repository</a>.</p>
+</div>
+</div>
+
+
+	    <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/docsearch.js@2/dist/cdn/docsearch.min.js"></script>
+	    <script type="text/javascript"> docsearch({
+	     apiKey: '1f9e0efb89e98543f6613a60f847b176',
+	     indexName: 'rasa',
+	     inputSelector: 'body > div.nav-top > .nav-container > .nav > input',
+	     debug: false // Set debug to true if you want to inspect the dropdown
+	    });
+	    </script>
+          </div>
+
+          <div class="footer">
+
+            <div class="social">
+              <a href="https://github.com/RasaHQ" target="_blank" title="GitHub"><i class="fab fa-github"></i></a>
+              <a href="https://stackoverflow.com/search?q=rasa" target="_blank" title="Stack Overflow"><i class="fab fa-stack-overflow"></i></a>
+              <a href="https://www.youtube.com/channel/UCJ0V6493mLvqdiVwOKWBODQ" target="_blank" title="YouTube"><i class="fab fa-youtube"></i></a>
+              <a href="https://twitter.com/rasa_hq" target="_blank" title="Twitter"><i class="fab fa-twitter"></i></a>
+            </div>
+
+            <div class="copyright small">
+            &copy;2019, Rasa Technologies GmbH | <a href="https://rasa.com/imprint/" target="_blank">Imprint</a> | <a href="https://rasa.com/privacy-policy/" target="_blank">Privacy Policy</a>
+            
+            </div>
+
+          </div>
+          
+        </div>
+      </div>
+    <div class="clearer"></div>
+  </div>
+
+    
+
+  <script>
+    window.dataLayer = window.dataLayer || [];
+
+    function gtag(...arguments) {
+      dataLayer.push(...arguments);
+    }
+    gtag('js', new Date());
+    gtag('config', 'UA-87333416-1', {
+      'anonymize_ip': true,
+    });
+  </script>
+  <script src="https://rasa.com/assets/js/js.cookies.js"></script>
+  <script async defer src="https://buttons.github.io/buttons.js"></script>
+  <!-- Global site tag (gtag.js) - Google Analytics -->
+  <script type="opt-in" data-name="googleanalytics" data-type="text/javascript" data-src="https://www.googletagmanager.com/gtag/js?id=UA-87333416-1"></script>
+  <script type="opt-in" data-name="googleanalytics" data-type="text/javascript" data-src="https://rasa.com/assets/js/userId.js"></script>
+
+  <script type="text/javascript">
+    var clipboard = new ClipboardJS('.copyable');
+    clipboard.on('success', function(e) {
+      gtag('event', e.action, {
+        'event_category': 'code',
+        'event_label': e.text
+      });
+      const id = e.text.replace(' ','-');
+      document.getElementById(id).classList.add('visible');
+      setTimeout(function(){
+        document.getElementById(id).classList.remove('visible');},
+        800
+      );
+    });
+    clipboard.on('error', function(e) {
+      console.log(e);
+    });
+  </script>
+
+  <!-- onsite anchor fix (otherwise anchors scroll to far) -->
+  <script>
+    /* Adapted from https://stackoverflow.com/a/13067009/1906073 */
+    (function(document, history, location) {
+      var HISTORY_SUPPORT = !!(history && history.pushState);
+
+      var anchorScrolls = {
+        ANCHOR_REGEX: /^#[^ ]+$/,
+        OFFSET_HEIGHT_PX: 66,
+
+        /**
+         * Establish events, and fix initial scroll position if a hash is provided.
+         */
+        init: function() {
+          this.scrollToCurrent();
+          $(window).on('hashchange', $.proxy(this, 'scrollToCurrent'));
+          $('body').on('click', 'a', $.proxy(this, 'delegateAnchors'));
+        },
+
+        /**
+         * Return the offset amount to deduct from the normal scroll position.
+         * Modify as appropriate to allow for dynamic calculations
+         */
+        getFixedOffset: function() {
+          return this.OFFSET_HEIGHT_PX;
+        },
+
+        /**
+         * If the provided href is an anchor which resolves to an element on the
+         * page, scroll to it.
+         * @param  {String} href
+         * @return {Boolean} - Was the href an anchor.
+         */
+        scrollIfAnchor: function(href, pushToHistory) {
+          var match, anchorOffset;
+
+          if(!this.ANCHOR_REGEX.test(href)) {
+            return false;
+          }
+
+          match = document.getElementById(href.slice(1));
+
+          if(match) {
+            anchorOffset = $(match).offset().top - this.getFixedOffset();
+            $('html, body').animate({ scrollTop: anchorOffset});
+
+            // Add the state to history as-per normal anchor links
+            if(HISTORY_SUPPORT && pushToHistory) {
+              history.pushState({}, document.title, location.pathname + href);
+            }
+          }
+
+          return !!match;
+        },
+
+        /**
+         * Attempt to scroll to the current location's hash.
+         */
+        scrollToCurrent: function(e) {
+          if(this.scrollIfAnchor(window.location.hash) && e) {
+            e.preventDefault();
+          }
+        },
+
+        /**
+         * If the click event's target was an anchor, fix the scroll position.
+         */
+        delegateAnchors: function(e) {
+          var elem = e.target;
+
+          if(this.scrollIfAnchor(elem.getAttribute('href'), true)) {
+            e.preventDefault();
+          }
+        }
+      };
+
+      $(document).ready($.proxy(anchorScrolls, 'init'));
+    })(window.document, window.history, window.location);
+
+  </script>
+  </body>
+</html>

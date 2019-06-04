@@ -1,0 +1,592 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>Getting Started with Rasa NLU</title>
+    <link rel="stylesheet" href="../_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/banner.css" type="text/css" />
+    <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+    <script type="text/javascript" src="../_static/jquery.js"></script>
+    <script type="text/javascript" src="../_static/underscore.js"></script>
+    <script type="text/javascript" src="../_static/doctools.js"></script>
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <link rel="index" title="Index" href="../genindex/" />
+    <link rel="search" title="Search" href="../search/" />
+    <link rel="next" title="Installation" href="../installation/" />
+    <link rel="prev" title="Rasa NLU: Language Understanding for chatbots and AI assistants" href="../" />
+
+ <!-- Google Tag Manager -->
+    <script type="opt-in" data-type="application/javascript" data-name="googletagmanager">(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
+      new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
+      j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
+      'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
+      })(window,document,'script','dataLayer','GTM-MMHSZCS');</script>
+    <!-- End Google Tag Manager -->
+   
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+  <meta itemprop="image" content="https://rasa.com/assets/img/facebook-og.png">
+  <meta property="og:title" content="Getting Started with Rasa NLU" />
+  <meta property="og:type" content="website" />
+  <meta property="og:image" content="https://rasa.com/assets/img/facebook-og.png" />
+  <meta property="og:url" content="https://legacy-docs.rasa.com/docs/nlu/quickstart" />
+  
+    <meta name="description" content="Check out the tutorial for open source NLP library as an on premise
+solution for on premise intent recognition and entity extraction." />
+    <meta itemprop="description" content="Check out the tutorial for open source NLP library as an on premise
+solution for on premise intent recognition and entity extraction.">
+    <meta name="twitter:description" content="Check out the tutorial for open source NLP library as an on premise
+solution for on premise intent recognition and entity extraction." />
+    <meta property="og:description" content="Check out the tutorial for open source NLP library as an on premise
+solution for on premise intent recognition and entity extraction." />
+  
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:site" content="@Rasa_HQ">
+  <meta name="twitter:title" content="Getting Started with Rasa NLU">
+  <meta name="twitter:creator" content="@Rasa_HQ">
+  <meta name="twitter:image" content="https://rasa.com/assets/img/facebook-og.png">
+
+  <link rel="stylesheet" href="../_static/xq-light.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/fontawesome/css/fontawesome-all.css" type="text/css" />
+  <script defer type="text/javascript" src="../_static/config.js"></script>
+  <script defer type="text/javascript" src="../_static/klaro.js"></script>
+  <script type="text/javascript" src="https://storage.googleapis.com/docs-theme/clipboard.min.js"></script>
+  
+  
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/docsearch.js@2/dist/cdn/docsearch.min.css" />
+
+
+  </head><body>
+
+<!-- Google Tag Manager (noscript) -->
+<noscript><iframe data-name="googletagmanager" data-src="https://www.googletagmanager.com/ns.html?id=GTM-MMHSZCS" height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
+<!-- End Google Tag Manager (noscript) -->
+
+<div class="nav-top">
+  <div class="nav-container">
+    <a href="/docs" class="brand-link">
+        <h1 class="brand">
+            <img src="../_static/rasa_logo.svg" width="80px" height="40px" title="Rasa logo" alt="Rasa logo">
+        </h1>
+        <span class="logo extension">docs</span>
+    </a>
+
+    <ul class="nav">
+      <input type="text" class="search" placeholder="Search">
+      
+        
+          <li class="active"><a href=/docs/nlu/>NLU</a></li>
+        
+      
+        
+          <li><a href=/docs/core/>Core</a></li>
+        
+      
+        
+          <li><a href=/docs/platform/>Platform</a></li>
+        
+      
+
+      <li>
+        <a href="https://github.com/rasaHQ/" target="_blank"><button class="button btn-ghost btn-small"> <i class="fab fa-github"></i>GitHub</button></a>
+      </li>
+
+      <li>
+        <a href="https://forum.rasa.com" target="_blank"><button class="button btn-small">Ask the Community</button></a>
+      </li>
+
+    </ul>
+  </div>
+</div>
+
+  <div class="sidebar-extended"></div>
+  <div class="document">
+
+    
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper"><p class="caption"><span class="caption-text">Getting Started</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Try It Out</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../installation/">Installation</a></li>
+</ul>
+<p class="caption"><span class="caption-text">User Guide</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../choosing_pipeline/">Choosing a Rasa NLU Pipeline</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../languages/">Language Support</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../entities/">Entity Extraction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../evaluation/">Evaluating and Improving Models</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../fallback/">Confidence and Fallback Intents</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../faq/">Frequently Asked Questions</a></li>
+</ul>
+<p class="caption"><span class="caption-text">API Reference</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../dataformat/">Training Data Format</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../components/">Component Configuration</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../config/">Server Configuration</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../http/">HTTP API</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../python/">Python API</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../persist/">Storing Models in the Cloud</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../endpoint_configuration/">Endpoint Configuration</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../docker/">Running in Docker</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Developer Documentation</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../customcomponents/">Custom Components</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../migrations/">Migration Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../license/">License</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../changelog/">Change Log</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../support/">Getting Support</a></li>
+</ul>
+
+<div class="versions">
+    <p class="caption">Versions</p>
+    <div class="versions-content">
+      <div>
+        <span class="current-version">
+          viewing: 0.15.1
+        </span>
+      </div>
+      <div class="other-versions">
+          <p>tags</p>
+          <div class="dropdown-content">
+              <a href="../../0.15.1/quickstart/">0.15.1</a>
+              <a href="../../0.15.0/quickstart/">0.15.0</a>
+              <a href="../../0.14.6/quickstart/">0.14.6</a>
+              <a href="../../0.14.5/quickstart/">0.14.5</a>
+              <a href="../../0.14.4/quickstart/">0.14.4</a>
+              <a href="../../0.14.3/quickstart/">0.14.3</a>
+              <a href="../../0.14.2/quickstart/">0.14.2</a>
+              <a href="../../0.14.1/quickstart/">0.14.1</a>
+              <a href="../../0.14.0/quickstart/">0.14.0</a>
+              <a href="../../0.13.8/quickstart/">0.13.8</a>
+              <a href="../../0.13.7/quickstart/">0.13.7</a>
+              <a href="../../0.13.6/quickstart/">0.13.6</a>
+              <a href="../../0.13.5/quickstart/">0.13.5</a>
+              <a href="../../0.13.4/quickstart/">0.13.4</a>
+              <a href="../../0.13.3/quickstart/">0.13.3</a>
+              <a href="../../0.13.2/quickstart/">0.13.2</a>
+              <a href="../../0.13.1/quickstart/">0.13.1</a>
+              <a href="../../0.13.0/quickstart/">0.13.0</a>
+              <a href="../../0.12.4/quickstart/">0.12.4</a>
+              <a href="../../0.12.3/index/">0.12.3</a>
+              <a href="../../0.12.2/index/">0.12.2</a>
+              <a href="../../0.12.1/index/">0.12.1</a>
+              <a href="../../0.12.0/index/">0.12.0</a>
+              <a href="../../0.11.4/index/">0.11.4</a>
+              <a href="../../0.10.6/index/">0.10.6</a>
+              <a href="../../0.9.2/index/">0.9.2</a>
+              <a href="../../0.8.12/index/">0.8.12</a>
+              <a href="../../0.7.4/index/">0.7.4</a>
+          </div>
+      </div>
+    </div>
+</div>
+
+
+        </div>
+      </div>
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  
+
+
+
+
+
+<div class="section" id="getting-started-with-rasa-nlu">
+<span id="tutorial"></span><span id="section-quickstart"></span><h1>Getting Started with Rasa NLU<a class="headerlink" href="#getting-started-with-rasa-nlu" title="Permalink to this headline">¶</a></h1>
+<p>In this tutorial you will create your first Rasa NLU bot. You can run all of the
+code snippets in here directly, or you can install Rasa NLU and run the examples on your
+own machine.</p>
+<p>As an example we’ll start a new project to help people search for restaurants.
+We’ll start with an extremely simple model of those conversations. You can build up from there.</p>
+<p>Let’s assume that <cite>anything</cite> our users say can be
+categorized into one of the following <strong>intents</strong>:</p>
+<ul class="simple">
+<li><code class="docutils literal notranslate"><span class="pre">greet</span></code></li>
+<li><code class="docutils literal notranslate"><span class="pre">restaurant_search</span></code></li>
+<li><code class="docutils literal notranslate"><span class="pre">thankyou</span></code></li>
+</ul>
+<p>Of course there are many ways our users might <code class="docutils literal notranslate"><span class="pre">greet</span></code> our bot:</p>
+<ul class="simple">
+<li><cite>Hi!</cite></li>
+<li><cite>Hey there!</cite></li>
+<li><cite>Hello again :)</cite></li>
+</ul>
+<p>And even more ways to say that you want to look for restaurants:</p>
+<ul class="simple">
+<li><cite>Do you know any good pizza places?</cite></li>
+<li><cite>I’m in the North of town and I want chinese food</cite></li>
+<li><cite>I’m hungry</cite></li>
+</ul>
+<p>The first job of Rasa NLU is to assign any given sentence to one of the <strong>intent</strong> categories: <code class="docutils literal notranslate"><span class="pre">greet</span></code>, <code class="docutils literal notranslate"><span class="pre">restaurant_search</span></code>, or <code class="docutils literal notranslate"><span class="pre">thankyou</span></code>.</p>
+<p>The second job is to label words like “chinese” and “North” as
+<code class="docutils literal notranslate"><span class="pre">cuisine</span></code> and <code class="docutils literal notranslate"><span class="pre">location</span></code> <strong>entities</strong>, respectively.
+In this tutorial we’ll build a model which does that.</p>
+<div class="section" id="prepare-your-nlu-training-data">
+<h2>1. Prepare your NLU Training Data<a class="headerlink" href="#prepare-your-nlu-training-data" title="Permalink to this headline">¶</a></h2>
+<p>Training data is essential for developing chatbots and voice apps.
+The data is just a list of messages that you expect to receive, annotated with
+the intent and entities Rasa NLU should learn to extract.</p>
+<p>The best way to get training data is from <em>real users</em>, and a good way to get it is to
+<a class="reference external" href="https://medium.com/rasa-blog/put-on-your-robot-costume-and-be-the-minimum-viable-bot-yourself-3e48a5a59308">pretend to be the bot yourself</a>.
+But to help get you started, we have some demo data here.
+See <a class="reference internal" href="../dataformat/#section-dataformat"><span class="std std-ref">Training Data Format</span></a> for details of the data format.</p>
+<p>If you are running this in the docs, it may take a few seconds to start up.
+If you are running locally, copy the text between the triple quotes (<code class="docutils literal notranslate"><span class="pre">&quot;&quot;&quot;</span></code>)
+and save it in a file called <code class="docutils literal notranslate"><span class="pre">nlu.md</span></code>.</p>
+
+
+  <pre data-executable>nlu_md = """
+## intent:greet
+- hey
+- hello
+- hi
+- good morning
+- good evening
+- hey there
+
+## intent:restaurant_search
+- i'm looking for a place to eat
+- I want to grab lunch
+- I am searching for a dinner spot
+- i'm looking for a place in the [north](location) of town
+- show me [chinese](cuisine) restaurants
+- show me a [mexican](cuisine) place in the [centre](location)
+- i am looking for an [indian](cuisine) spot
+- search for restaurants
+- anywhere in the [west](location)
+- anywhere near [18328](location)
+- I am looking for [asian fusion](cuisine) food
+- I am looking a restaurant in [29432](location)
+
+## intent:thankyou
+- thanks!
+- thank you
+- thx
+- thanks very much
+"""
+%store nlu_md > nlu.md</pre>
+  <script src="https://storage.googleapis.com/docs-theme/juniper.min.js"></script>
+  <script>
+    new Juniper({ repo: 'RasaHQ/rasa_core', branch: 'master', isolateCells: false , theme: 'xq-light', eventName: 'nlu-write-nlu-data' })
+    document.addEventListener('nlu-write-nlu-data', event => {
+      if (event.detail.status == 'executing') {
+        console.error("nlu-write-nlu-data");
+	console.error(JSON.stringify(event));
+        console.error(event.currentTarget)
+        gtag('event', 'execute-code-snippet', {
+          'event_category': 'code',
+          'event_label': "nlu-write-nlu-data"
+        });
+      }
+      if (event.detail.status == 'failed') {
+        gtag('event', e.action, {
+          'event_category': 'code',
+          'event_label': e.text
+        });
+      }
+    })
+  </script></div>
+<div class="section" id="define-your-machine-learning-model">
+<h2>2. Define your Machine Learning Model<a class="headerlink" href="#define-your-machine-learning-model" title="Permalink to this headline">¶</a></h2>
+<p>Rasa NLU has a number of different components, which together make a pipeline. Create a markdown file with the pipeline you want to use. In this case, we’re using the pre-defined <code class="docutils literal notranslate"><span class="pre">supervised_embeddings</span></code> pipeline. If you are running this locally instead of here in the docs, copy the text between the (<code class="docutils literal notranslate"><span class="pre">&quot;&quot;&quot;</span></code>)
+and save it in a file called <code class="docutils literal notranslate"><span class="pre">nlu_config.yml</span></code>.</p>
+
+
+  <pre data-executable>nlu_config = """
+language: en
+pipeline: supervised_embeddings
+"""
+%store nlu_config > nlu_config.yml</pre>
+  <script src="https://storage.googleapis.com/docs-theme/juniper.min.js"></script>
+  <script>
+    new Juniper({ repo: 'RasaHQ/rasa_core', branch: 'master', isolateCells: false , theme: 'xq-light', eventName: 'nlu-write-nlu-config' })
+    document.addEventListener('nlu-write-nlu-config', event => {
+      if (event.detail.status == 'executing') {
+        console.error("nlu-write-nlu-config");
+	console.error(JSON.stringify(event));
+        console.error(event.currentTarget)
+        gtag('event', 'execute-code-snippet', {
+          'event_category': 'code',
+          'event_label': "nlu-write-nlu-config"
+        });
+      }
+      if (event.detail.status == 'failed') {
+        gtag('event', e.action, {
+          'event_category': 'code',
+          'event_label': e.text
+        });
+      }
+    })
+  </script><p>To choose which pipeline is best for you read <a class="reference internal" href="../choosing_pipeline/#choosing-pipeline"><span class="std std-ref">Choosing a Rasa NLU Pipeline</span></a>.</p>
+</div>
+<div class="section" id="train-your-machine-learning-nlu-model">
+<h2>3. Train your Machine Learning NLU model.<a class="headerlink" href="#train-your-machine-learning-nlu-model" title="Permalink to this headline">¶</a></h2>
+<p>To train a model, start the <code class="docutils literal notranslate"><span class="pre">rasa_nlu.train</span></code> command, and tell it where to find your configuration and your training data:</p>
+<p>If you are running this in your computer, leave out the <code class="docutils literal notranslate"><span class="pre">!</span></code> at the start.</p>
+
+
+  <pre data-executable>!python -m rasa_nlu.train -c nlu_config.yml --data nlu.md -o models --fixed_model_name nlu --project current --verbose</pre>
+  <script src="https://storage.googleapis.com/docs-theme/juniper.min.js"></script>
+  <script>
+    new Juniper({ repo: 'RasaHQ/rasa_core', branch: 'master', isolateCells: false , theme: 'xq-light', eventName: 'nlu-train-nlu' })
+    document.addEventListener('nlu-train-nlu', event => {
+      if (event.detail.status == 'executing') {
+        console.error("nlu-train-nlu");
+	console.error(JSON.stringify(event));
+        console.error(event.currentTarget)
+        gtag('event', 'execute-code-snippet', {
+          'event_category': 'code',
+          'event_label': "nlu-train-nlu"
+        });
+      }
+      if (event.detail.status == 'failed') {
+        gtag('event', e.action, {
+          'event_category': 'code',
+          'event_label': e.text
+        });
+      }
+    })
+  </script><p>We are also passing the <code class="docutils literal notranslate"><span class="pre">--project</span> <span class="pre">current</span></code> and <code class="docutils literal notranslate"><span class="pre">--fixed_model_name</span> <span class="pre">nlu</span></code> parameters, this means the model will be saved at <code class="docutils literal notranslate"><span class="pre">./models/current/nlu</span></code> relative to your working directory.</p>
+</div>
+<div class="section" id="try-it-out">
+<span id="tutorial-using-your-model"></span><h2>4. Try it out!<a class="headerlink" href="#try-it-out" title="Permalink to this headline">¶</a></h2>
+<p>There are two ways you can use your model, directly from python, or by starting a http server.
+Details of running the Rasa NLU HTTP server are in <a class="reference internal" href="../config/#section-configuration"><span class="std std-ref">Server Configuration</span></a>.</p>
+<p>To use your new model in python, create an <code class="docutils literal notranslate"><span class="pre">Interpreter</span></code> object and pass a message to its <code class="docutils literal notranslate"><span class="pre">parse()</span></code> method:</p>
+<p><strong>This will not work if you haven’t run the cells above!</strong></p>
+
+
+  <pre data-executable>from rasa_nlu.model import Interpreter
+import json
+interpreter = Interpreter.load("./models/current/nlu")
+message = "let's see some italian restaurants"
+result = interpreter.parse(message)
+print(json.dumps(result, indent=2))</pre>
+  <script src="https://storage.googleapis.com/docs-theme/juniper.min.js"></script>
+  <script>
+    new Juniper({ repo: 'RasaHQ/rasa_core', branch: 'master', isolateCells: false , theme: 'xq-light', eventName: 'nlu-parse-nlu-python' })
+    document.addEventListener('nlu-parse-nlu-python', event => {
+      if (event.detail.status == 'executing') {
+        console.error("nlu-parse-nlu-python");
+	console.error(JSON.stringify(event));
+        console.error(event.currentTarget)
+        gtag('event', 'execute-code-snippet', {
+          'event_category': 'code',
+          'event_label': "nlu-parse-nlu-python"
+        });
+      }
+      if (event.detail.status == 'failed') {
+        gtag('event', e.action, {
+          'event_category': 'code',
+          'event_label': e.text
+        });
+      }
+    })
+  </script><p>Spend some time playing around with this, for example try sending some different test messages to Rasa NLU.
+Also try adding some new words and phrases to your data at the top of the page, then re-train your model
+to teach Rasa NLU.
+Remember that this is just a toy example, with just a little bit of training data.
+To build a really great NLU system you’ll want to collect some real user messages!</p>
+<div class="rating-container">
+    <div class="rating-text">
+      <p> How was the tutorial? Click to Vote </p>
+    </div>
+      <form class="rating-form">
+        <label for="great" onclick="gtag('event', 'docs_tutorial_satisfaction', { event_category: 'nlu_docs_satisfaction', event_action: 'click', event_label: 'great'} );">
+            <input type="radio" name="rating" class="great" id="great" value="great" />
+            <svg viewBox="0 0 24 24"><path d="M12,17.5C14.33,17.5 16.3,16.04 17.11,14H6.89C7.69,16.04 9.67,17.5 12,17.5M8.5,11A1.5,1.5 0 0,0 10,9.5A1.5,1.5 0 0,0 8.5,8A1.5,1.5 0 0,0 7,9.5A1.5,1.5 0 0,0 8.5,11M15.5,11A1.5,1.5 0 0,0 17,9.5A1.5,1.5 0 0,0 15.5,8A1.5,1.5 0 0,0 14,9.5A1.5,1.5 0 0,0 15.5,11M12,20A8,8 0 0,1 4,12A8,8 0 0,1 12,4A8,8 0 0,1 20,12A8,8 0 0,1 12,20M12,2C6.47,2 2,6.5 2,12A10,10 0 0,0 12,22A10,10 0 0,0 22,12A10,10 0 0,0 12,2Z" /></svg>
+            <span style="display: block;"> Great! </span>
+        </label>
+
+        <label for="didnt-work" onclick="gtag('event', 'docs_tutorial_satisfaction', { event_category: 'nlu_docs_satisfaction', event_action: 'click', event_label: 'didnt-work'} );">
+            <input type="radio" name="rating" class="didnt-work" id="didnt-work" value="didnt-work" />
+            <svg viewBox="0 0 24 24"><path d="M12,2C6.47,2 2,6.47 2,12C2,17.53 6.47,22 12,22A10,10 0 0,0 22,12C22,6.47 17.5,2 12,2M12,20A8,8 0 0,1 4,12A8,8 0 0,1 12,4A8,8 0 0,1 20,12A8,8 0 0,1 12,20M16.18,7.76L15.12,8.82L14.06,7.76L13,8.82L14.06,9.88L13,10.94L14.06,12L15.12,10.94L16.18,12L17.24,10.94L16.18,9.88L17.24,8.82L16.18,7.76M7.82,12L8.88,10.94L9.94,12L11,10.94L9.94,9.88L11,8.82L9.94,7.76L8.88,8.82L7.82,7.76L6.76,8.82L7.82,9.88L6.76,10.94L7.82,12M12,14C9.67,14 7.69,15.46 6.89,17.5H17.11C16.31,15.46 14.33,14 12,14Z" /></svg>
+            <span style="display: block;"> Didn't Work </span>
+        </label>
+
+        <label for="didnt-finish" onclick="gtag('event', 'docs_tutorial_satisfaction', { event_category: 'nlu_docs_satisfaction', event_action: 'click', event_label: 'didnt-finish'} );">
+            <input type="radio" name="rating" class="didnt-finish" id="didnt-finish" value="didnt-finish" />
+            <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" version="1.1" width="100%" height="100%" viewBox="0 0 24 24"><path d="M8.5,11A1.5,1.5 0 0,1 7,9.5A1.5,1.5 0 0,1 8.5,8A1.5,1.5 0 0,1 10,9.5A1.5,1.5 0 0,1 8.5,11M15.5,11A1.5,1.5 0 0,1 14,9.5A1.5,1.5 0 0,1 15.5,8A1.5,1.5 0 0,1 17,9.5A1.5,1.5 0 0,1 15.5,11M12,20A8,8 0 0,0 20,12A8,8 0 0,0 12,4A8,8 0 0,0 4,12A8,8 0 0,0 12,20M12,2A10,10 0 0,1 22,12A10,10 0 0,1 12,22C6.47,22 2,17.5 2,12A10,10 0 0,1 12,2M9,14H15A1,1 0 0,1 16,15A1,1 0 0,1 15,16H9A1,1 0 0,1 8,15A1,1 0 0,1 9,14Z" /></svg>
+            <span style="display: block;"> Didn't Finish </span>
+        </label>
+      </form>
+</div>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last"><strong>For windows users</strong> the windows command line interface doesn’t
+like single quotes. Use doublequotes and escape where necessary.
+<code class="docutils literal notranslate"><span class="pre">curl</span> <span class="pre">-X</span> <span class="pre">POST</span> <span class="pre">&quot;localhost:5000/parse&quot;</span> <span class="pre">-d</span> <span class="pre">&quot;{/&quot;q/&quot;:/&quot;I</span> <span class="pre">am</span> <span class="pre">looking</span> <span class="pre">for</span> <span class="pre">Mexican</span> <span class="pre">food/&quot;}&quot;</span> <span class="pre">|</span> <span class="pre">python</span> <span class="pre">-m</span> <span class="pre">json.tool</span></code></p>
+</div>
+</div>
+<div class="section" id="have-questions-or-feedback">
+<h2>Have questions or feedback?<a class="headerlink" href="#have-questions-or-feedback" title="Permalink to this headline">¶</a></h2>
+<p>We have a very active support community on <a class="reference external" href="https://forum.rasa.com">Rasa Community Forum</a>
+that is happy to help you with your questions. If you have any feedback for us or a specific
+suggestion for improving the docs, feel free to share it by creating an issue on Rasa NLU
+<a class="reference external" href="https://github.com/RasaHQ/rasa_nlu">GitHub repository</a>.</p>
+</div>
+</div>
+
+
+	    <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/docsearch.js@2/dist/cdn/docsearch.min.js"></script>
+	    <script type="text/javascript"> docsearch({
+	     apiKey: '1f9e0efb89e98543f6613a60f847b176',
+	     indexName: 'rasa',
+	     inputSelector: 'body > div.nav-top > .nav-container > .nav > input',
+	     debug: false // Set debug to true if you want to inspect the dropdown
+	    });
+	    </script>
+          </div>
+
+          <div class="footer">
+
+            <div class="social">
+              <a href="https://github.com/RasaHQ" target="_blank" title="GitHub"><i class="fab fa-github"></i></a>
+              <a href="https://stackoverflow.com/search?q=rasa" target="_blank" title="Stack Overflow"><i class="fab fa-stack-overflow"></i></a>
+              <a href="https://www.youtube.com/channel/UCJ0V6493mLvqdiVwOKWBODQ" target="_blank" title="YouTube"><i class="fab fa-youtube"></i></a>
+              <a href="https://twitter.com/rasa_hq" target="_blank" title="Twitter"><i class="fab fa-twitter"></i></a>
+            </div>
+
+            <div class="copyright small">
+            &copy;2019, Rasa Technologies GmbH | <a href="https://rasa.com/imprint/" target="_blank">Imprint</a> | <a href="https://rasa.com/privacy-policy/" target="_blank">Privacy Policy</a>
+            
+            </div>
+
+          </div>
+          
+        </div>
+      </div>
+    <div class="clearer"></div>
+  </div>
+
+    
+
+  <script>
+    window.dataLayer = window.dataLayer || [];
+
+    function gtag(...arguments) {
+      dataLayer.push(...arguments);
+    }
+    gtag('js', new Date());
+    gtag('config', 'UA-87333416-1', {
+      'anonymize_ip': true,
+    });
+  </script>
+  <script src="https://rasa.com/assets/js/js.cookies.js"></script>
+  <script async defer src="https://buttons.github.io/buttons.js"></script>
+  <!-- Global site tag (gtag.js) - Google Analytics -->
+  <script type="opt-in" data-name="googleanalytics" data-type="text/javascript" data-src="https://www.googletagmanager.com/gtag/js?id=UA-87333416-1"></script>
+  <script type="opt-in" data-name="googleanalytics" data-type="text/javascript" data-src="https://rasa.com/assets/js/userId.js"></script>
+
+  <script type="text/javascript">
+    var clipboard = new ClipboardJS('.copyable');
+    clipboard.on('success', function(e) {
+      gtag('event', e.action, {
+        'event_category': 'code',
+        'event_label': e.text
+      });
+      const id = e.text.replace(' ','-');
+      document.getElementById(id).classList.add('visible');
+      setTimeout(function(){
+        document.getElementById(id).classList.remove('visible');},
+        800
+      );
+    });
+    clipboard.on('error', function(e) {
+      console.log(e);
+    });
+  </script>
+
+  <!-- onsite anchor fix (otherwise anchors scroll to far) -->
+  <script>
+    /* Adapted from https://stackoverflow.com/a/13067009/1906073 */
+    (function(document, history, location) {
+      var HISTORY_SUPPORT = !!(history && history.pushState);
+
+      var anchorScrolls = {
+        ANCHOR_REGEX: /^#[^ ]+$/,
+        OFFSET_HEIGHT_PX: 66,
+
+        /**
+         * Establish events, and fix initial scroll position if a hash is provided.
+         */
+        init: function() {
+          this.scrollToCurrent();
+          $(window).on('hashchange', $.proxy(this, 'scrollToCurrent'));
+          $('body').on('click', 'a', $.proxy(this, 'delegateAnchors'));
+        },
+
+        /**
+         * Return the offset amount to deduct from the normal scroll position.
+         * Modify as appropriate to allow for dynamic calculations
+         */
+        getFixedOffset: function() {
+          return this.OFFSET_HEIGHT_PX;
+        },
+
+        /**
+         * If the provided href is an anchor which resolves to an element on the
+         * page, scroll to it.
+         * @param  {String} href
+         * @return {Boolean} - Was the href an anchor.
+         */
+        scrollIfAnchor: function(href, pushToHistory) {
+          var match, anchorOffset;
+
+          if(!this.ANCHOR_REGEX.test(href)) {
+            return false;
+          }
+
+          match = document.getElementById(href.slice(1));
+
+          if(match) {
+            anchorOffset = $(match).offset().top - this.getFixedOffset();
+            $('html, body').animate({ scrollTop: anchorOffset});
+
+            // Add the state to history as-per normal anchor links
+            if(HISTORY_SUPPORT && pushToHistory) {
+              history.pushState({}, document.title, location.pathname + href);
+            }
+          }
+
+          return !!match;
+        },
+
+        /**
+         * Attempt to scroll to the current location's hash.
+         */
+        scrollToCurrent: function(e) {
+          if(this.scrollIfAnchor(window.location.hash) && e) {
+            e.preventDefault();
+          }
+        },
+
+        /**
+         * If the click event's target was an anchor, fix the scroll position.
+         */
+        delegateAnchors: function(e) {
+          var elem = e.target;
+
+          if(this.scrollIfAnchor(elem.getAttribute('href'), true)) {
+            e.preventDefault();
+          }
+        }
+      };
+
+      $(document).ready($.proxy(anchorScrolls, 'init'));
+    })(window.document, window.history, window.location);
+
+  </script>
+  </body>
+</html>
