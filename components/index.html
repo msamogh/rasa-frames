@@ -734,28 +734,28 @@ If constant <code class="docutils literal notranslate"><span class="pre">batch_s
 <div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">pipeline</span><span class="p">:</span>
 <span class="p p-Indicator">-</span> <span class="nt">name</span><span class="p">:</span> <span class="s">&quot;EmbeddingIntentClassifier&quot;</span>
   <span class="c1"># nn architecture</span>
-  <span class="nt">&quot;hidden_layers_sizes_a&quot;</span><span class="p">:</span> <span class="p p-Indicator">[</span><span class="nv">256</span><span class="p p-Indicator">,</span> <span class="nv">128</span><span class="p p-Indicator">]</span>
-  <span class="nt">&quot;hidden_layers_sizes_b&quot;</span><span class="p">:</span> <span class="p p-Indicator">[]</span>
-  <span class="nt">&quot;batch_size&quot;</span><span class="p">:</span> <span class="p p-Indicator">[</span><span class="nv">64</span><span class="p p-Indicator">,</span> <span class="nv">256</span><span class="p p-Indicator">]</span>
-  <span class="nt">&quot;epochs&quot;</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">300</span>
+  <span class="s">&quot;hidden_layers_sizes_a&quot;</span><span class="p p-Indicator">:</span> <span class="p p-Indicator">[</span><span class="nv">256</span><span class="p p-Indicator">,</span> <span class="nv">128</span><span class="p p-Indicator">]</span>
+  <span class="s">&quot;hidden_layers_sizes_b&quot;</span><span class="p p-Indicator">:</span> <span class="p p-Indicator">[]</span>
+  <span class="s">&quot;batch_size&quot;</span><span class="p p-Indicator">:</span> <span class="p p-Indicator">[</span><span class="nv">64</span><span class="p p-Indicator">,</span> <span class="nv">256</span><span class="p p-Indicator">]</span>
+  <span class="s">&quot;epochs&quot;</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">300</span>
   <span class="c1"># embedding parameters</span>
-  <span class="nt">&quot;embed_dim&quot;</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">20</span>
-  <span class="nt">&quot;mu_pos&quot;</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">0.8</span>  <span class="c1"># should be 0.0 &lt; ... &lt; 1.0 for &#39;cosine&#39;</span>
-  <span class="nt">&quot;mu_neg&quot;</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">-0.4</span>  <span class="c1"># should be -1.0 &lt; ... &lt; 1.0 for &#39;cosine&#39;</span>
-  <span class="nt">&quot;similarity_type&quot;</span><span class="p">:</span> <span class="s">&quot;cosine&quot;</span>  <span class="c1"># string &#39;cosine&#39; or &#39;inner&#39;</span>
-  <span class="nt">&quot;num_neg&quot;</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">20</span>
-  <span class="nt">&quot;use_max_sim_neg&quot;</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">true</span>  <span class="c1"># flag which loss function to use</span>
-  <span class="nt">&quot;random_seed&quot;</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">None</span> <span class="c1"># set to any int to generate a reproducible training result</span>
+  <span class="s">&quot;embed_dim&quot;</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">20</span>
+  <span class="s">&quot;mu_pos&quot;</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">0.8</span>  <span class="c1"># should be 0.0 &lt; ... &lt; 1.0 for &#39;cosine&#39;</span>
+  <span class="s">&quot;mu_neg&quot;</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">-0.4</span>  <span class="c1"># should be -1.0 &lt; ... &lt; 1.0 for &#39;cosine&#39;</span>
+  <span class="s">&quot;similarity_type&quot;</span><span class="p p-Indicator">:</span> <span class="s">&quot;cosine&quot;</span>  <span class="c1"># string &#39;cosine&#39; or &#39;inner&#39;</span>
+  <span class="s">&quot;num_neg&quot;</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">20</span>
+  <span class="s">&quot;use_max_sim_neg&quot;</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">true</span>  <span class="c1"># flag which loss function to use</span>
+  <span class="s">&quot;random_seed&quot;</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">None</span> <span class="c1"># set to any int to generate a reproducible training result</span>
   <span class="c1"># regularization</span>
-  <span class="nt">&quot;C2&quot;</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">0.002</span>
-  <span class="nt">&quot;C_emb&quot;</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">0.8</span>
-  <span class="nt">&quot;droprate&quot;</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">0.2</span>
+  <span class="s">&quot;C2&quot;</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">0.002</span>
+  <span class="s">&quot;C_emb&quot;</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">0.8</span>
+  <span class="s">&quot;droprate&quot;</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">0.2</span>
   <span class="c1"># flag for tokenizing intents</span>
-  <span class="nt">&quot;intent_tokenization_flag&quot;</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">false</span>
-  <span class="nt">&quot;intent_split_symbol&quot;</span><span class="p">:</span> <span class="s">&quot;_&quot;</span>
+  <span class="s">&quot;intent_tokenization_flag&quot;</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">false</span>
+  <span class="s">&quot;intent_split_symbol&quot;</span><span class="p p-Indicator">:</span> <span class="s">&quot;_&quot;</span>
   <span class="c1"># visualization of accuracy</span>
-  <span class="nt">&quot;evaluate_every_num_epochs&quot;</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">10</span>  <span class="c1"># small values may hurt performance</span>
-  <span class="nt">&quot;evaluate_on_num_examples&quot;</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">1000</span>  <span class="c1"># large values may hurt performance</span>
+  <span class="s">&quot;evaluate_every_num_epochs&quot;</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">10</span>  <span class="c1"># small values may hurt performance</span>
+  <span class="s">&quot;evaluate_on_num_examples&quot;</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">1000</span>  <span class="c1"># large values may hurt performance</span>
 </pre></div>
 </div>
 <div class="last admonition note">

@@ -437,30 +437,30 @@ Unseen words will be substituted with <code class="docutils literal notranslate"
   <span class="c1"># the parameters are taken from</span>
   <span class="c1"># sklearn&#39;s CountVectorizer</span>
   <span class="c1"># regular expression for tokens</span>
-  <span class="nt">&quot;token_pattern&quot;</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">r&#39;(?u)\b\w\w+\b&#39;</span>
+  <span class="s">&quot;token_pattern&quot;</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">r&#39;(?u)\b\w\w+\b&#39;</span>
   <span class="c1"># remove accents during the preprocessing step</span>
-  <span class="nt">&quot;strip_accents&quot;</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">None</span>  <span class="c1"># {&#39;ascii&#39;, &#39;unicode&#39;, None}</span>
+  <span class="s">&quot;strip_accents&quot;</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">None</span>  <span class="c1"># {&#39;ascii&#39;, &#39;unicode&#39;, None}</span>
   <span class="c1"># list of stop words</span>
-  <span class="nt">&quot;stop_words&quot;</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">None</span>  <span class="c1"># string {&#39;english&#39;}, list, or None (default)</span>
+  <span class="s">&quot;stop_words&quot;</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">None</span>  <span class="c1"># string {&#39;english&#39;}, list, or None (default)</span>
   <span class="c1"># min document frequency of a word to add to vocabulary</span>
   <span class="c1"># float - the parameter represents a proportion of documents</span>
   <span class="c1"># integer - absolute counts</span>
-  <span class="nt">&quot;min_df&quot;</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">1</span>  <span class="c1"># float in range [0.0, 1.0] or int</span>
+  <span class="s">&quot;min_df&quot;</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">1</span>  <span class="c1"># float in range [0.0, 1.0] or int</span>
   <span class="c1"># max document frequency of a word to add to vocabulary</span>
   <span class="c1"># float - the parameter represents a proportion of documents</span>
   <span class="c1"># integer - absolute counts</span>
-  <span class="nt">&quot;max_df&quot;</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">1.0</span>  <span class="c1"># float in range [0.0, 1.0] or int</span>
+  <span class="s">&quot;max_df&quot;</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">1.0</span>  <span class="c1"># float in range [0.0, 1.0] or int</span>
   <span class="c1"># set ngram range</span>
-  <span class="nt">&quot;min_ngram&quot;</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">1</span>  <span class="c1"># int</span>
-  <span class="nt">&quot;max_ngram&quot;</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">1</span>  <span class="c1"># int</span>
+  <span class="s">&quot;min_ngram&quot;</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">1</span>  <span class="c1"># int</span>
+  <span class="s">&quot;max_ngram&quot;</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">1</span>  <span class="c1"># int</span>
   <span class="c1"># limit vocabulary size</span>
-  <span class="nt">&quot;max_features&quot;</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">None</span>  <span class="c1"># int or None</span>
+  <span class="s">&quot;max_features&quot;</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">None</span>  <span class="c1"># int or None</span>
   <span class="c1"># if convert all characters to lowercase</span>
-  <span class="nt">&quot;lowercase&quot;</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">true</span>  <span class="c1"># bool</span>
+  <span class="s">&quot;lowercase&quot;</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">true</span>  <span class="c1"># bool</span>
   <span class="c1"># handling Out-Of-Vacabulary (OOV) words</span>
   <span class="c1"># will be converted to lowercase if lowercase is true</span>
-  <span class="nt">&quot;OOV_token&quot;</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">None</span>  <span class="c1"># string or None</span>
-  <span class="nt">&quot;OOV_words&quot;</span><span class="p">:</span> <span class="p p-Indicator">[]</span>  <span class="c1"># list of strings</span>
+  <span class="s">&quot;OOV_token&quot;</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">None</span>  <span class="c1"># string or None</span>
+  <span class="s">&quot;OOV_words&quot;</span><span class="p p-Indicator">:</span> <span class="p p-Indicator">[]</span>  <span class="c1"># list of strings</span>
 </pre></div>
 </div>
 </td>
@@ -699,29 +699,29 @@ If constant <code class="docutils literal notranslate"><span class="pre">batch_s
 <div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">pipeline</span><span class="p">:</span>
 <span class="p p-Indicator">-</span> <span class="nt">name</span><span class="p">:</span> <span class="s">&quot;intent_classifier_tensorflow_embedding&quot;</span>
   <span class="c1"># nn architecture</span>
-  <span class="nt">&quot;num_hidden_layers_a&quot;</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">2</span>
-  <span class="nt">&quot;hidden_layer_size_a&quot;</span><span class="p">:</span> <span class="p p-Indicator">[</span><span class="nv">256</span><span class="p p-Indicator">,</span> <span class="nv">128</span><span class="p p-Indicator">]</span>
-  <span class="nt">&quot;num_hidden_layers_b&quot;</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">0</span>
-  <span class="nt">&quot;hidden_layer_size_b&quot;</span><span class="p">:</span> <span class="p p-Indicator">[]</span>
-  <span class="nt">&quot;batch_size&quot;</span><span class="p">:</span> <span class="p p-Indicator">[</span><span class="nv">64</span><span class="p p-Indicator">,</span> <span class="nv">256</span><span class="p p-Indicator">]</span>
-  <span class="nt">&quot;epochs&quot;</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">300</span>
+  <span class="s">&quot;num_hidden_layers_a&quot;</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">2</span>
+  <span class="s">&quot;hidden_layer_size_a&quot;</span><span class="p p-Indicator">:</span> <span class="p p-Indicator">[</span><span class="nv">256</span><span class="p p-Indicator">,</span> <span class="nv">128</span><span class="p p-Indicator">]</span>
+  <span class="s">&quot;num_hidden_layers_b&quot;</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">0</span>
+  <span class="s">&quot;hidden_layer_size_b&quot;</span><span class="p p-Indicator">:</span> <span class="p p-Indicator">[]</span>
+  <span class="s">&quot;batch_size&quot;</span><span class="p p-Indicator">:</span> <span class="p p-Indicator">[</span><span class="nv">64</span><span class="p p-Indicator">,</span> <span class="nv">256</span><span class="p p-Indicator">]</span>
+  <span class="s">&quot;epochs&quot;</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">300</span>
   <span class="c1"># embedding parameters</span>
-  <span class="nt">&quot;embed_dim&quot;</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">20</span>
-  <span class="nt">&quot;mu_pos&quot;</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">0.8</span>  <span class="c1"># should be 0.0 &lt; ... &lt; 1.0 for &#39;cosine&#39;</span>
-  <span class="nt">&quot;mu_neg&quot;</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">-0.4</span>  <span class="c1"># should be -1.0 &lt; ... &lt; 1.0 for &#39;cosine&#39;</span>
-  <span class="nt">&quot;similarity_type&quot;</span><span class="p">:</span> <span class="s">&quot;cosine&quot;</span>  <span class="c1"># string &#39;cosine&#39; or &#39;inner&#39;</span>
-  <span class="nt">&quot;num_neg&quot;</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">20</span>
-  <span class="nt">&quot;use_max_sim_neg&quot;</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">true</span>  <span class="c1"># flag which loss function to use</span>
+  <span class="s">&quot;embed_dim&quot;</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">20</span>
+  <span class="s">&quot;mu_pos&quot;</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">0.8</span>  <span class="c1"># should be 0.0 &lt; ... &lt; 1.0 for &#39;cosine&#39;</span>
+  <span class="s">&quot;mu_neg&quot;</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">-0.4</span>  <span class="c1"># should be -1.0 &lt; ... &lt; 1.0 for &#39;cosine&#39;</span>
+  <span class="s">&quot;similarity_type&quot;</span><span class="p p-Indicator">:</span> <span class="s">&quot;cosine&quot;</span>  <span class="c1"># string &#39;cosine&#39; or &#39;inner&#39;</span>
+  <span class="s">&quot;num_neg&quot;</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">20</span>
+  <span class="s">&quot;use_max_sim_neg&quot;</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">true</span>  <span class="c1"># flag which loss function to use</span>
   <span class="c1"># regularization</span>
-  <span class="nt">&quot;C2&quot;</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">0.002</span>
-  <span class="nt">&quot;C_emb&quot;</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">0.8</span>
-  <span class="nt">&quot;droprate&quot;</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">0.2</span>
+  <span class="s">&quot;C2&quot;</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">0.002</span>
+  <span class="s">&quot;C_emb&quot;</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">0.8</span>
+  <span class="s">&quot;droprate&quot;</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">0.2</span>
   <span class="c1"># flag if to tokenize intents</span>
-  <span class="nt">&quot;intent_tokenization_flag&quot;</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">false</span>
-  <span class="nt">&quot;intent_split_symbol&quot;</span><span class="p">:</span> <span class="s">&quot;_&quot;</span>
+  <span class="s">&quot;intent_tokenization_flag&quot;</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">false</span>
+  <span class="s">&quot;intent_split_symbol&quot;</span><span class="p p-Indicator">:</span> <span class="s">&quot;_&quot;</span>
   <span class="c1"># visualization of accuracy</span>
-  <span class="nt">&quot;evaluate_every_num_epochs&quot;</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">10</span>  <span class="c1"># small values may hurt performance</span>
-  <span class="nt">&quot;evaluate_on_num_examples&quot;</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">1000</span>  <span class="c1"># large values may hurt performance</span>
+  <span class="s">&quot;evaluate_every_num_epochs&quot;</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">10</span>  <span class="c1"># small values may hurt performance</span>
+  <span class="s">&quot;evaluate_on_num_examples&quot;</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">1000</span>  <span class="c1"># large values may hurt performance</span>
 </pre></div>
 </div>
 <div class="last admonition note">
