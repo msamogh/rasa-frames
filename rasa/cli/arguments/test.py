@@ -111,6 +111,15 @@ def add_test_nlu_argument_group(
         help="Output path for the confusion matrix plot.",
     )
 
+    # Argument to check whether to include test data intents or not.
+    parser.add_argument(
+        "--include_test_intent",
+        type=int,
+        default=0,
+        help="Whether to include intents from test set or now",
+        required=False,
+    )
+
     cross_validation_arguments = parser.add_argument_group("Cross Validation")
     cross_validation_arguments.add_argument(
         "--cross-validation",

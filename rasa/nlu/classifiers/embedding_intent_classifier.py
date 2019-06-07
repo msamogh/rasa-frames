@@ -140,7 +140,8 @@ class EmbeddingIntentClassifier(Component):
                  all_intents_embed_in: Optional['tf.Tensor'] = None,
                  sim_all: Optional['tf.Tensor'] = None,
                  word_embed: Optional['tf.Tensor'] = None,
-                 intent_embed: Optional['tf.Tensor'] = None
+                 intent_embed: Optional['tf.Tensor'] = None,
+                 test_data: Optional['TrainingData'] = None,
                  ) -> None:
         """Declare instant variables with default values"""
 
@@ -171,6 +172,22 @@ class EmbeddingIntentClassifier(Component):
         # persisted embeddings
         self.word_embed = word_embed
         self.intent_embed = intent_embed
+
+        # Add test intents to existing intents
+
+        new_test_intents = list(set([example.get("intent")
+                                            for example in test_data.intent_examples
+                                            if example.get("intent") not in inv_intent_dict.values()]))
+
+        self.inv_intent_dict = {intent: idx + len(self.inv_intent_dict)
+                                                 for idx, intent in enumerate(sorted(new_test_intents))}
+
+        encoded_new_intents = self._create_encoded_intents(self.inv_intent_dict, test_data)
+
+        self.encoded_all_intents = np.append(self.encoded_all_intents, encoded_new_intents, axis=0)
+
+        new_intents_embed_values = self._create_all_intents_embed(encoded_new_intents)
+        self.all_intents_embed_values = np.append(self.all_intents_embed_values, new_intents_embed_values, axis=1)
 
     # init helpers
     def _load_nn_architecture_params(self, config: Dict[Text, Any]) -> None:
@@ -275,6 +292,7 @@ class EmbeddingIntentClassifier(Component):
             if ex.get("intent") == intent:
                 return ex
 
+    # @staticmethod
     def _create_encoded_intents(self,
                                 intent_dict: Dict[Text, int],
                                 training_data: 'TrainingData') -> np.ndarray:
@@ -1336,6 +1354,12 @@ class EmbeddingIntentClassifier(Component):
                     file_name + "_all_intents_embed_values.pkl"), 'rb') as f:
                 all_intents_embed_values = pickle.load(f)
 
+            test_data = None
+            if kwargs["include_test_intent"]:
+
+                test_data = kwargs["test_data"]
+
+
             return cls(
                 component_config=meta,
                 inv_intent_dict=inv_intent_dict,
@@ -1350,6 +1374,7 @@ class EmbeddingIntentClassifier(Component):
                 sim_all=sim_all,
                 word_embed=word_embed,
                 intent_embed=intent_embed,
+                test_data=test_data
             )
 
         else:

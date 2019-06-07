@@ -632,6 +632,7 @@ def run_evaluation(
     confmat: Optional[Text] = None,
     histogram: Optional[Text] = None,
     component_builder: Optional[ComponentBuilder] = None,
+    kwargs: Optional[Dict] = None
 ) -> Dict:  # pragma: no cover
     """
     Evaluate intent classification and entity extraction.
@@ -648,11 +649,18 @@ def run_evaluation(
     :return: dictionary containing evaluation results
     """
 
-    # get the metadata config from the package data
-    interpreter = Interpreter.load(model_path, component_builder)
+    # TODO: Fix this. Training Data should be loaded with language stored in model metadata which the interpreter gives, but interpreter needs test data if test intents have to be loaded. Sort of a chicken and egg problem.
+    test_data = training_data.load_data(data_path)
 
+    # Add test data object to kwargs to include test intents
+    if kwargs["include_test_intent"]:
+        kwargs['test_data']=test_data
+
+    # get the metadata config from the package data
+    interpreter = Interpreter.load(model_path, component_builder,kwargs=kwargs)
     interpreter.pipeline = remove_pretrained_extractors(interpreter.pipeline)
-    test_data = training_data.load_data(data_path, interpreter.model_metadata.language)
+
+    # test_data = training_data.load_data(data_path, interpreter.model_metadata.language)
 
     result = {"intent_evaluation": None, "entity_evaluation": None}
 

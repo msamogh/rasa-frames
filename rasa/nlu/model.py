@@ -280,6 +280,7 @@ class Interpreter(object):
         model_dir: Text,
         component_builder: Optional[ComponentBuilder] = None,
         skip_validation: bool = False,
+        kwargs: Optional[Dict] = None,
     ) -> "Interpreter":
         """Create an interpreter based on a persisted model.
 
@@ -298,17 +299,22 @@ class Interpreter(object):
         model_metadata = Metadata.load(model_dir)
 
         Interpreter.ensure_model_compatibility(model_metadata)
-        return Interpreter.create(model_metadata, component_builder, skip_validation)
+        return Interpreter.create(model_metadata, component_builder, skip_validation,kwargs=kwargs)
 
     @staticmethod
     def create(
         model_metadata: Metadata,
         component_builder: Optional[ComponentBuilder] = None,
         skip_validation: bool = False,
+        kwargs: Optional[Dict] = None
     ) -> "Interpreter":
         """Load stored model and components defined by the provided metadata."""
 
         context = {}
+
+        # Add test data to context so that components can pick up if needed
+        if kwargs["load_test_intent"]:
+            context["test_data"] = kwargs["test_data"]
 
         if component_builder is None:
             # If no builder is passed, every interpreter creation will result
