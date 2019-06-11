@@ -233,7 +233,7 @@ class TrainingData(object):
             + "\t- intent examples: {} ({} distinct intents)\n".format(
                 len(self.intent_examples), len(self.intents)
             )
-            + "\t- Found intents: {}\n".format(list_to_str(self.intents))
+            # + "\t- Found intents: {}\n".format(list_to_str(self.intents))
             + "\t- entity examples: {} ({} distinct entities)\n".format(
                 len(self.entity_examples), len(self.entities)
             )

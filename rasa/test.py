@@ -116,9 +116,10 @@ def test_nlu(model: Optional[Text], nlu_data: Optional[Text], kwargs: Optional[D
     nlu_model = os.path.join(unpacked_model, "nlu")
 
     if os.path.exists(nlu_model):
+        extra_kwargs = {'include_test_intent': kwargs["include_test_intent"]}
         kwargs = minimal_kwargs(kwargs, run_evaluation, ["data_path", "model"])
         logger.info("Argument set: ", str(kwargs))
-        run_evaluation(nlu_data, nlu_model, **kwargs)
+        run_evaluation(nlu_data, nlu_model, **kwargs, kwargs=extra_kwargs)
     else:
         print_error(
             "Could not find any model. Use 'rasa train nlu' to train an NLU model."
