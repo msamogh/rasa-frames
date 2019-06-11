@@ -175,19 +175,20 @@ class EmbeddingIntentClassifier(Component):
 
         # Add test intents to existing intents
 
-        new_test_intents = list(set([example.get("intent")
-                                            for example in test_data.intent_examples
-                                            if example.get("intent") not in inv_intent_dict.values()]))
+        if test_data:
+            new_test_intents = list(set([example.get("intent")
+                                                for example in test_data.intent_examples
+                                                if example.get("intent") not in inv_intent_dict.values()]))
 
-        self.inv_intent_dict = {intent: idx + len(self.inv_intent_dict)
-                                                 for idx, intent in enumerate(sorted(new_test_intents))}
+            self.inv_intent_dict = {intent: idx + len(self.inv_intent_dict)
+                                                     for idx, intent in enumerate(sorted(new_test_intents))}
 
-        encoded_new_intents = self._create_encoded_intents(self.inv_intent_dict, test_data)
+            encoded_new_intents = self._create_encoded_intents(self.inv_intent_dict, test_data)
 
-        self.encoded_all_intents = np.append(self.encoded_all_intents, encoded_new_intents, axis=0)
+            self.encoded_all_intents = np.append(self.encoded_all_intents, encoded_new_intents, axis=0)
 
-        new_intents_embed_values = self._create_all_intents_embed(encoded_new_intents)
-        self.all_intents_embed_values = np.append(self.all_intents_embed_values, new_intents_embed_values, axis=1)
+            new_intents_embed_values = self._create_all_intents_embed(encoded_new_intents)
+            self.all_intents_embed_values = np.append(self.all_intents_embed_values, new_intents_embed_values, axis=1)
 
     # init helpers
     def _load_nn_architecture_params(self, config: Dict[Text, Any]) -> None:

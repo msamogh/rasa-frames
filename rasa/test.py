@@ -117,6 +117,7 @@ def test_nlu(model: Optional[Text], nlu_data: Optional[Text], kwargs: Optional[D
 
     if os.path.exists(nlu_model):
         kwargs = minimal_kwargs(kwargs, run_evaluation, ["data_path", "model"])
+        logger.info("Argument set: ", str(kwargs))
         run_evaluation(nlu_data, nlu_model, **kwargs)
     else:
         print_error(
