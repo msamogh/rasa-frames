@@ -313,7 +313,7 @@ class Interpreter(object):
         context = {}
 
         # Add test data to context so that components can pick up if needed
-        if kwargs["load_test_intent"]:
+        if kwargs["include_test_intent"]:
             context["test_data"] = kwargs["test_data"]
 
         if component_builder is None:
@@ -361,7 +361,7 @@ class Interpreter(object):
         self,
         text: Text,
         time: Optional[datetime.datetime] = None,
-        only_output_properties: bool = True,
+        only_output_properties: bool = True
     ) -> Dict[Text, Any]:
         """Parse the input text, classify it and return pipeline result.
 
@@ -378,8 +378,12 @@ class Interpreter(object):
 
         message = Message(text, self.default_output_attributes(), time=time)
 
+        # print([e.get("intent") for e in self.context["test_data"].intent_examples])
         for component in self.pipeline:
-            component.process(message, **self.context)
+            test_data = component.process(message, **self.context)
+            if "test_data" in self.context and test_data is not None:
+                logger.info('updating test data')
+                self.context["test_data"] = test_data
 
         output = self.default_output_attributes()
         output.update(message.as_dict(only_output_properties=only_output_properties))

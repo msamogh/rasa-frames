@@ -141,7 +141,6 @@ class EmbeddingIntentClassifier(Component):
                  sim_all: Optional['tf.Tensor'] = None,
                  word_embed: Optional['tf.Tensor'] = None,
                  intent_embed: Optional['tf.Tensor'] = None,
-                 test_data: Optional['TrainingData'] = None,
                  ) -> None:
         """Declare instant variables with default values"""
 
@@ -152,6 +151,7 @@ class EmbeddingIntentClassifier(Component):
 
         # transform numbers to intents
         self.inv_intent_dict = inv_intent_dict
+
         # encode all intents with numbers
         self.encoded_all_intents = encoded_all_intents
         self.all_intents_embed_values = all_intents_embed_values
@@ -173,22 +173,9 @@ class EmbeddingIntentClassifier(Component):
         self.word_embed = word_embed
         self.intent_embed = intent_embed
 
-        # Add test intents to existing intents
+        # Flags to ensure test data is featurized only once
+        self.is_test_data_featurized = False
 
-        if test_data:
-            new_test_intents = list(set([example.get("intent")
-                                                for example in test_data.intent_examples
-                                                if example.get("intent") not in inv_intent_dict.values()]))
-
-            self.inv_intent_dict = {intent: idx + len(self.inv_intent_dict)
-                                                     for idx, intent in enumerate(sorted(new_test_intents))}
-
-            encoded_new_intents = self._create_encoded_intents(self.inv_intent_dict, test_data)
-
-            self.encoded_all_intents = np.append(self.encoded_all_intents, encoded_new_intents, axis=0)
-
-            new_intents_embed_values = self._create_all_intents_embed(encoded_new_intents)
-            self.all_intents_embed_values = np.append(self.all_intents_embed_values, new_intents_embed_values, axis=1)
 
     # init helpers
     def _load_nn_architecture_params(self, config: Dict[Text, Any]) -> None:
@@ -1100,6 +1087,33 @@ class EmbeddingIntentClassifier(Component):
             X = message.get("text_features")
             X = self._toarray(X)
 
+            # Add test intents to existing intents
+            if "test_data" in kwargs and not self.is_test_data_featurized:
+
+                logger.info("Embedding test intents and adding to intent list for the first time")
+                test_data = kwargs["test_data"]
+                new_test_intents = list(set([example.get("intent")
+                                                    for example in test_data.intent_examples
+                                                    if example.get("intent") not in self.inv_intent_dict.keys()]))
+
+                self.test_intent_dict = {intent: idx + len(self.inv_intent_dict)
+                                                         for idx, intent in enumerate(sorted(new_test_intents))}
+
+                self.test_inv_intent_dict = {v: k for k, v in self.test_intent_dict.items()}
+
+                encoded_new_intents = self._create_encoded_intents(self.test_intent_dict, test_data)
+
+                self.inv_intent_dict.update(self.test_inv_intent_dict)
+
+                self.encoded_all_intents = np.append(self.encoded_all_intents, encoded_new_intents, axis=0)
+
+                new_intents_embed_values = self._create_all_intents_embed(encoded_new_intents)
+                self.all_intents_embed_values = np.append(self.all_intents_embed_values, new_intents_embed_values, axis=1)
+
+                self.is_test_data_featurized = True
+
+                # print(self.intent_dict)
+
             # with self.graph.as_default():
             #     if issparse(X):
             #         a_sparse = self._to_sparse_tensor([X])
@@ -1355,11 +1369,6 @@ class EmbeddingIntentClassifier(Component):
                     file_name + "_all_intents_embed_values.pkl"), 'rb') as f:
                 all_intents_embed_values = pickle.load(f)
 
-            test_data = None
-            if kwargs["include_test_intent"]:
-
-                test_data = kwargs["test_data"]
-
 
             return cls(
                 component_config=meta,
@@ -1374,8 +1383,7 @@ class EmbeddingIntentClassifier(Component):
                 all_intents_embed_in=all_intents_embed_in,
                 sim_all=sim_all,
                 word_embed=word_embed,
-                intent_embed=intent_embed,
-                test_data=test_data
+                intent_embed=intent_embed
             )
 
         else:

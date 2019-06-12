@@ -20,6 +20,7 @@ class WhitespaceTokenizer(Tokenizer, Component):
         super(WhitespaceTokenizer, self).__init__(component_config)
         self.intent_split_symbol = self.component_config['intent_split_symbol']
         self.add_class_label = self.component_config['add_class_label']
+        self.is_test_data_featurized = False
 
     def train(self, training_data: TrainingData, config: RasaNLUModelConfig,
               **kwargs: Any) -> None:
@@ -32,6 +33,16 @@ class WhitespaceTokenizer(Tokenizer, Component):
                                           self.intent_split_symbol))
 
     def process(self, message: Message, **kwargs: Any) -> None:
+
+        if "test_data" in kwargs and not self.is_test_data_featurized:
+
+            test_data = kwargs["test_data"]
+
+            for example in test_data.training_examples:
+                if example.get("intent"):
+                    example.set("intent_tokens",
+                                self.tokenize(example.get("intent"),
+                                              self.intent_split_symbol))
 
         message.set("tokens", self.tokenize(message.text))
 

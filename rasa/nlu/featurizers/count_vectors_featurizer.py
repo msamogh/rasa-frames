@@ -107,6 +107,9 @@ class CountVectorsFeaturizer(Featurizer):
         # if convert all characters to lowercase
         self.lowercase = self.component_config["lowercase"]
 
+        # Flag to check if test data has been featurized or not.
+        self.is_test_data_featurized = False
+
     # noinspection PyPep8Naming
     def _load_OOV_params(self):
         self.OOV_token = self.component_config["OOV_token"]
@@ -358,6 +361,37 @@ class CountVectorsFeaturizer(Featurizer):
                 "didn't receive enough training data"
             )
         else:
+
+            featurized_test_data = None
+
+            if "test_data" in kwargs and not self.is_test_data_featurized:
+
+                test_data = kwargs["test_data"]
+
+                lem_ints = [self._get_message_intent(example)
+                                for example in test_data.intent_examples]
+
+                self._check_OOV_present(lem_ints)
+
+                if self.use_shared_vocab:
+                    vect = self.vect
+                else:
+                    vect = self.vect[1]
+
+                if not self.sequence:
+                    Y = vect.transform(lem_ints)
+                    if not self.sparse:
+                        Y = Y.toarray()
+                else:
+                    Y = self._create_sequence(vect, lem_ints)
+
+                for i, example in enumerate(test_data.intent_examples):
+                    example.set("intent_features", Y[i])
+
+                featurized_test_data = test_data
+
+                self.is_test_data_featurized = True
+
             message_text = self._get_message_text(message)
             if self.use_shared_vocab:
                 vect = self.vect
@@ -381,6 +415,8 @@ class CountVectorsFeaturizer(Featurizer):
                 else:
                     seq = self._create_sequence(vect, [message_text])
                     message.set("text_features", seq)
+
+            return featurized_test_data
 
     def persist(self, file_name: Text, model_dir: Text) -> Optional[Dict[Text, Any]]:
         """Persist this model into the passed directory.
