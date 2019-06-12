@@ -118,7 +118,7 @@ def log_evaluation_table(
     logger.info("F1-Score:  {}".format(f1))
     logger.info("Precision: {}".format(precision))
     logger.info("Accuracy:  {}".format(accuracy))
-    logger.info("Classification report: \n{}".format(report))
+    # logger.info("Classification report: \n{}".format(report))
 
 
 def get_evaluation_metrics(targets, predictions, output_dict=False):
@@ -302,17 +302,18 @@ def evaluate_intents(
 
         cnf_matrix = confusion_matrix(targets, predictions)
         labels = unique_labels(targets, predictions)
-        plot_confusion_matrix(
-            cnf_matrix,
-            classes=labels,
-            title="Intent Confusion matrix",
-            out=confmat_filename,
-        )
-        plt.show()
 
-        plot_intent_confidences(intent_results, intent_hist_filename)
-
-        plt.show()
+        # plot_confusion_matrix(
+        #     cnf_matrix,
+        #     classes=labels,
+        #     title="Intent Confusion matrix",
+        #     out=confmat_filename,
+        # )
+        # plt.show()
+        #
+        # plot_intent_confidences(intent_results, intent_hist_filename)
+        #
+        # plt.show()
 
     predictions = [
         {

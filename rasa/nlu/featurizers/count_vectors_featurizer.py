@@ -366,6 +366,8 @@ class CountVectorsFeaturizer(Featurizer):
 
             if "test_data" in kwargs and not self.is_test_data_featurized:
 
+                logger.info("Adding BOW features to intents of test set for the first time")
+
                 test_data = kwargs["test_data"]
 
                 lem_ints = [self._get_message_intent(example)

@@ -1103,12 +1103,16 @@ class EmbeddingIntentClassifier(Component):
 
                 encoded_new_intents = self._create_encoded_intents(self.test_intent_dict, test_data)
 
-                self.inv_intent_dict.update(self.test_inv_intent_dict)
+                # self.inv_intent_dict.update(self.test_inv_intent_dict)
+                self.test_inv_intent_dict = {i:val for i,(key,val) in enumerate(self.test_inv_intent_dict.items())}
+                self.inv_intent_dict = self.test_inv_intent_dict
 
                 self.encoded_all_intents = np.append(self.encoded_all_intents, encoded_new_intents, axis=0)
 
                 new_intents_embed_values = self._create_all_intents_embed(encoded_new_intents)
-                self.all_intents_embed_values = np.append(self.all_intents_embed_values, new_intents_embed_values, axis=1)
+                print(self.all_intents_embed_values.shape,new_intents_embed_values.shape)
+                # self.all_intents_embed_values = np.append(self.all_intents_embed_values, new_intents_embed_values, axis=1)
+                self.all_intents_embed_values = new_intents_embed_values
 
                 self.is_test_data_featurized = True
 
