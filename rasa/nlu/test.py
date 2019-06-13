@@ -128,7 +128,7 @@ def compute_hit_ratio(targets, prediction_rankings):
     num_hits = 0
     prediction_ranked_intents = [[candidate['name'] for candidate in target_predictions] for target_predictions in prediction_rankings]
     for idx, target in enumerate(targets):
-        target_predictions = prediction_rankings[idx]
+        target_predictions = prediction_ranked_intents[idx]
         if target in target_predictions:
             num_hits += 1
     return num_hits / float(num_samples)
