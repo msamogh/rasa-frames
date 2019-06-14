@@ -1046,7 +1046,7 @@ class EmbeddingIntentClassifier(Component):
 
         filtered_embed_values = self.all_intents_embed_values[:,filtered_cand_ids]
 
-        print(filtered_cand_ids, filtered_embed_values.shape)
+        # print(filtered_cand_ids, filtered_embed_values.shape)
 
         message_sim = self.session.run(
             self.sim_all,
@@ -1158,7 +1158,7 @@ class EmbeddingIntentClassifier(Component):
                 self.encoded_all_intents = np.append(self.encoded_all_intents, encoded_new_intents, axis=0)
 
                 new_intents_embed_values = self._create_all_intents_embed(encoded_new_intents)
-                print(self.all_intents_embed_values.shape,new_intents_embed_values.shape)
+                # print(self.all_intents_embed_values.shape,new_intents_embed_values.shape)
                 # self.all_intents_embed_values = np.append(self.all_intents_embed_values, new_intents_embed_values, axis=1)
                 self.all_intents_embed_values = new_intents_embed_values
 
