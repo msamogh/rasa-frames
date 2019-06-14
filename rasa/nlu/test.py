@@ -129,6 +129,7 @@ def compute_hit_ratio(targets, prediction_rankings):
     prediction_ranked_intents = [[candidate['name'] for candidate in target_predictions] for target_predictions in prediction_rankings]
     for idx, target in enumerate(targets):
         target_predictions = prediction_ranked_intents[idx]
+        # print(idx, target,target_predictions)
         if target in target_predictions:
             num_hits += 1
     return num_hits / float(num_samples)
@@ -584,7 +585,7 @@ def get_eval_data(interpreter, test_data):  # pragma: no cover
     should_eval_entities = is_entity_extractor_present(interpreter)
 
     for example in tqdm(test_data.training_examples):
-        result = interpreter.parse(example.text, only_output_properties=False)
+        result = interpreter.parse(example.text, only_output_properties=False,text_intent=example.get('intent'))
 
         if should_eval_intents:
             intent_prediction = result.get("intent", {}) or {}

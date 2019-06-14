@@ -361,7 +361,8 @@ class Interpreter(object):
         self,
         text: Text,
         time: Optional[datetime.datetime] = None,
-        only_output_properties: bool = True
+        only_output_properties: bool = True,
+        text_intent: Text = None,
     ) -> Dict[Text, Any]:
         """Parse the input text, classify it and return pipeline result.
 
@@ -377,6 +378,8 @@ class Interpreter(object):
             return output
 
         message = Message(text, self.default_output_attributes(), time=time)
+        if text_intent is not None:
+            message.set("intent_target", text_intent)
 
         # print([e.get("intent") for e in self.context["test_data"].intent_examples])
         for component in self.pipeline:

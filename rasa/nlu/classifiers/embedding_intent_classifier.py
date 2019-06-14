@@ -5,13 +5,14 @@ import pickle
 import typing
 from tqdm import tqdm
 from typing import Any, Dict, List, Optional, Text, Tuple
+from random import shuffle
 
 import numpy as np
 from scipy.sparse import issparse, csr_matrix
 from tensor2tensor.models.transformer import transformer_small, transformer_prepare_encoder, transformer_encoder
 from tensor2tensor.layers.common_attention import add_timing_signal_1d, large_compatible_negative
 
-from rasa.nlu.classifiers import INTENT_RANKING_LENGTH
+from rasa.nlu.classifiers import INTENT_RANKING_LENGTH, NUM_INTENT_CANDIDATES
 from rasa.nlu.components import Component
 from rasa.utils.common import is_logging_disabled
 
@@ -1028,7 +1029,8 @@ class EmbeddingIntentClassifier(Component):
 
     # noinspection PyPep8Naming
     def _calculate_message_sim_all(self,
-                                   X: np.ndarray
+                                   X: np.ndarray,
+                                   target_intent_id: int,
                                    ) -> Tuple[np.ndarray, List[float]]:
         """Load tf graph and calculate message similarities"""
 
@@ -1037,22 +1039,49 @@ class EmbeddingIntentClassifier(Component):
             feed_dict={self.a_in: X,
                        self.all_intents_embed_in: self.all_intents_embed_values}
         )
-        message_sim = message_sim.flatten()  # sim is a matrix
 
-        intent_ids = message_sim.argsort()[::-1]
-        message_sim[::-1].sort()
+        # print('Shapes in message sim func', message_sim.shape, X.shape, self.all_intents_embed_values.shape)
+
+        message_sim = message_sim.flatten().tolist()  # sim is a matrix
+
+        # print(message_sim)
+
+        intent_sim_pairs = [(id,sim) for id,sim in enumerate(message_sim)]
+
+        # print(intent_sim_pairs)
+
+        target_intent_id_sim = intent_sim_pairs.pop(target_intent_id)
+
+        shuffle(intent_sim_pairs)
+
+        negative_intent_sample = intent_sim_pairs[:NUM_INTENT_CANDIDATES-1]
+
+        message_sim = negative_intent_sample + [target_intent_id_sim]
+
+        sorted_intents = sorted(message_sim, key=lambda x: x[1])[::-1]
+
+        intent_ids, message_sim = list(zip(*sorted_intents))
+
+        intent_ids = list(intent_ids)
+        message_sim = list(message_sim)
+
+        # print(intent_ids,message_sim)
+
+        # intent_ids = message_sim.argsort()[::-1]
+        # # print(intent_ids)
+        # message_sim[::-1].sort()
 
         if self.similarity_type == 'cosine':
             # clip negative values to zero
             message_sim[message_sim < 0] = 0
         elif self.similarity_type == 'inner':
             # normalize result to [0, 1] with softmax but only over 3*num_neg+1 values
-            message_sim[3*self.num_neg+1:] += -np.inf
+            # message_sim[3*self.num_neg+1:] += -np.inf
             message_sim = np.exp(message_sim)
             message_sim /= np.sum(message_sim)
 
         # transform sim to python list for JSON serializing
-        return intent_ids, message_sim.tolist()
+        return np.array(intent_ids), message_sim
 
     def _toarray(self, array_of_sparse):
         if issparse(array_of_sparse):
@@ -1086,6 +1115,7 @@ class EmbeddingIntentClassifier(Component):
             # get features (bag of words) for a message
             X = message.get("text_features")
             X = self._toarray(X)
+            intent_target = message.get("intent_target")
 
             # Add test intents to existing intents
             if "test_data" in kwargs and not self.is_test_data_featurized:
@@ -1104,8 +1134,12 @@ class EmbeddingIntentClassifier(Component):
                 encoded_new_intents = self._create_encoded_intents(self.test_intent_dict, test_data)
 
                 # self.inv_intent_dict.update(self.test_inv_intent_dict)
+
+                # Reindex the intents from 0
                 self.test_inv_intent_dict = {i:val for i,(key,val) in enumerate(self.test_inv_intent_dict.items())}
                 self.inv_intent_dict = self.test_inv_intent_dict
+
+                self.test_intent_dict = {v: k for k, v in self.inv_intent_dict.items()}
 
                 self.encoded_all_intents = np.append(self.encoded_all_intents, encoded_new_intents, axis=0)
 
@@ -1135,7 +1169,10 @@ class EmbeddingIntentClassifier(Component):
             # load tf graph and session
             # intent_ids, message_sim = self._calculate_message_sim(X, all_Y)
 
-            intent_ids, message_sim = self._calculate_message_sim_all(X)
+            intent_target_id = self.test_intent_dict[intent_target]
+            # print(intent_target,intent_target_id)
+
+            intent_ids, message_sim = self._calculate_message_sim_all(X, intent_target_id)
 
             # if X contains all zeros do not predict some label
             if X.any() and intent_ids.size > 0:
