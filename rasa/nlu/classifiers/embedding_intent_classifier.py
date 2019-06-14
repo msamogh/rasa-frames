@@ -1077,7 +1077,7 @@ class EmbeddingIntentClassifier(Component):
         intent_ids, message_sim = list(zip(*sorted_intents))
 
         intent_ids = list(intent_ids)
-        message_sim = list(message_sim)
+        message_sim = np.array(message_sim)
 
         # print(intent_ids,message_sim)
 
@@ -1095,7 +1095,7 @@ class EmbeddingIntentClassifier(Component):
             message_sim /= np.sum(message_sim)
 
         # transform sim to python list for JSON serializing
-        return np.array(intent_ids), message_sim
+        return np.array(intent_ids), message_sim.tolist()
 
     def _toarray(self, array_of_sparse):
         if issparse(array_of_sparse):
