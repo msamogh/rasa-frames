@@ -758,6 +758,8 @@ class EmbeddingIntentClassifier(Component):
               **kwargs: Any) -> None:
         """Train the embedding intent classifier on a data set."""
 
+        tb_sum_dir = '/tmp/tb_logs'
+
         intent_dict = self._create_intent_dict(training_data)
         if len(intent_dict) < 2:
             logger.error("Can not train an intent classifier. "
@@ -800,6 +802,8 @@ class EmbeddingIntentClassifier(Component):
             train_dataset = tf.data.Dataset.from_tensor_slices((X_tensor, Y_tensor))
             train_dataset = train_dataset.shuffle(buffer_size=len(X))
             train_dataset = train_dataset.batch(batch_size_in, drop_remainder=self.fused_lstm)
+
+            # tf.summary.scalar("batch_size", batch_size_in)
 
             if self.evaluate_on_num_examples:
                 ids = np.random.permutation(len(X))[:self.evaluate_on_num_examples]
@@ -853,6 +857,14 @@ class EmbeddingIntentClassifier(Component):
             else:
                 raise
 
+            self.max_sim_id = tf.reduce_max(self.sim_op,axis=-1)
+            self.sim_diag = tf.linalg.tensor_diag_part(self.sim_op)
+
+            self.acc_op = tf.reduce_mean(tf.cast(tf.math.equal(self.max_sim_id,self.sim_diag),dtype=tf.float32))
+
+            tf.summary.scalar('loss',loss)
+            tf.summary.scalar('accuracy',self.acc_op)
+
             train_op = tf.train.AdamOptimizer().minimize(loss)
 
             train_init_op = iterator.make_initializer(train_dataset)
@@ -861,6 +873,8 @@ class EmbeddingIntentClassifier(Component):
             else:
                 val_init_op = None
 
+            self.summary_merged_op = tf.summary.merge_all()
+
             # [print(v.name, v.shape) for v in tf.trainable_variables()]
             # exit()
             # train tensorflow graph
@@ -868,7 +882,7 @@ class EmbeddingIntentClassifier(Component):
 
             # self._train_tf(X, Y, intents_for_X, negs_in,
             #                loss, is_training, train_op)
-            self._train_tf_dataset(train_init_op, val_init_op, batch_size_in, loss, is_training, train_op)
+            self._train_tf_dataset(train_init_op, val_init_op, batch_size_in, loss, is_training, train_op, tb_sum_dir)
 
             self.all_intents_embed_values = self._create_all_intents_embed(self.encoded_all_intents, iterator)
 
@@ -895,11 +909,16 @@ class EmbeddingIntentClassifier(Component):
                           batch_size_in,
                           loss: 'tf.Tensor',
                           is_training: 'tf.Tensor',
-                          train_op: 'tf.Tensor'
+                          train_op: 'tf.Tensor',
+                          tb_sum_dir: Text,
                           ) -> None:
         """Train tf graph"""
 
         self.session.run(tf.global_variables_initializer())
+
+        train_tb_writer = tf.summary.FileWriter(os.path.join(tb_sum_dir,'train'),
+                                      self.session.graph)
+        test_tb_writer = tf.summary.FileWriter(os.path.join(tb_sum_dir,'test'))
 
         if self.evaluate_on_num_examples:
             logger.info("Accuracy is updated every {} epochs"
@@ -908,6 +927,7 @@ class EmbeddingIntentClassifier(Component):
         pbar = tqdm(range(self.epochs), desc="Epochs", disable=is_logging_disabled())
         train_acc = 0
         last_loss = 0
+        iter_num = 0
         for ep in pbar:
 
             batch_size = self._linearly_increasing_batch_size(ep)
@@ -916,16 +936,22 @@ class EmbeddingIntentClassifier(Component):
 
             ep_loss = 0
             batches_per_epoch = 0
+
             while True:
                 try:
-                    _, batch_loss = self.session.run((train_op, loss),
+                    _, batch_loss, summary = self.session.run((train_op, loss, self.summary_merged_op),
                                                      feed_dict={is_training: True})
+
+                    train_tb_writer.add_summary(summary, iter_num)
 
                 except tf.errors.OutOfRangeError:
                     break
 
                 batches_per_epoch += 1
+                iter_num += 1
                 ep_loss += batch_loss
+
+            # logger.info('Epoch ended with {0} number of mini-batch iterations'.format(batches_per_epoch))
 
             ep_loss /= batches_per_epoch
 
@@ -933,8 +959,14 @@ class EmbeddingIntentClassifier(Component):
                 if (ep == 0 or
                         (ep + 1) % self.evaluate_every_num_epochs == 0 or
                         (ep + 1) == self.epochs):
-                    train_acc = self._output_training_stat_dataset(val_init_op)
+                    self.session.run(val_init_op)
+                    batch_loss, train_acc, summary = self.session.run((loss, self.acc_op, self.summary_merged_op),
+                                                     feed_dict={is_training: False})
+
+                    # np_train_acc = self._output_training_stat_dataset(val_init_op)
+
                     last_loss = ep_loss
+                    test_tb_writer.add_summary(summary, iter_num)
 
                 pbar.set_postfix({
                     "loss": "{:.3f}".format(ep_loss),
@@ -956,8 +988,9 @@ class EmbeddingIntentClassifier(Component):
         self.session.run(val_init_op)
         train_sim = self.session.run(self.sim_op)
 
-        train_acc = np.mean(np.max(train_sim, -1) == train_sim.diagonal())
-
+        sim_maxs = np.max(train_sim, -1)
+        sim_diags = train_sim.diagonal()
+        train_acc = np.mean(sim_maxs == sim_diags)
         return train_acc
 
     def _create_all_intents_embed(self, encoded_all_intents, iterator=None):
