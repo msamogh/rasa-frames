@@ -1034,10 +1034,24 @@ class EmbeddingIntentClassifier(Component):
                                    ) -> Tuple[np.ndarray, List[float]]:
         """Load tf graph and calculate message similarities"""
 
+        num_unique_intents = self.all_intents_embed_values.shape[1]
+
+        all_cand_ids = list(range(num_unique_intents))
+
+        all_cand_ids.pop(target_intent_id)
+
+        filtered_neg_intent_ids = np.random.choice(np.array(all_cand_ids),NUM_INTENT_CANDIDATES-1)
+
+        filtered_cand_ids = np.append(filtered_neg_intent_ids,[target_intent_id])
+
+        filtered_embed_values = self.all_intents_embed_values[:,filtered_cand_ids]
+
+        print(filtered_cand_ids, filtered_embed_values.shape)
+
         message_sim = self.session.run(
             self.sim_all,
             feed_dict={self.a_in: X,
-                       self.all_intents_embed_in: self.all_intents_embed_values}
+                       self.all_intents_embed_in: filtered_embed_values}
         )
 
         # print('Shapes in message sim func', message_sim.shape, X.shape, self.all_intents_embed_values.shape)
@@ -1046,17 +1060,17 @@ class EmbeddingIntentClassifier(Component):
 
         # print(message_sim)
 
-        intent_sim_pairs = [(id,sim) for id,sim in enumerate(message_sim)]
+        message_sim = list(zip(filtered_cand_ids, message_sim))
 
         # print(intent_sim_pairs)
 
-        target_intent_id_sim = intent_sim_pairs.pop(target_intent_id)
-
-        shuffle(intent_sim_pairs)
-
-        negative_intent_sample = intent_sim_pairs[:NUM_INTENT_CANDIDATES-1]
-
-        message_sim = negative_intent_sample + [target_intent_id_sim]
+        # target_intent_id_sim = intent_sim_pairs.pop(target_intent_id)
+        #
+        # shuffle(intent_sim_pairs)
+        #
+        # negative_intent_sample = intent_sim_pairs[:NUM_INTENT_CANDIDATES-1]
+        #
+        # message_sim = negative_intent_sample + [target_intent_id_sim]
 
         sorted_intents = sorted(message_sim, key=lambda x: x[1])[::-1]
 
