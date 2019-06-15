@@ -683,7 +683,10 @@ class EmbeddingIntentClassifier(Component):
         loss += max_sim_intent_emb * self.C_emb
 
         # penalize max similarity between input embeddings
-        sim_input_emb += large_compatible_negative(bad_negs.dtype) * bad_negs
+
+        sim_input_emb = tf.cond(tf.math.equal(tf.shape(sim_input_emb)[1], 0), lambda: sim_input_emb,
+                                lambda: sim_input_emb + large_compatible_negative(bad_negs.dtype) * bad_negs)
+        # sim_input_emb += large_compatible_negative(bad_negs.dtype) * bad_negs
         max_sim_input_emb = tf.maximum(0., tf.reduce_max(sim_input_emb, -1))
         loss += max_sim_input_emb * self.C_emb
 
@@ -708,6 +711,16 @@ class EmbeddingIntentClassifier(Component):
         # add regularization losses
         loss += tf.losses.get_regularization_loss()
         return loss
+
+    def tf_acc_op(self,sim_mat,is_training):
+
+        max_sim_id = tf.reduce_max(sim_mat,axis=-1)
+        acc_op = tf.cond(is_training, lambda: tf.reduce_mean(tf.cast(tf.math.equal(max_sim_id,tf.zeros_like(max_sim_id)),
+                                                                     dtype=tf.float32)),
+                         lambda: tf.reduce_mean(tf.cast(tf.math.equal(max_sim_id, tf.linalg.tensor_diag_part(sim_mat)),
+                                                                     dtype=tf.float32)))
+
+        return acc_op
 
     # training helpers:
     def _linearly_increasing_batch_size(self, epoch: int) -> int:
@@ -830,37 +843,35 @@ class EmbeddingIntentClassifier(Component):
             iterator = tf.data.Iterator.from_structure(train_dataset.output_types,
                                                        (train_dataset_output_shapes_X, train_dataset_output_shapes_Y),
                                                        output_classes=train_dataset.output_classes)
+
             # iterator = train_dataset.make_initializable_iterator()
             a_sparse, b_sparse = iterator.get_next()
 
-            a_raw = self._sparse_tensor_to_dense(a_sparse, X[0].shape[-1])
-            b_raw = self._sparse_tensor_to_dense(b_sparse, Y[0].shape[-1])
+            self.a_raw = self._sparse_tensor_to_dense(a_sparse, X[0].shape[-1])
+            self.b_raw = self._sparse_tensor_to_dense(b_sparse, Y[0].shape[-1])
 
             is_training = tf.placeholder_with_default(False, shape=())
 
-            self.word_embed = self._create_tf_embed_a(a_raw, is_training)
-            self.intent_embed = self._create_tf_embed_b(b_raw, is_training)
+            self.word_embed = self._create_tf_embed_a(self.a_raw, is_training)
+            self.intent_embed = self._create_tf_embed_b(self.b_raw, is_training)
 
-            neg_ids = tf.random.categorical(tf.log(1. - tf.eye(tf.shape(b_raw)[0])), self.num_neg)
+            neg_ids = tf.random.categorical(tf.log(1. - tf.eye(tf.shape(self.b_raw)[0])), self.num_neg)
 
-            iou_intent = self._tf_calc_iou(b_raw, is_training, neg_ids)
-            bad_negs = 1. - tf.nn.relu(tf.sign(self.iou_threshold - iou_intent))
+            iou_intent = self._tf_calc_iou(self.b_raw, is_training, neg_ids)
+            self.bad_negs = 1. - tf.nn.relu(tf.sign(self.iou_threshold - iou_intent))
 
-            tiled_word_embed = self._tf_sample_neg(self.word_embed, is_training, neg_ids, first_only=True)
-            tiled_intent_embed = self._tf_sample_neg(self.intent_embed, is_training, neg_ids)
+            self.tiled_word_embed = self._tf_sample_neg(self.word_embed, is_training, neg_ids, first_only=True)
+            self.tiled_intent_embed = self._tf_sample_neg(self.intent_embed, is_training, neg_ids)
 
-            self.sim_op, sim_intent_emb, sim_input_emb = self._tf_sim(tiled_word_embed, tiled_intent_embed)
+            self.sim_op, self.sim_intent_emb, self.sim_input_emb = self._tf_sim(self.tiled_word_embed, self.tiled_intent_embed)
             if self.loss_type == 'margin':
-                loss = self._tf_loss_margin(self.sim_op, sim_intent_emb, sim_input_emb, bad_negs)
+                loss = self._tf_loss_margin(self.sim_op, self.sim_intent_emb, self.sim_input_emb, self.bad_negs)
             elif self.loss_type == 'softmax':
-                loss = self._tf_loss_softmax(self.sim_op, sim_intent_emb, sim_input_emb, bad_negs)
+                loss = self._tf_loss_softmax(self.sim_op, self.sim_intent_emb, self.sim_input_emb, self.bad_negs)
             else:
                 raise
 
-            self.max_sim_id = tf.reduce_max(self.sim_op,axis=-1)
-            self.sim_diag = tf.linalg.tensor_diag_part(self.sim_op)
-
-            self.acc_op = tf.reduce_mean(tf.cast(tf.math.equal(self.max_sim_id,self.sim_diag),dtype=tf.float32))
+            self.acc_op = self.tf_acc_op(self.sim_op,is_training)
 
             tf.summary.scalar('loss',loss)
             tf.summary.scalar('accuracy',self.acc_op)
@@ -890,8 +901,8 @@ class EmbeddingIntentClassifier(Component):
             self.all_intents_embed_in = tf.placeholder(tf.float32, (None, None, self.embed_dim),
                                                        name='all_intents_embed')
 
-            self.a_in = tf.placeholder(a_raw.dtype, a_raw.shape, name='a')
-            self.b_in = tf.placeholder(b_raw.dtype, b_raw.shape, name='b')
+            self.a_in = tf.placeholder(self.a_raw.dtype, self.a_raw.shape, name='a')
+            self.b_in = tf.placeholder(self.b_raw.dtype, self.b_raw.shape, name='b')
 
             if not self.gpu_lstm:
                 self.word_embed = self._create_tf_embed_a(self.a_in, is_training)
@@ -939,10 +950,24 @@ class EmbeddingIntentClassifier(Component):
 
             while True:
                 try:
-                    _, batch_loss, summary = self.session.run((train_op, loss, self.summary_merged_op),
-                                                     feed_dict={is_training: True})
 
-                    train_tb_writer.add_summary(summary, iter_num)
+                    fetch_list = (self.a_raw, self.b_raw, self.intent_embed, self.word_embed,
+                                                                        self.tiled_intent_embed, self.tiled_word_embed,
+                                                                        self.sim_op, self.bad_negs, self.sim_input_emb,
+                                                                        self.sim_intent_emb,
+                                                                        train_op, loss,
+                                                                        self.summary_merged_op)
+
+                    return_vals = self.session.run(fetch_list, feed_dict={is_training: True})
+
+                    batch_loss = return_vals[-2]
+                    #
+                    # for i in range(10):
+                    #     print(return_vals[i].shape)
+                    #
+                    # print(return_vals[7][0])
+
+                    train_tb_writer.add_summary(return_vals[-1], iter_num)
 
                 except tf.errors.OutOfRangeError:
                     break
@@ -959,11 +984,23 @@ class EmbeddingIntentClassifier(Component):
                 if (ep == 0 or
                         (ep + 1) % self.evaluate_every_num_epochs == 0 or
                         (ep + 1) == self.epochs):
-                    self.session.run(val_init_op)
-                    batch_loss, train_acc, summary = self.session.run((loss, self.acc_op, self.summary_merged_op),
-                                                     feed_dict={is_training: False})
 
-                    # np_train_acc = self._output_training_stat_dataset(val_init_op)
+                    self.session.run(val_init_op)
+
+                    fetch_list = (self.a_raw, self.b_raw, self.intent_embed, self.word_embed,
+                                                                        self.tiled_intent_embed, self.tiled_word_embed,
+                                                                        self.sim_op, self.bad_negs,self.sim_input_emb,
+                                                                        self.sim_intent_emb,
+                                                                        loss, self.acc_op, self.summary_merged_op)
+
+                    return_vals = self.session.run(fetch_list)
+
+                    summary = return_vals[-1]
+                    # print('Evaluation round')
+                    # for i in range(12):
+                    #     print(return_vals[i].shape)
+
+                    train_acc = return_vals[-2]
 
                     last_loss = ep_loss
                     test_tb_writer.add_summary(summary, iter_num)
