@@ -125,7 +125,12 @@ class EmbeddingIntentClassifier(Component):
         # how often to calculate training accuracy
         "evaluate_every_num_epochs": 10,  # small values may hurt performance
         # how many examples to use for calculation of training accuracy
-        "evaluate_on_num_examples": 1000  # large values may hurt performance
+        "evaluate_on_num_examples": 1000,   # large values may hurt performance
+
+        # Batch size for evaluation runs
+        "validation_batch_size": 64
+
+
     }
 
     def __init__(self,
@@ -243,6 +248,8 @@ class EmbeddingIntentClassifier(Component):
             self.evaluate_every_num_epochs = self.epochs
 
         self.evaluate_on_num_examples = config['evaluate_on_num_examples']
+        self.validation_bs = config["validation_batch_size"]
+        print('Setting evaluation batch size to', self.validation_bs)
 
     def _load_params(self) -> None:
 
@@ -826,7 +833,7 @@ class EmbeddingIntentClassifier(Component):
                 X_tensor_val = self._to_sparse_tensor(X[ids])
                 Y_tensor_val = self._to_sparse_tensor(Y[ids])
 
-                val_dataset = tf.data.Dataset.from_tensor_slices((X_tensor_val, Y_tensor_val)).batch(self.evaluate_on_num_examples)
+                val_dataset = tf.data.Dataset.from_tensor_slices((X_tensor_val, Y_tensor_val)).batch(self.validation_bs)
             else:
                 val_dataset = None
 
@@ -871,7 +878,7 @@ class EmbeddingIntentClassifier(Component):
             else:
                 raise
 
-            self.acc_op = self.tf_acc_op(self.sim_op,is_training)
+            self.acc_op = self.tf_acc_op(self.sim_op, is_training)
 
             tf.summary.scalar('loss',loss)
             tf.summary.scalar('accuracy',self.acc_op)
@@ -937,7 +944,10 @@ class EmbeddingIntentClassifier(Component):
 
         pbar = tqdm(range(self.epochs), desc="Epochs", disable=is_logging_disabled())
         train_acc = 0
-        last_loss = 0
+        val_acc = 0
+        train_loss = 0
+        val_loss = 0
+
         iter_num = 0
         for ep in pbar:
 
@@ -945,7 +955,8 @@ class EmbeddingIntentClassifier(Component):
 
             self.session.run(train_init_op, feed_dict={batch_size_in: batch_size})
 
-            ep_loss = 0
+            ep_train_loss = 0
+            ep_train_acc = 0
             batches_per_epoch = 0
 
             while True:
@@ -955,17 +966,13 @@ class EmbeddingIntentClassifier(Component):
                                                                         self.tiled_intent_embed, self.tiled_word_embed,
                                                                         self.sim_op, self.bad_negs, self.sim_input_emb,
                                                                         self.sim_intent_emb,
-                                                                        train_op, loss,
+                                                                        train_op, loss, self.acc_op,
                                                                         self.summary_merged_op)
 
                     return_vals = self.session.run(fetch_list, feed_dict={is_training: True})
 
-                    batch_loss = return_vals[-2]
-                    #
-                    # for i in range(10):
-                    #     print(return_vals[i].shape)
-                    #
-                    # print(return_vals[7][0])
+                    batch_loss = return_vals[-3]
+                    batch_acc = return_vals[-2]
 
                     train_tb_writer.add_summary(return_vals[-1], iter_num)
 
@@ -974,50 +981,70 @@ class EmbeddingIntentClassifier(Component):
 
                 batches_per_epoch += 1
                 iter_num += 1
-                ep_loss += batch_loss
+                ep_train_loss += batch_loss
+                ep_train_acc += batch_acc
 
             # logger.info('Epoch ended with {0} number of mini-batch iterations'.format(batches_per_epoch))
 
-            ep_loss /= batches_per_epoch
+            ep_train_loss /= batches_per_epoch
+            ep_train_acc /= batches_per_epoch
 
             if self.evaluate_on_num_examples and val_init_op is not None:
+
                 if (ep == 0 or
                         (ep + 1) % self.evaluate_every_num_epochs == 0 or
                         (ep + 1) == self.epochs):
 
                     self.session.run(val_init_op)
 
-                    fetch_list = (self.a_raw, self.b_raw, self.intent_embed, self.word_embed,
+                    ep_val_loss = 0
+                    ep_val_acc = 0
+                    val_num_batches = 0
+
+                    while True:
+
+                        try:
+
+                            fetch_list = (self.a_raw, self.b_raw, self.intent_embed, self.word_embed,
                                                                         self.tiled_intent_embed, self.tiled_word_embed,
                                                                         self.sim_op, self.bad_negs,self.sim_input_emb,
                                                                         self.sim_intent_emb,
                                                                         loss, self.acc_op, self.summary_merged_op)
 
-                    return_vals = self.session.run(fetch_list)
+                            return_vals = self.session.run(fetch_list)
 
-                    summary = return_vals[-1]
-                    # print('Evaluation round')
-                    # for i in range(12):
-                    #     print(return_vals[i].shape)
+                            summary = return_vals[-1]
+                            batch_acc = return_vals[-2]
+                            batch_loss = return_vals[-3]
 
-                    train_acc = return_vals[-2]
+                            test_tb_writer.add_summary(summary, iter_num)
 
-                    last_loss = ep_loss
-                    test_tb_writer.add_summary(summary, iter_num)
+                        except tf.errors.OutOfRangeError:
+                            break
+
+                        ep_val_loss += batch_loss
+                        ep_val_acc += batch_acc
+                        iter_num += 1
+                        val_num_batches += 1
+
+                    ep_val_loss /= val_num_batches
+                    ep_val_acc /= val_num_batches
 
                 pbar.set_postfix({
-                    "loss": "{:.3f}".format(ep_loss),
-                    "acc": "{:.3f}".format(train_acc)
+                    "Train loss": "{:.3f}".format(ep_train_loss),
+                    "Train acc": "{:.3f}".format(ep_train_acc),
+                    "Val loss": "{:.3f}".format(ep_val_loss),
+                    "Val acc": "{:.3f}".format(ep_val_acc)
                 })
             else:
                 pbar.set_postfix({
-                    "loss": "{:.3f}".format(ep_loss)
+                    "loss": "{:.3f}".format(ep_train_loss)
                 })
 
         if self.evaluate_on_num_examples:
             logger.info("Finished training embedding classifier, "
-                        "loss={:.3f}, train accuracy={:.3f}"
-                        "".format(last_loss, train_acc))
+                        "Train loss : {:.3f}, train accuracy: {:.3f}, val loss : {:.3f}, val accuracy: {:.3f}"
+                        "".format(ep_train_loss, ep_train_acc, ep_val_loss, ep_val_acc))
 
     def _output_training_stat_dataset(self, val_init_op) -> np.ndarray:
         """Output training statistics"""
