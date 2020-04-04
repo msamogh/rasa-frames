@@ -11,6 +11,7 @@ from datetime import datetime
 from typing import List, Dict, Text, Any, Type, Optional
 
 from rasa.core import utils
+from rasa.core.constants import SLOT_CURRENT_FRAME
 from typing import Union
 
 if typing.TYPE_CHECKING:
@@ -329,6 +330,10 @@ class UserUttered(Event):
             return self.text
 
     def apply_to(self, tracker: "DialogueStateTracker") -> None:
+        from rasa.core.actions.action import (  # pytype: disable=pyi-error
+            ACTION_CHANGE_FRAME_NAME,
+        )
+
         tracker.latest_message = self
         tracker.clear_followup_action()
 
@@ -492,6 +497,20 @@ class SlotSet(Event):
 
     def apply_to(self, tracker: "DialogueStateTracker") -> None:
         tracker._set_slot(self.key, self.value)
+
+
+class FrameChanged(Event):
+
+    type_name = "frame_change"
+
+    def __init__(self, frame_id: int):
+        self.frame_id = frame_id
+
+    def apply_to(self, tracker: "DialogueStateTracker") -> None:
+        for slot in tracker.slots.values():
+            assert slot.frame_slot is True
+            tracker._set_slot(slot.name, slot.value)
+        tracker.current_frame = self.frame_id
 
 
 # noinspection PyProtectedMember

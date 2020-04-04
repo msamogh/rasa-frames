@@ -1,15 +1,22 @@
 slots:
   cuisine:
     type: text
+    frame_slot: true
   people:
     type: text
+    frame_slot: true
   location:
     type: text
+    frame_slot: true
   price:
     type: text
+    frame_slot: true
   info:
     type: text
+    frame_slot: true
   matches:
+    type: unfeaturized
+  current_frame:
     type: unfeaturized
 
 entities:

@@ -16,7 +16,7 @@ from typing import (
 )
 
 from rasa.core import events  # pytype: disable=pyi-error
-from rasa.core.actions.action import ACTION_LISTEN_NAME  # pytype: disable=pyi-error
+from rasa.core.actions.action import ACTION_LISTEN_NAME, ACTION_CHANGE_FRAME_NAME  # pytype: disable=pyi-error
 from rasa.core.conversation import Dialogue  # pytype: disable=pyi-error
 from rasa.core.events import (  # pytype: disable=pyi-error
     UserUttered,
@@ -29,7 +29,9 @@ from rasa.core.events import (  # pytype: disable=pyi-error
     BotUttered,
     Form,
     SessionStarted,
+    FrameChanged,
 )
+from rasa.core.frames import FrameSet
 from rasa.core.domain import Domain  # pytype: disable=pyi-error
 from rasa.core.slots import Slot
 
@@ -128,6 +130,9 @@ class DialogueStateTracker:
         else:
             self.slots = AnySlotDict()
 
+        self.frames = FrameSet(init_slots=self.slots.values())
+        self.current_frame = 0
+
         ###
         # current state of the tracker - MUST be re-creatable by processing
         # all the events. This only defines the attributes, values are set in
@@ -171,11 +176,13 @@ class DialogueStateTracker:
             "latest_message": self.latest_message.parse_data,
             "latest_event_time": latest_event_time,
             "followup_action": self.followup_action,
+            "current_frame": self.current_frame,
             "paused": self.is_paused(),
             "events": evts,
             "latest_input_channel": self.get_latest_input_channel(),
             "active_form": self.active_form,
             "latest_action_name": self.latest_action_name,
+            "frames": self.frames,
         }
 
     def past_states(self, domain) -> deque:
@@ -438,9 +445,13 @@ class DialogueStateTracker:
         event.apply_to(self)
 
         if domain and isinstance(event, UserUttered):
-            # store all entities as slots
+            # reset all framed slots to None
+            for key, value in FrameSet.get_framed_slots(self.slots).items():
+                self._set_slot(key, None)
+            # store the entities only from the latest UserUtterance in the tracker's slots
             for e in domain.slots_for_entities(event.parse_data["entities"]):
                 self.update(e)
+            self.trigger_followup_action(ACTION_CHANGE_FRAME_NAME)
 
     def export_stories(self, e2e: bool = False) -> Text:
         """Dump the tracker as a story in the Rasa Core story format.
@@ -523,12 +534,15 @@ class DialogueStateTracker:
         self.latest_bot_utterance = BotUttered.empty()
         self.followup_action = ACTION_LISTEN_NAME
         self.active_form = {}
+        self.frames = FrameSet(init_slots=self.slots.values())
+        self.current_frame = 0
 
     def _reset_slots(self) -> None:
         """Set all the slots to their initial value."""
 
         for slot in self.slots.values():
             slot.reset()
+        self.current_frame = 0
 
     def _set_slot(self, key: Text, value: Any) -> None:
         """Set the value of a slot if that slot exists."""

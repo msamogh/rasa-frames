@@ -22,6 +22,9 @@ SLOT_LAST_OBJECT = "knowledge_base_last_object"
 SLOT_LAST_OBJECT_TYPE = "knowledge_base_last_object_type"
 DEFAULT_KNOWLEDGE_BASE_ACTION = "action_query_knowledge_base"
 
+# slots for frames
+SLOT_CURRENT_FRAME = "current_frame"
+
 # start of special user message section
 INTENT_MESSAGE_PREFIX = "/"
 

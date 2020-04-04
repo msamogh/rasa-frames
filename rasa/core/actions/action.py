@@ -28,7 +28,12 @@ from rasa.core.events import (
     ActionExecuted,
     Event,
     BotUttered,
+    FrameChanged,
 )
+
+from rasa.core.frames import FrameSet
+from rasa.core.frames import RuleBasedFrameTracker
+
 from rasa.utils.endpoints import EndpointConfig, ClientResponseError
 from typing import Coroutine, Union
 
@@ -59,6 +64,8 @@ ACTION_DEFAULT_ASK_REPHRASE_NAME = "action_default_ask_rephrase"
 
 ACTION_BACK_NAME = "action_back"
 
+ACTION_CHANGE_FRAME_NAME = "action_change_frame"
+
 
 def default_actions() -> List["Action"]:
     """List default actions."""
@@ -72,6 +79,7 @@ def default_actions() -> List["Action"]:
         ActionDefaultAskAffirmation(),
         ActionDefaultAskRephrase(),
         ActionBack(),
+        ActionChangeFrame(),
     ]
 
 
@@ -88,7 +96,8 @@ def combine_user_with_default_actions(user_actions) -> list:
     # implicitly assume that e.g. "action_listen" is always at location
     # 0 in this array. to keep it that way, we remove the duplicate
     # action names from the users list instead of the defaults
-    unique_user_actions = [a for a in user_actions if a not in default_action_names()]
+    unique_user_actions = [
+        a for a in user_actions if a not in default_action_names()]
     return default_action_names() + unique_user_actions
 
 
@@ -535,7 +544,8 @@ class RemoteAction(Action):
 
         try:
             logger.debug(
-                "Calling action endpoint to run action '{}'.".format(self.name())
+                "Calling action endpoint to run action '{}'.".format(
+                    self.name())
             )
             response = await self.action_endpoint.request(
                 json=json_body, method="post", timeout=DEFAULT_REQUEST_TIMEOUT
@@ -724,3 +734,44 @@ class ActionDefaultAskRephrase(ActionUtterTemplate):
 
     def __init__(self) -> None:
         super().__init__("utter_ask_rephrase", silent_fail=True)
+
+
+class ActionChangeFrame(Action):
+    """Triggers a frame-change."""
+
+    def name(self) -> Text:
+        return ACTION_CHANGE_FRAME_NAME
+
+    async def run(
+        self,
+        output_channel: "OutputChannel",
+        nlg: "NaturalLanguageGenerator",
+        tracker: "DialogueStateTracker",
+        domain: "Domain",
+    ) -> List[Event]:
+        events = tracker.events_after_latest_restart()
+        idx = -1
+        while isinstance(events[idx], SlotSet):
+            idx -= 1
+        assert isinstance(events[idx], UserUttered)
+
+        RuleBasedFrameTracker().update_frames(tracker, events[idx])
+
+        # Treat the slot values in the tracker as temporary values
+        # (not necessarily reflecting the values of the active frame).
+        # The active frame will be decided upon only after checking with the FrameTracker.
+        dialogue_act = events[idx].intent
+
+        frames = tracker.frames
+        current_frame = tracker.current_frame
+        if dialogue_act == 'inform':
+            for key, slot in FrameSet.get_framed_slots(tracker.slots).items():
+                if slot.value is None: continue
+                assert slot.frame_slot is True
+                for frame in frames:
+                    if frame.get(key, None) == slot.value:
+
+        tracker.current_frame = self.frame_id
+
+        logger.debug(f'Events before ChangeFrame: {tracker.events_after_latest_restart()[-2:]}')
+        return [FrameChanged(1)]

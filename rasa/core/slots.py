@@ -17,12 +17,14 @@ class Slot:
         initial_value: Any = None,
         value_reset_delay: Optional[int] = None,
         auto_fill: bool = True,
+        frame_slot: bool = False,
     ) -> None:
         self.name = name
         self.value = initial_value
         self.initial_value = initial_value
         self._value_reset_delay = value_reset_delay
         self.auto_fill = auto_fill
+        self.frame_slot = True
 
     def feature_dimensionality(self) -> int:
         """How many features this single slot creates.
@@ -96,10 +98,11 @@ class FloatSlot(Slot):
         initial_value: Optional[float] = None,
         value_reset_delay: Optional[int] = None,
         auto_fill: bool = True,
+        frame_slot: bool = False,
         max_value: float = 1.0,
         min_value: float = 0.0,
     ) -> None:
-        super().__init__(name, initial_value, value_reset_delay, auto_fill)
+        super().__init__(name, initial_value, value_reset_delay, auto_fill, frame_slot)
         self.max_value = max_value
         self.min_value = min_value
 
@@ -194,8 +197,9 @@ class CategoricalSlot(Slot):
         initial_value: Any = None,
         value_reset_delay: Optional[int] = None,
         auto_fill: bool = True,
+        frame_slot: bool = False,
     ) -> None:
-        super().__init__(name, initial_value, value_reset_delay, auto_fill)
+        super().__init__(name, initial_value, value_reset_delay, auto_fill, frame_slot)
         self.values = [str(v).lower() for v in values] if values else []
 
     def persistence_info(self) -> Dict[Text, Any]:
@@ -238,8 +242,9 @@ class DataSlot(Slot):
         initial_value: Any = None,
         value_reset_delay: Optional[int] = 1,
         auto_fill: bool = True,
+        frame_slot: bool = False,
     ):
-        super().__init__(name, initial_value, value_reset_delay, auto_fill)
+        super().__init__(name, initial_value, value_reset_delay, auto_fill, frame_slot)
 
     def as_feature(self) -> List[float]:
         raise NotImplementedError(
