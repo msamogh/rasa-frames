@@ -755,23 +755,7 @@ class ActionChangeFrame(Action):
             idx -= 1
         assert isinstance(events[idx], UserUttered)
 
-        RuleBasedFrameTracker().update_frames(tracker, events[idx])
-
-        # Treat the slot values in the tracker as temporary values
-        # (not necessarily reflecting the values of the active frame).
-        # The active frame will be decided upon only after checking with the FrameTracker.
-        dialogue_act = events[idx].intent
-
-        frames = tracker.frames
-        current_frame = tracker.current_frame
-        if dialogue_act == 'inform':
-            for key, slot in FrameSet.get_framed_slots(tracker.slots).items():
-                if slot.value is None: continue
-                assert slot.frame_slot is True
-                for frame in frames:
-                    if frame.get(key, None) == slot.value:
-
-        tracker.current_frame = self.frame_id
-
-        logger.debug(f'Events before ChangeFrame: {tracker.events_after_latest_restart()[-2:]}')
-        return [FrameChanged(1)]
+        events = RuleBasedFrameTracker().update_frames(
+            tracker, user_utterance=events[idx]
+        )
+        return events

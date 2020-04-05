@@ -31,6 +31,16 @@ actions:
 - utter_you_are_welcome
 
 templates:
+  utter_affirm:
+  - text: "Yes"
+
+  utter_canthelp:
+  - text: "Sorry, I can't help you with that! :("
+
+  utter_confirm:
+  - text: "Are you sure?"
+
+  
   utter_greet:
   - text: "Hey! How are you?"
 
