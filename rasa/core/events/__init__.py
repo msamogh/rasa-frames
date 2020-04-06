@@ -507,10 +507,12 @@ class FrameChanged(Event):
         self.frame_id = frame_id
 
     def apply_to(self, tracker: "DialogueStateTracker") -> None:
-        for slot in tracker.slots.values():
-            assert slot.frame_slot is True
-            tracker._set_slot(slot.name, slot.value)
-        tracker.current_frame = self.frame_id
+        pass
+        # for slot in tracker.slots.values():
+        #     assert slot.frame_slot is True
+        #     tracker._set_slot(slot.name, slot.value)
+        # tracker.frames.activate_frame(self.frame_id, tracker.)
+        # tracker.current_frame = self.frame_id
 
 
 # noinspection PyProtectedMember

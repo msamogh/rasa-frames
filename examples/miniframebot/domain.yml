@@ -1,0 +1,28 @@
+intents:
+  - greet
+  - affirm
+  - inform
+  - compare
+
+entities:
+  - city
+
+actions:
+- utter_greet
+- utter_searching
+- action_search_db
+
+slots:
+  city:
+    type: text
+    frame_slot: true
+
+templates:
+  utter_greet:
+  - text: "Hey! How are you?"
+  utter_searching:
+  - text: "Searching..."
+
+session_config:
+  session_expiration_time: 60
+  carry_over_slots_to_new_session: true

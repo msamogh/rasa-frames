@@ -28,6 +28,7 @@ from rasa.core.events import (
     ActionExecuted,
     Event,
     BotUttered,
+    SlotSet,
     FrameChanged,
 )
 
@@ -749,13 +750,15 @@ class ActionChangeFrame(Action):
         tracker: "DialogueStateTracker",
         domain: "Domain",
     ) -> List[Event]:
+        logger.debug('ActionChangeFrame triggered!')
         events = tracker.events_after_latest_restart()
         idx = -1
         while isinstance(events[idx], SlotSet):
             idx -= 1
         assert isinstance(events[idx], UserUttered)
 
-        events = RuleBasedFrameTracker().update_frames(
+        logger.debug('Calling RuleBasedFrameTracker')
+        RuleBasedFrameTracker().update_frames(
             tracker, user_utterance=events[idx]
         )
-        return events
+        return []
