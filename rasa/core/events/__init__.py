@@ -322,7 +322,8 @@ class UserUttered(Event):
                 intent=self.intent.get("name", ""), entities=ent_string
             )
             if e2e:
-                message = md_format_message(self.text, self.intent, self.entities)
+                message = md_format_message(
+                    self.text, self.intent, self.entities)
                 return "{}: {}".format(self.intent.get("name"), message)
             else:
                 return parse_string
@@ -378,7 +379,8 @@ class BotUttered(Event):
 
     def __repr__(self) -> Text:
         return "BotUttered('{}', {}, {}, {})".format(
-            self.text, json.dumps(self.data), json.dumps(self.metadata), self.timestamp
+            self.text, json.dumps(self.data), json.dumps(
+                self.metadata), self.timestamp
         )
 
     def apply_to(self, tracker: "DialogueStateTracker") -> None:
@@ -411,7 +413,8 @@ class BotUttered(Event):
 
     def as_dict(self) -> Dict[Text, Any]:
         d = super().as_dict()
-        d.update({"text": self.text, "data": self.data, "metadata": self.metadata})
+        d.update({"text": self.text, "data": self.data,
+                  "metadata": self.metadata})
         return d
 
     @classmethod
@@ -499,20 +502,135 @@ class SlotSet(Event):
         tracker._set_slot(self.key, self.value)
 
 
-class FrameChanged(Event):
+class FrameCreated(Event):
 
-    type_name = "frame_change"
+    type_name = "create_frame"
 
-    def __init__(self, frame_id: int):
-        self.frame_id = frame_id
+    def __init__(
+        self,
+        slots: List["Slot"],
+        switch_to: bool = False,
+        timestamp: Optional[float] = None,
+        metadata: Optional[Dict[Text, Any]] = None
+    ):
+        self.slots = slots
+        self.timestamp = timestamp
+        super().__init__(timestamp, metadata)
+
+    @classmethod
+    def _from_story_string(cls, parameters: Dict[Text, Any]) -> Optional[List[Event]]:
+        slots_dict = parameters.get("slots")
+        slots = []
+        for slot in slots_dict:
+            slots.append(Slot(name=slots['name'],
+                              initial_value=slots['value']))
+        return [FrameCreated(
+            slots,
+            parameters.get("switch_to"),
+            parameters.get("timestamp"),
+            parameters.get("metadata"),
+        )]
+
+    def as_dict(self) -> Dict[Text, Any]:
+        d = super().as_dict()
+        d.update({
+            "slots": [{'key': slot.name, 'value': slot.value} for slot in self.slots],
+            "switch_to": self.switch_to
+        })
+        return d
 
     def apply_to(self, tracker: "DialogueStateTracker") -> None:
-        pass
-        # for slot in tracker.slots.values():
-        #     assert slot.frame_slot is True
-        #     tracker._set_slot(slot.name, slot.value)
-        # tracker.frames.activate_frame(self.frame_id, tracker.)
-        # tracker.current_frame = self.frame_id
+        tracker.frames.add_frame(
+            self.slots,
+            self.timestamp,
+            switch_to=self.switch_to
+        )
+
+
+class FrameUpdated(Event):
+
+    type_name = "update_frame"
+
+    def __init__(
+        self,
+        frame_idx: int,
+        name: Text,
+        value: Any,
+        timestamp: Optional[float] = None,
+        metadata: Optional[Dict[Text, Any]] = None
+    ) -> None:
+        self.frame_idx = frame_idx
+        self.name = name
+        self.value = value
+        super().__init__(timestamp, metadata)
+
+    @classmethod
+    def from_story_string(cls, parameters: Dict[Text, Any]) -> Optional[List[Event]]:
+        return [
+            FrameUpdated(
+                parameters.get('frame_idx'),
+                parameters.get('name'),
+                parameters.get('value'),
+                parameters.get('timestamp'),
+                parameters.get('metadata'),
+            )
+        ]
+
+    def as_dict(self) -> Dict[Text, Any]:
+        d = super().as_dict()
+        d.update({
+            'frame_idx': self.frame_idx,
+            'name': self.name,
+            'value': self.value,
+        })
+        return d
+
+    def apply_to(self, tracker: "DialogueStateTracker") -> None:
+        tracker.frames[self.frame_idx][self.name] = self.value
+
+
+class CurrentFrameChanged(Event):
+
+    type_name = "change_current_frame"
+
+    def __init__(
+        self,
+        frame_idx: int,
+        timestamp: Optional[float] = None,
+        metadata: Optional[Dict[Text, Any]] = None
+    ) -> None:
+        self.frame_idx = frame_idx
+        super().__init__(timestamp, metadata)
+
+    @classmethod
+    def _from_story_string(cls, parameters: Dict[Text, Any]) -> Optional[List[Event]]:
+        return [CurrentFrameChanged(
+            parameters.get('frame_idx'),
+            parameters.get('timestamp'),
+            parameters.get('metadata'),
+        )]
+
+    def as_dict(self) -> Dict[Text, Any]:
+        d = super().as_dict()
+        d.update({'frame_idx': self.frame_idx})
+        return d
+
+    def apply_to(self, tracker: "DialogueStateTracker") -> None:
+        tracker.frames.activate_frame(self.frame_idx, self.timestamp)
+
+
+class CurrentFrameDumped(Event):
+
+    type_name = "dump_current_frame"
+
+    def __init__(
+        self, timestamp: Optional[float] = None, metadata: Optional[Dict[Text, Any]] = None
+    ) -> None:
+        super().__init__(timestamp, metadata)
+
+    def apply_to(self, tracker: "DialogueStateTracker") -> None:
+        for key, value in tracker.frames.current_frame.items():
+            tracker._set_slot(key, value)
 
 
 # noinspection PyProtectedMember
@@ -972,7 +1090,8 @@ class ActionExecuted(Event):
         if hasattr(self, "confidence"):
             confidence = self.confidence
 
-        d.update({"name": self.action_name, "policy": policy, "confidence": confidence})
+        d.update({"name": self.action_name,
+                  "policy": policy, "confidence": confidence})
         return d
 
     def apply_to(self, tracker: "DialogueStateTracker") -> None:

@@ -28,10 +28,12 @@ from rasa.core.events import (  # pytype: disable=pyi-error
     BotUttered,
     Form,
     SessionStarted,
-    FrameChanged,
 )
 from rasa.core.frames import FrameSet
-from rasa.core.actions.action import ACTION_LISTEN_NAME, ACTION_CHANGE_FRAME_NAME  # pytype: disable=pyi-error
+from rasa.core.actions.action import (
+    ACTION_LISTEN_NAME,
+    ACTION_CHANGE_FRAME_NAME,
+)  # pytype: disable=pyi-error
 from rasa.core.domain import Domain  # pytype: disable=pyi-error
 from rasa.core.slots import Slot
 
@@ -130,7 +132,9 @@ class DialogueStateTracker:
         else:
             self.slots = AnySlotDict()
 
-        self.frames = FrameSet(init_slots=self.slots, created=0)
+        self.frames = FrameSet(
+            init_slots=[slot for slot in slots if slot.frame_slot], created=0
+        )
 
         ###
         # current state of the tracker - MUST be re-creatable by processing
@@ -280,9 +284,12 @@ class DialogueStateTracker:
         """Creates a new state tracker with the same initial values."""
         from rasa.core.channels.channel import UserMessage
 
-        return DialogueStateTracker(
+        logger.debug("Creating a new copy of the tracker")
+        tracker_copy = DialogueStateTracker(
             UserMessage.DEFAULT_SENDER_ID, self.slots.values(), self._max_event_history
         )
+        tracker_copy.frames = self.frames
+        return tracker_copy
 
     def generate_all_prior_trackers(
         self,
@@ -417,6 +424,7 @@ class DialogueStateTracker:
         passed time stamp will be replayed. Events that occur exactly
         at the target time will be included."""
 
+        logger.debug("Creating a new copy of the tracker: trackers.py:426")
         tracker = self.init_copy()
 
         for event in self.events:
@@ -444,18 +452,8 @@ class DialogueStateTracker:
         event.apply_to(self)
 
         if domain and isinstance(event, UserUttered):
-            logger.debug('UserUttered event!')
-            # reset all framed slots to None
-            for key, value in FrameSet.get_framed_slots(self.slots).items():
-                self.update(SlotSet(key, None))
-            logger.debug('Set all framed-slots to None')
-            # store the entities only from the latest UserUtterance in the tracker's slots
-            for e in domain.slots_for_entities(event.parse_data["entities"]):
-                self.update(e)
-            logger.debug('Set slots to entity values')
-            # update self.current_frames[self.current_frame]
+            logger.debug("UserUttered event!")
             self.trigger_followup_action(ACTION_CHANGE_FRAME_NAME)
-            logger.debug('Finished executing action')
 
     def export_stories(self, e2e: bool = False) -> Text:
         """Dump the tracker as a story in the Rasa Core story format.
@@ -538,14 +536,11 @@ class DialogueStateTracker:
         self.latest_bot_utterance = BotUttered.empty()
         self.followup_action = ACTION_LISTEN_NAME
         self.active_form = {}
-        self.frames = FrameSet(init_slots=self.slots, created=0)
 
     def _reset_slots(self) -> None:
         """Set all the slots to their initial value."""
-
         for slot in self.slots.values():
             slot.reset()
-        self.frames.reset()
 
     def _set_slot(self, key: Text, value: Any) -> None:
         """Set the value of a slot if that slot exists."""

@@ -25,6 +25,7 @@ from rasa.core.exceptions import UnsupportedDialogueModelError
 from rasa.core.featurizers import MaxHistoryTrackerFeaturizer
 from rasa.core.policies.policy import Policy
 from rasa.core.policies.fallback import FallbackPolicy
+from rasa.core.policies.frame_policy import FrameMemoizationPolicy
 from rasa.core.policies.memoization import MemoizationPolicy, AugmentedMemoizationPolicy
 from rasa.core.trackers import DialogueStateTracker
 from rasa.core import registry
@@ -71,6 +72,7 @@ class PolicyEnsemble:
         events_metadata = defaultdict(set)
 
         for t in training_trackers:
+            logger.debug("Creating a new copy of the tracker: ensemble.py")
             tracker = t.init_copy()
             for event in t.events:
                 tracker.update(event)

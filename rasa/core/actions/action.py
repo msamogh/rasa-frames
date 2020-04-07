@@ -29,7 +29,6 @@ from rasa.core.events import (
     Event,
     BotUttered,
     SlotSet,
-    FrameChanged,
 )
 
 from rasa.core.frames import FrameSet
@@ -97,8 +96,7 @@ def combine_user_with_default_actions(user_actions) -> list:
     # implicitly assume that e.g. "action_listen" is always at location
     # 0 in this array. to keep it that way, we remove the duplicate
     # action names from the users list instead of the defaults
-    unique_user_actions = [
-        a for a in user_actions if a not in default_action_names()]
+    unique_user_actions = [a for a in user_actions if a not in default_action_names()]
     return default_action_names() + unique_user_actions
 
 
@@ -545,8 +543,7 @@ class RemoteAction(Action):
 
         try:
             logger.debug(
-                "Calling action endpoint to run action '{}'.".format(
-                    self.name())
+                "Calling action endpoint to run action '{}'.".format(self.name())
             )
             response = await self.action_endpoint.request(
                 json=json_body, method="post", timeout=DEFAULT_REQUEST_TIMEOUT
@@ -750,15 +747,15 @@ class ActionChangeFrame(Action):
         tracker: "DialogueStateTracker",
         domain: "Domain",
     ) -> List[Event]:
-        logger.debug('ActionChangeFrame triggered!')
+        logger.debug("ActionChangeFrame triggered!")
         events = tracker.events_after_latest_restart()
         idx = -1
         while isinstance(events[idx], SlotSet):
             idx -= 1
         assert isinstance(events[idx], UserUttered)
 
-        logger.debug('Calling RuleBasedFrameTracker')
-        RuleBasedFrameTracker().update_frames(
+        logger.debug("Calling RuleBasedFrameTracker")
+        events = RuleBasedFrameTracker(domain).update_frames(
             tracker, user_utterance=events[idx]
         )
-        return []
+        return events
