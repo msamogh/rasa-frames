@@ -3,6 +3,7 @@ intents:
   - affirm
   - inform
   - compare
+  - switch_frame
 
 entities:
   - city

@@ -502,13 +502,7 @@ class SlotSet(Event):
         tracker._set_slot(self.key, self.value)
 
 
-class FrameEvent(Event):
-
-    def as_story_string(self) -> Text:
-        return self.type_name
-
-
-class FrameCreated(FrameEvent):
+class FrameCreated(Event):
 
     type_name = "create_frame"
 
@@ -524,14 +518,26 @@ class FrameCreated(FrameEvent):
         self.switch_to = switch_to
         super().__init__(timestamp, metadata)
 
+    def _data_obj(self) -> Dict[Text, Any]:
+        return {
+            'slots': self.slots,
+            'switch_to': self.switch_to
+        }
+
+    def as_story_string(self) -> Text:
+        return None
+
     @classmethod
-    def _from_story_string(cls, parameters: Dict[Text, Any]) -> Optional[List[Event]]:
-        return [FrameCreated(
-            parameters.get("slots"),
-            parameters.get("switch_to"),
-            parameters.get("timestamp"),
-            parameters.get("metadata"),
-        )]
+    def _from_parameters(cls, parameters: Dict[Text, Any]) -> "FrameCreated":
+        try:
+            return FrameCreated(
+                parameters.get("slots"),
+                parameters.get("switch_to"),
+                parameters.get("timestamp"),
+                parameters.get("metadata"),
+            )
+        except KeyError as e:
+            raise ValueError(f"Failed to parse frame created event. {e}")
 
     def as_dict(self) -> Dict[Text, Any]:
         d = super().as_dict()
@@ -549,7 +555,7 @@ class FrameCreated(FrameEvent):
         )
 
 
-class FrameUpdated(FrameEvent):
+class FrameUpdated(Event):
 
     type_name = "update_frame"
 
@@ -567,7 +573,7 @@ class FrameUpdated(FrameEvent):
         super().__init__(timestamp, metadata)
 
     @classmethod
-    def from_story_string(cls, parameters: Dict[Text, Any]) -> Optional[List[Event]]:
+    def _from_story_string(cls, parameters: Dict[Text, Any]) -> Optional[List[Event]]:
         return [
             FrameUpdated(
                 parameters.get('frame_idx'),
@@ -587,11 +593,14 @@ class FrameUpdated(FrameEvent):
         })
         return d
 
+    def as_story_string(self) -> Text:
+        return None
+
     def apply_to(self, tracker: "DialogueStateTracker") -> None:
         tracker.frames[self.frame_idx][self.name] = self.value
 
 
-class CurrentFrameChanged(FrameEvent):
+class CurrentFrameChanged(Event):
 
     type_name = "change_current_frame"
 
@@ -612,6 +621,9 @@ class CurrentFrameChanged(FrameEvent):
             parameters.get('metadata'),
         )]
 
+    def as_story_string(self) -> Text:
+        return None
+
     def as_dict(self) -> Dict[Text, Any]:
         d = super().as_dict()
         d.update({'frame_idx': self.frame_idx})
@@ -621,7 +633,7 @@ class CurrentFrameChanged(FrameEvent):
         tracker.frames.activate_frame(self.frame_idx, self.timestamp)
 
 
-class CurrentFrameDumped(FrameEvent):
+class CurrentFrameDumped(Event):
 
     type_name = "dump_current_frame"
 
@@ -634,6 +646,9 @@ class CurrentFrameDumped(FrameEvent):
         if tracker.frames.current_frame:
             for key, value in tracker.frames.current_frame.items():
                 tracker._set_slot(key, value)
+
+    def as_story_string(self) -> Text:
+        return None
 
 
 # noinspection PyProtectedMember
