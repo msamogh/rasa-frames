@@ -2,14 +2,13 @@ import logging
 from collections import Counter
 from typing import Any, List, Text, Tuple, Dict, Optional
 
-from rasa.core.events import Event, SlotSet, UserUttered
 from rasa.core.events import (
+    Event,
     FrameCreated,
     CurrentFrameChanged,
     CurrentFrameDumped,
     FrameUpdated,
 )
-from rasa.core.slots import Slot
 
 
 logger = logging.getLogger(__name__)
@@ -39,26 +38,24 @@ class Frame(object):
 
 
 class FrameSet(object):
-    def __init__(self, init_slots: Dict[Text, Any], created: float) -> None:
+    def __init__(self) -> None:
         self.frames = []
         self.current_frame_idx = None
-        if init_slots:
-            init_frame = Frame(idx=0, slots=init_slots, created=created, switch_to=True)
-            self.frames.append(init_frame)
 
     @property
     def current_frame(self) -> Frame:
         if len(self.frames) == 0 or self.current_frame_idx is None:
             return None
+
         return self.frames[self.current_frame_idx]
 
     def reset(self) -> None:
-        lgoger.debug("!!!@@@Frames reset@@@!!!")
+        logger.debug("!!!@@@Frames reset@@@!!!")
         self.frames = []
         self.current_frame_idx = None
 
     def add_frame(
-        self, slots: List[Slot], created: float, switch_to: Optional[bool] = False
+        self, slots: Dict[Text, Any], created: float, switch_to: Optional[bool] = False
     ) -> Frame:
         logger.debug(f"Frame created with values {slots}")
         frame = Frame(
@@ -79,7 +76,7 @@ class FrameSet(object):
         s = ""
         for idx, frame in enumerate(self.frames):
             s += f"\nFrame {idx}\n============\n"
-            s += str({key: slot for key, slot in frame.slots.items()})
+            s += str({key: slot for key, slot in frame.items()})
         return s
 
     def activate_frame(self, idx: int, timestamp: float) -> None:
@@ -87,22 +84,32 @@ class FrameSet(object):
         self.frames[idx].last_active = timestamp
 
     @staticmethod
-    def get_framed_slots(entities: Dict[Text, Any], domain: "Domain") -> Dict[Text, Any]:
-        return {slot.name: slot.value for slot in domain.slots if slot.frame_slot}
+    def get_framed_entities(entities: Dict[Text, Any], domain: "Domain") -> Dict[Text, Any]:
+        logger.debug(f'All those slots: {domain.slots}')
+        framed_slot_names = [slot.name for slot in domain.slots if slot.frame_slot]
+        framed_entities = {
+            entity['entity']: entity['value']
+            for entity in entities
+            if entity['entity'] in framed_slot_names
+        }
+        return framed_entities
 
 
 class RuleBasedFrameTracker(object):
-    def __init__(domain: "Domain") -> None:
+    def __init__(self, domain: "Domain") -> None:
         self.domain = domain
 
     def update_frames(
         self, tracker: "DialogueStateTracker", user_utterance: Text
     ) -> List[Event]:
-        # Treat the slot values in the tracker as temporary values
-        # (not necessarily reflecting the values of the active frame).
-        # The active frame will be decided upon only after checking with the FrameTracker.
+
+        events = []
+
+        events.extend(self._dump_slots_into_current_frame(tracker))
+
         dialogue_act = user_utterance.intent["name"]
-        dialogue_entities = FrameSet.get_framed_slots(
+        logger.debug(f"All them entities: {user_utterance.entities}")
+        dialogue_entities = FrameSet.get_framed_entities(
             user_utterance.entities, self.domain
         )
 
@@ -122,17 +129,16 @@ class RuleBasedFrameTracker(object):
             "switch_frame",
         ]
 
-        events = []
         if dialogue_act == "inform":
             logger.debug("Handling inform")
-            events.extend(self.handle_inform(tracker, dialogue_entities))
+            events.extend(self._handle_inform(tracker, dialogue_entities))
         elif dialogue_act == "switch_frame":
             logger.debug("Switching frame")
-            events.extend(self.handle_switch_frame(tracker, dialogue_entities))
+            events.extend(self._handle_switch_frame(tracker, dialogue_entities))
         elif dialogue_act in acts_with_ref:
             # anything with a ref tag
             logger.debug("Handling act with ref")
-            events.extend(self.handle_act_with_ref(tracker, dialogue_entities))
+            events.extend(self._handle_act_with_ref(tracker, dialogue_entities))
         else:
             logger.debug("Handling another kind of intent")
             for key, value in dialogue_entities.items():
@@ -147,26 +153,49 @@ class RuleBasedFrameTracker(object):
         events.append(CurrentFrameDumped())
         return events
 
-    def handle_inform(
+    def _dump_slots_into_current_frame(self, tracker: "DialogueStateTracker") -> List[Event]:
+        events = []
+        framed_slots = {
+            key: slot.value
+            for key, slot in tracker.slots.items()
+            if slot.frame_slot
+        }
+        if tracker.frames.current_frame:
+            for key, value in framed_slots.items():
+                events.append(
+                    FrameUpdated(
+                        frame_idx=tracker.frames.current_frame_idx,
+                        name=key,
+                        value=value,
+                    )
+                )
+        else:
+            events.append(FrameCreated(slots=framed_slots, switch_to=True))
+        return events
+
+    def _handle_inform(
         self, tracker: "DialogueStateTracker", framed_slots: Dict[Text, Any]
     ) -> List[Event]:
+        logger.debug(f'Received the great framed_slots: {framed_slots}')
         for key, value in framed_slots.items():
             logger.debug(f"Current frame: {tracker.frames.current_frame}")
-            if tracker.frames.current_frame[key] != value:
+            if not tracker.frames.current_frame \
+                    or tracker.frames.current_frame[key] != value:
                 logger.debug("Created and switched to new frame")
                 return [FrameCreated(slots=framed_slots, switch_to=True)]
         return []
 
-    def handle_switch_frame(
+    def _handle_switch_frame(
         self, tracker: "DialogueStateTracker", framed_slots: Dict[Text, Any]
     ) -> List[Event]:
         equality_counts = Counter()
         for key, value in framed_slots.items():
             # If the slot value from the latest utterance is not equal to that of the
             # current_frame, search for it among the other frames.
-            if tracker.frames.current_frame[key] == value:
+            if tracker.frames.current_frame \
+                    and tracker.frames.current_frame[key] == value:
                 continue
-            for idx, frame in enumerate(tracker.frames):
+            for idx, frame in enumerate(tracker.frames.frames):
                 if idx == tracker.frames.current_frame_idx:
                     continue
                 if frame[key] == value:
@@ -183,7 +212,7 @@ class RuleBasedFrameTracker(object):
             )
             return [CurrentFrameChanged(frame_idx=most_recent_frames[0].idx)]
 
-    def handle_act_with_ref(
+    def _handle_act_with_ref(
         self, tracker: "DialogueStateTracker", framed_slots: Dict[Text, Any]
     ) -> List[Event]:
         equality_counts = Counter()

@@ -28,6 +28,7 @@ from rasa.core.events import (  # pytype: disable=pyi-error
     BotUttered,
     Form,
     SessionStarted,
+    FrameCreated
 )
 from rasa.core.frames import FrameSet
 from rasa.core.actions.action import (
@@ -126,15 +127,12 @@ class DialogueStateTracker:
         self.events = self._create_events([])
         # id of the source of the messages
         self.sender_id = sender_id
+        self.frames = FrameSet()
         # slots that can be filled in this domain
         if slots is not None:
             self.slots = {slot.name: copy.deepcopy(slot) for slot in slots}
         else:
             self.slots = AnySlotDict()
-
-        self.frames = FrameSet(
-            init_slots=[slot for slot in slots if slot.frame_slot], created=0
-        )
 
         ###
         # current state of the tracker - MUST be re-creatable by processing
