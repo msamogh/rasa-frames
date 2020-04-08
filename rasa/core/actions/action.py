@@ -758,4 +758,5 @@ class ActionChangeFrame(Action):
         events = RuleBasedFrameTracker(domain).update_frames(
             tracker, user_utterance=events[idx]
         )
+        logger.debug(tracker.frames)
         return events

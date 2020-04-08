@@ -508,24 +508,20 @@ class FrameCreated(Event):
 
     def __init__(
         self,
-        slots: List["Slot"],
+        slots: Dict[Text, Any],
         switch_to: bool = False,
         timestamp: Optional[float] = None,
         metadata: Optional[Dict[Text, Any]] = None
     ):
         self.slots = slots
         self.timestamp = timestamp
+        self.switch_to = switch_to
         super().__init__(timestamp, metadata)
 
     @classmethod
     def _from_story_string(cls, parameters: Dict[Text, Any]) -> Optional[List[Event]]:
-        slots_dict = parameters.get("slots")
-        slots = []
-        for slot in slots_dict:
-            slots.append(Slot(name=slots['name'],
-                              initial_value=slots['value']))
         return [FrameCreated(
-            slots,
+            parameters.get("slots"),
             parameters.get("switch_to"),
             parameters.get("timestamp"),
             parameters.get("metadata"),
@@ -534,7 +530,7 @@ class FrameCreated(Event):
     def as_dict(self) -> Dict[Text, Any]:
         d = super().as_dict()
         d.update({
-            "slots": [{'key': slot.name, 'value': slot.value} for slot in self.slots],
+            "slots": self.slots,
             "switch_to": self.switch_to
         })
         return d
@@ -629,8 +625,9 @@ class CurrentFrameDumped(Event):
         super().__init__(timestamp, metadata)
 
     def apply_to(self, tracker: "DialogueStateTracker") -> None:
-        for key, value in tracker.frames.current_frame.items():
-            tracker._set_slot(key, value)
+        if tracker.frames.current_frame:
+            for key, value in tracker.frames.current_frame.items():
+                tracker._set_slot(key, value)
 
 
 # noinspection PyProtectedMember
