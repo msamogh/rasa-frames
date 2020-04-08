@@ -502,7 +502,13 @@ class SlotSet(Event):
         tracker._set_slot(self.key, self.value)
 
 
-class FrameCreated(Event):
+class FrameEvent(Event):
+
+    def as_story_string(self) -> Text:
+        return self.type_name
+
+
+class FrameCreated(FrameEvent):
 
     type_name = "create_frame"
 
@@ -543,7 +549,7 @@ class FrameCreated(Event):
         )
 
 
-class FrameUpdated(Event):
+class FrameUpdated(FrameEvent):
 
     type_name = "update_frame"
 
@@ -585,7 +591,7 @@ class FrameUpdated(Event):
         tracker.frames[self.frame_idx][self.name] = self.value
 
 
-class CurrentFrameChanged(Event):
+class CurrentFrameChanged(FrameEvent):
 
     type_name = "change_current_frame"
 
@@ -615,7 +621,7 @@ class CurrentFrameChanged(Event):
         tracker.frames.activate_frame(self.frame_idx, self.timestamp)
 
 
-class CurrentFrameDumped(Event):
+class CurrentFrameDumped(FrameEvent):
 
     type_name = "dump_current_frame"
 

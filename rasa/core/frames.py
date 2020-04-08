@@ -162,13 +162,11 @@ class RuleBasedFrameTracker(object):
         }
         if tracker.frames.current_frame:
             for key, value in framed_slots.items():
-                events.append(
-                    FrameUpdated(
-                        frame_idx=tracker.frames.current_frame_idx,
-                        name=key,
-                        value=value,
-                    )
-                )
+                events.append(FrameUpdated(
+                    frame_idx=tracker.frames.current_frame_idx,
+                    name=key,
+                    value=value,
+                ))
         else:
             events.append(FrameCreated(slots=framed_slots, switch_to=True))
         return events
@@ -179,9 +177,17 @@ class RuleBasedFrameTracker(object):
         logger.debug(f'Received the great framed_slots: {framed_slots}')
         for key, value in framed_slots.items():
             logger.debug(f"Current frame: {tracker.frames.current_frame}")
-            if not tracker.frames.current_frame \
-                    or tracker.frames.current_frame[key] != value:
-                logger.debug("Created and switched to new frame")
+            if tracker.frames.current_frame:
+                if tracker.frames.current_frame[key] is None:
+                    return [FrameUpdated(
+                        frame_idx=tracker.frames.current_frame_idx,
+                        name=key,
+                        value=value,
+                    ) for key, value in framed_slots.items()]
+                elif tracker.frames.current_frame[key] != value:
+                    logger.debug("Created and switched to new frame")
+                    return [FrameCreated(slots=framed_slots, switch_to=True)]
+            else:
                 return [FrameCreated(slots=framed_slots, switch_to=True)]
         return []
 
