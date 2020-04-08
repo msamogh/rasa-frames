@@ -25,7 +25,6 @@ from rasa.core.exceptions import UnsupportedDialogueModelError
 from rasa.core.featurizers import MaxHistoryTrackerFeaturizer
 from rasa.core.policies.policy import Policy
 from rasa.core.policies.fallback import FallbackPolicy
-from rasa.core.policies.frame_policy import FrameMemoizationPolicy
 from rasa.core.policies.memoization import MemoizationPolicy, AugmentedMemoizationPolicy
 from rasa.core.trackers import DialogueStateTracker
 from rasa.core import registry
