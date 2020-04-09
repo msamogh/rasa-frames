@@ -28,7 +28,7 @@ from rasa.core.events import (  # pytype: disable=pyi-error
     BotUttered,
     Form,
     SessionStarted,
-    FrameCreated
+    FrameCreated,
 )
 from rasa.core.frames import FrameSet
 from rasa.core.actions.action import (
