@@ -255,6 +255,14 @@ class Domain:
                 for properties in intent.values():
                     properties.setdefault("use_entities", True)
                     properties.setdefault("ignore_entities", [])
+
+                    properties.setdefault("intent_class", None)
+                    if properties["intent_class"] is not None and \
+                            properties["intent_class"] not in ["constraint", 
+                            "request", "comparison_request", "binary_question"]:
+                        raise InvalidDomain("Invalid intent_class specified "
+                            "for intent '{}'".format(name))
+
                     if (
                         properties["use_entities"] is None
                         or properties["use_entities"] is False
@@ -262,7 +270,13 @@ class Domain:
                         properties["use_entities"] = []
             else:
                 name = intent
-                intent = {intent: {"use_entities": True, "ignore_entities": []}}
+                intent = {
+                    intent: {
+                        "use_entities": True,
+                        "ignore_entities": [],
+                        "intent_class": None
+                    }
+                }
 
             if name in intent_properties.keys():
                 raise InvalidDomain(

@@ -755,7 +755,7 @@ class ActionChangeFrame(Action):
         assert isinstance(events[idx], UserUttered)
 
         logger.debug("Calling RuleBasedFrameTracker")
-        events = RuleBasedFrameTracker(domain).update_frames(
+        events = RuleBasedFrameTracker(domain).predict(
             tracker, user_utterance=events[idx]
         )
         logger.debug(tracker.frames)

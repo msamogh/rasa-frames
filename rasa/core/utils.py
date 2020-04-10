@@ -537,3 +537,53 @@ def number_of_sanic_workers(lock_store: Union[EndpointConfig, LockStore, None]) 
         f"no `RedisLockStore` endpoint configuration has been found."
     )
     return _log_and_get_default_number_of_workers()
+
+
+def get_best_matching_frame_idx(
+    frames: List["Frame"], framed_entities: Dict[Text, Any], fallback_idx: int
+) -> int:
+    """Return the most recent frame for which all slots match.
+
+    If no frame inside frames exists such that there's a full match,
+    return None. If there are multiple matches, return the most recent
+    of the matching frames.
+    """
+    from collections import Counter
+
+    assert len(frames) > 0
+
+    def most_recent_frame(frame_ids: List[int]) -> int:
+        return list(sorted(frames, key=lambda i: frames[i].created, reverse=True))[0]
+
+    equality_counts = Counter()
+    for key, value in framed_entities.items():
+        for idx, frame in enumerate(frames):
+            if frame[key] == value:
+                equality_counts[idx] += 1
+
+    frames_sorted_by_matches = equality_counts.most_common()
+    # If the best match has a less-than-perfect match, simply return
+    # the most recently created frame.
+    if frames_sorted_by_matches[0][1] == len(framed_entities):
+        best_matches = []
+        for frame in frames_sorted_by_matches:
+            if frame[1] == len(framed_entities):
+                best_matches.append(frame)
+        # Return the most recent frame out of all the best matching frames
+        return most_recent_frame(best_matches)
+    else:
+        return fallback_idx
+
+
+def is_first_frame_created_now(
+    tracker: "DialogueStateTracker", events: List["Event"]
+) -> bool:
+    from rasa.core.events import FrameCreated, FrameUpdated
+
+    # If first event (from dumping slots to frames) is a FrameCreated
+    # (as opposed to a FrameUpdated), then return True.
+    slot_dump_event = events[0]
+    assert isinstance(slot_dump_event, FrameCreated) or isinstance(
+        slot_dump_event, FrameUpdated
+    )
+    return isinstance(slot_dump_event, FrameCreated) and len(tracker.frames) == 0
