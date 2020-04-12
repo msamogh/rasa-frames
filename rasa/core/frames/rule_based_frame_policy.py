@@ -33,19 +33,14 @@ class RuleBasedFramePolicy(FramePolicy):
         frame_intent: FrameIntent,
         framed_entities: Dict[Text, Any],
     ) -> int:
-        frames_sorted_by_num_equal, frames_sorted_by_num_conflicts = \
-            self._matching_and_conflicting_frames(frames, framed_entities)
-
-        # If the best match has a less-than-perfect match, simply return
-        # the most recently created frame.
-        matching_candidates = []
-        for idx, num_matches in frames_sorted_by_num_equal:
-            if num_matches == len(framed_entities):
-                matching_candidates.append(frames[idx])
-        non_conflicting_candidates = []
-        for idx, num_conflicts in frames_sorted_by_num_conflicts:
-            if num_conflicts == 0:
-                non_conflicting_candidates.append(frames[idx])
+        matching_candidates = self._fully_matching_candidates(
+            frames,
+            framed_entities
+        )
+        non_conflicting_candidates = self._non_conflicting_candidates(
+            frames,
+            framed_entities
+        )
 
         if frame_intent.on_frame_match_failed == "create_new":
             choice_fn = RuleBasedFramePolicy.create_new
@@ -58,25 +53,43 @@ class RuleBasedFramePolicy(FramePolicy):
 
         return choice_fn(matching_candidates, non_conflicting_candidates, frames)
 
-    def _matching_and_conflicting_frames(
+    def _fully_matching_candidates(
         self,
         frames: List["Frame"],
         framed_entities: Dict[Text, Any]
-    ) -> Tuple[Dict[int, int], Dict[int, int]]:
+    ) -> Dict[int, int]:
         assert len(frames) > 0
 
         equality_counts = Counter()
-        conflict_counts = Counter()
         for key, value in framed_entities.items():
             for idx, frame in enumerate(frames):
                 if frame[key] == value:
                     equality_counts[idx] += 1
-                else:
-                    conflict_counts[idx] += 1
-        frames_sorted_by_num_equal = equality_counts.most_common()
-        frames_sorted_by_num_conflicts = conflict_counts.most_common()
+        
+        return [
+            frames[idx]
+            for idx, num_matches in equality_counts
+            if num_matches == len(framed_entities)
+        ]
 
-        return frames_sorted_by_num_equal, frames_sorted_by_num_conflicts
+    def _non_conflicting_candidates(
+        self,
+        frames: List["Frame"],
+        framed_entities: Dict[Text, Any]
+    ) -> Dict[int, int]:
+        assert len(frames) > 0
+
+        conflict_counts = Counter()
+        for key, value in framed_entities.items():
+            for idx, frame in enumerate(frames):
+                if frame[key] != value:
+                    conflict_counts[idx] += 1
+
+        return [
+            frames[idx]
+            for idx, num_conflicts in conflict_counts
+            if num_conflicts == 0
+        ]
 
     def on_frame_ref_identified(
         self,
