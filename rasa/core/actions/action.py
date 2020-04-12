@@ -32,7 +32,7 @@ from rasa.core.events import (
 )
 
 from rasa.core.frames import FrameSet
-from rasa.core.frames import RuleBasedFrameTracker
+from rasa.core.frames import RuleBasedFramePolicy
 
 from rasa.utils.endpoints import EndpointConfig, ClientResponseError
 from typing import Coroutine, Union
@@ -754,8 +754,8 @@ class ActionChangeFrame(Action):
             idx -= 1
         assert isinstance(events[idx], UserUttered)
 
-        logger.debug("Calling RuleBasedFrameTracker")
-        events = RuleBasedFrameTracker(domain).predict(
+        logger.debug("Calling RuleBasedFramePolicy")
+        events = RuleBasedFramePolicy(domain).predict(
             tracker, user_utterance=events[idx]
         )
         logger.debug(tracker.frames)

@@ -12,128 +12,14 @@ from rasa.core.events import (
     FrameUpdated,
 )
 from rasa.core.utils import get_best_matching_frame_idx, is_first_frame_created_now
+from rasa.core.frames import Frame, FrameSet
+from rasa.core.frames.util import push_slots_into_current_frame, pop_slots_from_current_frame
 
 
 logger = logging.getLogger(__name__)
 
 
-class Frame(object):
-    def __init__(
-        self,
-        idx: int,
-        slots: Dict[Text, Any],
-        created: float,
-        switch_to: Optional[bool] = False,
-    ) -> None:
-        self.slots = slots
-        self.idx = idx
-        self.created = created
-        self.last_active = created if switch_to else None
-
-    def items(self) -> Dict[Text, Any]:
-        return self.slots.items()
-
-    def __getitem__(self, key: Text) -> Optional[Any]:
-        return self.slots.get(key, None)
-
-    def __setitem__(self, key: Text, value: Any) -> None:
-        self.slots[key] = value
-
-
-class FrameSet(object):
-    def __init__(self) -> None:
-        self.frames = []
-        self.current_frame_idx = None
-
-    @property
-    def current_frame(self) -> Frame:
-        if len(self.frames) == 0 or self.current_frame_idx is None:
-            return None
-
-        return self.frames[self.current_frame_idx]
-
-    def reset(self) -> None:
-        logger.debug("!!!@@@Frames reset@@@!!!")
-        self.frames = []
-        self.current_frame_idx = None
-
-    def add_frame(
-        self, slots: Dict[Text, Any], created: float, switch_to: Optional[bool] = False
-    ) -> Frame:
-        logger.debug(f"Frame created with values {slots}")
-        frame = Frame(
-            idx=len(self.frames), slots=slots, created=created, switch_to=switch_to,
-        )
-        self.frames.append(frame)
-        if switch_to:
-            self.current_frame_idx = frame.idx
-        return frame
-
-    def __getitem__(self, idx: int) -> Frame:
-        return self.frames[idx]
-
-    def __len__(self) -> int:
-        return len(self.frames)
-
-    def __str__(self) -> Text:
-        s = ""
-        for idx, frame in enumerate(self.frames):
-            s += f"\nFrame {idx}\n============\n"
-            s += str({key: slot for key, slot in frame.items()})
-        return s
-
-    def activate_frame(self, idx: int, timestamp: float) -> None:
-        self.current_frame_idx = idx
-        self.frames[idx].last_active = timestamp
-
-    @staticmethod
-    def get_framed_entities(
-        entities: Dict[Text, Any], domain: "Domain"
-    ) -> Dict[Text, Any]:
-        logger.debug(f"All those slots: {domain.slots}")
-        framed_slot_names = [slot.name for slot in domain.slots if slot.frame_slot]
-        framed_entities = {
-            entity["entity"]: entity["value"]
-            for entity in entities
-            if entity["entity"] in framed_slot_names
-        }
-        return framed_entities
-
-
-def push_slots_into_current_frame(tracker: "DialogueStateTracker") -> List[Event]:
-    events = []
-    framed_entities = {
-        key: slot.value
-        for key, slot in tracker.slots.items()
-        if slot.frame_slot
-    }
-    logger.debug(
-        f"Dumping slots into current frame... "
-        f"{tracker.frames.current_frame} and {framed_entities}"
-    )
-    if tracker.frames.current_frame:
-        for key, value in framed_entities.items():
-            events.append(
-                FrameUpdated(
-                    frame_idx=tracker.frames.current_frame_idx,
-                    name=key,
-                    value=value,
-                )
-            )
-    else:
-        events.append(
-            FrameCreated(
-                slots=framed_entities,
-                switch_to=True
-            )
-        )
-    return events
-
-def pop_slots_from_current_frame() -> List[Event]:
-    return [CurrentFrameDumped()]
-
-
-class RuleBasedFrameTracker(object):
+class RuleBasedFramePolicy(object):
     def __init__(self, domain: "Domain") -> None:
         self.domain = domain
 
@@ -146,8 +32,8 @@ class RuleBasedFrameTracker(object):
         # or for a switching of the active frame.
         # 3. Refill the slots with the contents of the current frame
         events = push_slots_into_current_frame(tracker) + \
-                    self._handle_frame_changes(tracker, user_utterance) + \
-                    pop_slots_from_current_frame()
+            self._handle_frame_changes(tracker, user_utterance) + \
+            pop_slots_from_current_frame()
 
         return events
 
@@ -183,7 +69,8 @@ class RuleBasedFrameTracker(object):
             return can_contain_frame_ref, on_frame_match_failed
 
         intent = user_utterance.intent
-        can_contain_frame_ref, on_frame_match_failed = get_intent_frame_props(intent)
+        can_contain_frame_ref, on_frame_match_failed = get_intent_frame_props(
+            intent)
         dialogue_entities = FrameSet.get_framed_entities(
             user_utterance.entities, self.domain
         )
@@ -251,4 +138,3 @@ class RuleBasedFrameTracker(object):
             )]
 
         return []
-        
