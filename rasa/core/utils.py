@@ -32,6 +32,8 @@ from rasa.constants import DEFAULT_SANIC_WORKERS, ENV_SANIC_WORKERS
 # backwards compatibility 1.0.x
 # noinspection PyUnresolvedReferences
 from rasa.core.lock_store import LockStore, RedisLockStore
+from rasa.core.events import Event, FrameCreated, FrameUpdated, \
+    CurrentFrameDumped
 from rasa.utils.endpoints import EndpointConfig, read_endpoint_config
 from sanic import Sanic
 from sanic.views import CompositionView
@@ -46,8 +48,10 @@ def configure_file_logging(logger_obj: logging.Logger, log_file: Optional[Text])
     if not log_file:
         return
 
-    formatter = logging.Formatter("%(asctime)s [%(levelname)-5.5s]  %(message)s")
-    file_handler = logging.FileHandler(log_file, encoding=io_utils.DEFAULT_ENCODING)
+    formatter = logging.Formatter(
+        "%(asctime)s [%(levelname)-5.5s]  %(message)s")
+    file_handler = logging.FileHandler(
+        log_file, encoding=io_utils.DEFAULT_ENCODING)
     file_handler.setLevel(logger_obj.level)
     file_handler.setFormatter(formatter)
     logger_obj.addHandler(file_handler)
@@ -389,13 +393,16 @@ class AvailableEndpoints:
     def read_endpoints(cls, endpoint_file: Text) -> "AvailableEndpoints":
         nlg = read_endpoint_config(endpoint_file, endpoint_type="nlg")
         nlu = read_endpoint_config(endpoint_file, endpoint_type="nlu")
-        action = read_endpoint_config(endpoint_file, endpoint_type="action_endpoint")
+        action = read_endpoint_config(
+            endpoint_file, endpoint_type="action_endpoint")
         model = read_endpoint_config(endpoint_file, endpoint_type="models")
         tracker_store = read_endpoint_config(
             endpoint_file, endpoint_type="tracker_store"
         )
-        lock_store = read_endpoint_config(endpoint_file, endpoint_type="lock_store")
-        event_broker = read_endpoint_config(endpoint_file, endpoint_type="event_broker")
+        lock_store = read_endpoint_config(
+            endpoint_file, endpoint_type="lock_store")
+        event_broker = read_endpoint_config(
+            endpoint_file, endpoint_type="event_broker")
 
         return cls(nlg, nlu, action, model, tracker_store, lock_store, event_broker)
 
@@ -510,7 +517,8 @@ def number_of_sanic_workers(lock_store: Union[EndpointConfig, LockStore, None]) 
         return DEFAULT_SANIC_WORKERS
 
     try:
-        env_value = int(os.environ.get(ENV_SANIC_WORKERS, DEFAULT_SANIC_WORKERS))
+        env_value = int(os.environ.get(
+            ENV_SANIC_WORKERS, DEFAULT_SANIC_WORKERS))
     except ValueError:
         logger.error(
             f"Cannot convert environment variable `{ENV_SANIC_WORKERS}` "
@@ -537,61 +545,3 @@ def number_of_sanic_workers(lock_store: Union[EndpointConfig, LockStore, None]) 
         f"no `RedisLockStore` endpoint configuration has been found."
     )
     return _log_and_get_default_number_of_workers()
-
-
-def get_best_matching_frame_idx(
-    frames: List["Frame"],
-    framed_entities: Dict[Text, Any],
-    choice_fn: Callable
-) -> int:
-    """Return the most recent frame for which all slots match.
-
-    If no frame inside frames exists such that there's a full match,
-    return None. If there are multiple matches, return the most recent
-    of the matching frames.
-    """
-    from collections import Counter
-
-    assert len(frames) > 0
-
-    equality_counts = Counter()
-    conflict_counts = Counter()
-    for key, value in framed_entities.items():
-        for idx, frame in enumerate(frames):
-            if frame[key] == value:
-                equality_counts[idx] += 1
-            else:
-                conflict_counts[idx] += 1
-
-    frames_sorted_by_num_equal = equality_counts.most_common()
-    frames_sorted_by_num_conflicts = conflict_counts.most_common()
-    # If the best match has a less-than-perfect match, simply return
-    # the most recently created frame.
-    matching_candidates = []
-    for frame, num_matches in frames_sorted_by_num_equal:
-        if num_matches == len(framed_entities):
-            matching_candidates.append(frame)
-    non_conflicting_candidates = []
-    for frame, num_conflicts in frames_sorted_by_num_conflicts:
-        if num_conflicts == 0:
-            non_conflicting_candidates.append(frame)
-
-    return choice_fn(
-        matching_candidates,
-        non_conflicting_candidates,
-        frames
-    )
-
-
-def is_first_frame_created_now(
-    tracker: "DialogueStateTracker", events: List["Event"]
-) -> bool:
-    from rasa.core.events import FrameCreated, FrameUpdated
-
-    # If first event (from dumping slots to frames) is a FrameCreated
-    # (as opposed to a FrameUpdated), then return True.
-    slot_dump_event = events[0]
-    assert isinstance(slot_dump_event, FrameCreated) or isinstance(
-        slot_dump_event, FrameUpdated
-    )
-    return isinstance(slot_dump_event, FrameCreated) and len(tracker.frames) == 0
