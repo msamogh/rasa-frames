@@ -540,7 +540,9 @@ def number_of_sanic_workers(lock_store: Union[EndpointConfig, LockStore, None]) 
 
 
 def get_best_matching_frame_idx(
-    frames: List["Frame"], framed_entities: Dict[Text, Any], fallback_idx: int
+    frames: List["Frame"],
+    framed_entities: Dict[Text, Any],
+    choice_fn: Callable
 ) -> int:
     """Return the most recent frame for which all slots match.
 
@@ -552,27 +554,33 @@ def get_best_matching_frame_idx(
 
     assert len(frames) > 0
 
-    def most_recent_frame(frame_ids: List[int]) -> int:
-        return list(sorted(frames, key=lambda i: frames[i].created, reverse=True))[0]
-
     equality_counts = Counter()
+    conflict_counts = Counter()
     for key, value in framed_entities.items():
         for idx, frame in enumerate(frames):
             if frame[key] == value:
                 equality_counts[idx] += 1
+            else:
+                conflict_counts[idx] += 1
 
-    frames_sorted_by_matches = equality_counts.most_common()
+    frames_sorted_by_num_equal = equality_counts.most_common()
+    frames_sorted_by_num_conflicts = conflict_counts.most_common()
     # If the best match has a less-than-perfect match, simply return
     # the most recently created frame.
-    if frames_sorted_by_matches[0][1] == len(framed_entities):
-        best_matches = []
-        for frame in frames_sorted_by_matches:
-            if frame[1] == len(framed_entities):
-                best_matches.append(frame)
-        # Return the most recent frame out of all the best matching frames
-        return most_recent_frame(best_matches)
-    else:
-        return fallback_idx
+    matching_candidates = []
+    for frame, num_matches in frames_sorted_by_num_equal:
+        if num_matches == len(framed_entities):
+            matching_candidates.append(frame)
+    non_conflicting_candidates = []
+    for frame, num_conflicts in frames_sorted_by_num_conflicts:
+        if num_conflicts == 0:
+            non_conflicting_candidates.append(frame)
+
+    return choice_fn(
+        matching_candidates,
+        non_conflicting_candidates,
+        frames
+    )
 
 
 def is_first_frame_created_now(

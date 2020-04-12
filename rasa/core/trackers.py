@@ -177,13 +177,11 @@ class DialogueStateTracker:
             "latest_message": self.latest_message.parse_data,
             "latest_event_time": latest_event_time,
             "followup_action": self.followup_action,
-            "current_frame": self.frames.current_frame_idx,
             "paused": self.is_paused(),
             "events": evts,
             "latest_input_channel": self.get_latest_input_channel(),
             "active_form": self.active_form,
             "latest_action_name": self.latest_action_name,
-            # "frames": dict(self.frames),
         }
 
     def past_states(self, domain) -> deque:

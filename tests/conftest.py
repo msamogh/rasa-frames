@@ -74,6 +74,23 @@ async def unpacked_trained_moodbot_path(
     return get_model(trained_moodbot_path)
 
 
+@pytest.fixture(scope="session")
+async def trained_framebot_path() -> Text:
+    return await train_async(
+        domain="examples/framebot/domain.yml",
+        config="examples/moodbot/config.yml",
+        training_files="examples/framebot/data/",
+        output_path=FRAMEBOT_MODEL_PATH
+    )
+
+
+@pytest.fixture(scope="session")
+async def unpacked_trained_framebot_path(
+    trained_framebot_path: Text,
+) -> TempDirectoryPath:
+    return get_model(trained_framebot_path)
+
+
 @pytest.fixture
 async def stack_agent(trained_rasa_model: Text) -> Agent:
     return await load_agent(model_path=trained_rasa_model)

@@ -1,0 +1,34 @@
+intents:
+  - greet
+  - affirm
+  - inform:
+      can_contain_frame_ref: true
+      on_frame_match_failed: "create_new"
+  - compare:
+      can_contain_frame_ref: true
+      on_frame_match_failed: "most_recent"
+  - switch_frame:
+      can_contain_frame_ref: true
+      on_frame_match_failed: "most_recent"
+
+entities:
+  - city
+
+actions:
+- utter_greet
+- utter_searching
+- action_search_db
+
+slots:
+  city:
+    type: unfeaturized
+    frame_slot: true
+  ref:
+    type: unfeaturized
+    frame_slot: true
+
+templates:
+  utter_greet:
+  - text: "Hey! How are you?"
+  utter_searching:
+  - text: "Searching..."

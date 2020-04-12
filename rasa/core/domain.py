@@ -126,7 +126,8 @@ class Domain:
         utter_templates = cls.collect_templates(data.get("templates", {}))
         slots = cls.collect_slots(data.get("slots", {}))
         additional_arguments = data.get("config", {})
-        session_config = cls._get_session_config(data.get(SESSION_CONFIG_KEY, {}))
+        session_config = cls._get_session_config(
+            data.get(SESSION_CONFIG_KEY, {}))
         intents = data.get("intents", {})
 
         return cls(
@@ -142,7 +143,8 @@ class Domain:
 
     @staticmethod
     def _get_session_config(session_config: Dict) -> SessionConfig:
-        session_expiration_time = session_config.get(SESSION_EXPIRATION_TIME_KEY)
+        session_expiration_time = session_config.get(
+            SESSION_EXPIRATION_TIME_KEY)
 
         # TODO: 2.0 reconsider how to apply sessions to old projects and legacy trackers
         if session_expiration_time is None:
@@ -227,7 +229,8 @@ class Domain:
             combined[key] = merge_lists(combined[key], domain_dict[key])
 
         for key in ["templates", "slots"]:
-            combined[key] = merge_dicts(combined[key], domain_dict[key], override)
+            combined[key] = merge_dicts(
+                combined[key], domain_dict[key], override)
 
         return self.__class__.from_dict(combined)
 
@@ -255,13 +258,14 @@ class Domain:
                 for properties in intent.values():
                     properties.setdefault("use_entities", True)
                     properties.setdefault("ignore_entities", [])
+                    properties.setdefault("can_contain_frame_ref", False)
+                    properties.setdefault("on_frame_match_failed", None)
 
-                    properties.setdefault("intent_class", None)
-                    if properties["intent_class"] is not None and \
-                            properties["intent_class"] not in ["constraint", 
-                            "request", "comparison_request", "binary_question"]:
-                        raise InvalidDomain("Invalid intent_class specified "
-                            "for intent '{}'".format(name))
+                    if properties["on_frame_match_failed"] is not None and \
+                            properties["on_frame_match_failed"] not in ["create_new",
+                                                                         "most_recent"]:
+                        raise InvalidDomain("Invalid on_frame_match_failed specified "
+                                            "for intent '{}'".format(name))
 
                     if (
                         properties["use_entities"] is None
@@ -274,7 +278,8 @@ class Domain:
                     intent: {
                         "use_entities": True,
                         "ignore_entities": [],
-                        "intent_class": None
+                        "can_contain_frame_ref": False,
+                        "on_frame_match_failed": None
                     }
                 }
 
@@ -570,7 +575,8 @@ class Domain:
 
         elif intent_name:
             intent_id = "intent_{}".format(latest_message.intent["name"])
-            state_dict[intent_id] = latest_message.intent.get("confidence", 1.0)
+            state_dict[intent_id] = latest_message.intent.get(
+                "confidence", 1.0)
 
         return state_dict
 
@@ -659,9 +665,11 @@ class Domain:
                     ]
                     if matching_entities:
                         if s.type_name == "list":
-                            slot_events.append(SlotSet(s.name, matching_entities))
+                            slot_events.append(
+                                SlotSet(s.name, matching_entities))
                         else:
-                            slot_events.append(SlotSet(s.name, matching_entities[-1]))
+                            slot_events.append(
+                                SlotSet(s.name, matching_entities[-1]))
             return slot_events
         else:
             return []
@@ -744,7 +752,8 @@ class Domain:
                 if len(intent) == 0:
                     domain_data["intents"][idx] = name
 
-        for slot in domain_data["slots"].values():  # pytype: disable=attribute-error
+        # pytype: disable=attribute-error
+        for slot in domain_data["slots"].values():
             if slot["initial_value"] is None:
                 del slot["initial_value"]
             if slot["auto_fill"]:
@@ -826,7 +835,8 @@ class Domain:
             training_data_elements = set()
 
         in_domain_diff = set(domain_elements) - set(training_data_elements)
-        in_training_data_diff = set(training_data_elements) - set(domain_elements)
+        in_training_data_diff = set(
+            training_data_elements) - set(domain_elements)
 
         return {"in_domain": in_domain_diff, "in_training_data": in_training_data_diff}
 
@@ -845,7 +855,8 @@ class Domain:
         """
 
         intent_warnings = self._get_symmetric_difference(self.intents, intents)
-        entity_warnings = self._get_symmetric_difference(self.entities, entities)
+        entity_warnings = self._get_symmetric_difference(
+            self.entities, entities)
         action_warnings = self._get_symmetric_difference(
             self._actions_for_domain_warnings, actions
         )
@@ -965,7 +976,8 @@ class Domain:
             if a.startswith(rasa.core.constants.UTTER_PREFIX)
         ]
 
-        missing_templates = [t for t in utterances if t not in self.templates.keys()]
+        missing_templates = [
+            t for t in utterances if t not in self.templates.keys()]
 
         if missing_templates:
             for template in missing_templates:

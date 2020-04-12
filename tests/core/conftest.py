@@ -40,6 +40,8 @@ E2E_STORY_FILE_UNKNOWN_ENTITY = "data/test_evaluations/story_unknown_entity.md"
 
 MOODBOT_MODEL_PATH = "examples/moodbot/models/"
 
+FRAMEBOT_MODEL_PATH = "examples/framebot/models/"
+
 RESTAURANTBOT_PATH = "examples/restaurantbot/"
 
 DEFAULT_ENDPOINTS_FILE = "data/test_endpoints/example_endpoints.yml"
@@ -184,6 +186,19 @@ def moodbot_metadata(unpacked_trained_moodbot_path):
     )
 
 
+@pytest.fixture(scope="session")
+def framebot_domain():
+    domain_path = os.path.join("examples", "framebot", "domain.yml")
+    return Domain.load(domain_path)
+
+
+@pytest.fixture(scope="session")
+def framebot_metadata(unpacked_trained_framebot_path):
+    return PolicyEnsemble.load_metadata(
+        os.path.join(unpacked_trained_framebot_path, "core")
+    )
+
+
 @pytest.fixture()
 async def trained_stack_model(
     trained_async,
@@ -225,6 +240,11 @@ def default_nlg(default_domain):
 @pytest.fixture
 def default_tracker(default_domain):
     return DialogueStateTracker("my-sender", default_domain.slots)
+
+
+@pytest.fixture
+def framebot_tracker(framebot_domain):
+    return DialogueStateTracker("my-sender-1", framebot_domain.slots)
 
 
 @pytest.fixture(scope="session")

@@ -1,0 +1,23 @@
+actions:
+- action_search_db
+- utter_greet
+- utter_searching
+entities:
+- city
+intents:
+- inform
+- switch_frame
+- greet
+- affirm
+- compare
+session_config:
+  carry_over_slots_to_new_session: true
+  session_expiration_time: 60
+slots:
+  city:
+    type: text
+templates:
+  utter_greet:
+  - text: Hey! How are you?
+  utter_searching:
+  - text: Searching...

@@ -1,6 +1,8 @@
+import copy
 import logging
+import time
 from collections import Counter
-from typing import Any, List, Text, Tuple, Dict, Optional
+from typing import Any, List, Text, Tuple, Dict, Optional, Callable
 
 from rasa.core.events import (
     Event,
@@ -136,167 +138,117 @@ class RuleBasedFrameTracker(object):
         self.domain = domain
 
     def predict(
-        self, tracker: "DialogueStateTracker", user_utterance: Text
+        self, tracker: "DialogueStateTracker", user_utterance: "UserUttered"
     ) -> List[Event]:
-        dialogue_entities = FrameSet.get_framed_entities(
-            user_utterance.entities, self.domain
-        )
-
         # 1. Update the current frame with slots that might have been updated
         # through other custom actions.
         # 2. Check for changes in either the slot-values within the current frame
         # or for a switching of the active frame.
         # 3. Refill the slots with the contents of the current frame
-        events = push_slots_into_current_frame(tracker)
-                 + self._handle_frame_changes(tracker, dialogue_entities, events)
-                 + pop_slots_from_current_frame()
+        events = push_slots_into_current_frame(tracker) + \
+                    self._handle_frame_changes(tracker, user_utterance) + \
+                    pop_slots_from_current_frame()
 
         return events
+
+    def _get_latest_frames(self, tracker: "DialogueStateTracker") -> FrameSet:
+        """Generate the latest FrameSet temporarily until the tracker is permanently updated."""
+        latest_tracker_slots = {
+            key: slot.value
+            for key, slot in tracker.slots.items()
+            if slot.frame_slot
+        }
+
+        frames = copy.deepcopy(tracker.frames)
+        if not frames.current_frame:
+            frames.add_frame(
+                slots=latest_tracker_slots,
+                timestamp=time.time(),
+                switch_to=True
+            )
+        else:
+            for key, value in latest_tracker_slots.items():
+                frames.current_frame[key] = value
+
+        return frames
 
     def _handle_frame_changes(
         self,
         tracker: "DialogueStateTracker",
-        dialogue_entities: Dict[Text, Any],
-        events: List[Event]
+        user_utterance: "UserUttered",
     ) -> List[Event]:
-        # Populate the ref field in dialogue_entities
-        self._populate_utterance_with_ref(tracker, dialogue_entities, events)
+        def get_intent_frame_props(intent):
+            can_contain_frame_ref = self.domain.intent_properties[intent]["can_contain_frame_ref"]
+            on_frame_match_failed = self.domain.intent_properties[intent]["on_frame_match_failed"]
+            return can_contain_frame_ref, on_frame_match_failed
 
-        intent_class = self.domain.intent_properties.get(
-            user_utterance.intent["name"]
-        ).get("intent_class")
-
-        assert intent_class in ["constraint", "request", "comparison_request", "binary_question", None]
-        if intent_class == "constraint":
-            logger.debug("Handling inform")
-            events.extend(self._handle_inform(tracker, dialogue_entities, events))
-        elif intent_class == "switch_frame":
-            logger.debug("Switching frame")
-            events.extend(self._handle_switch_frame(tracker, dialogue_entities, events))
-        elif intent_class in acts_with_ref:
-            # anything with a ref tag
-            logger.debug("Handling act with ref")
-            events.extend(self._handle_act_with_ref(tracker, dialogue_entities, events))
-        else:
-            logger.debug("Handling another kind of intent")
-            for key, value in dialogue_entities.items():
-                events.append(
-                    FrameUpdated(
-                        frame_idx=tracker.frames.current_frame_idx,
-                        name=key,
-                        value=value,
-                    )
-                )
-        return events
-
-    def _populate_utterance_with_ref(
-        self,
-        tracker: "DialogueStateTracker",
-        framed_entities: Dict[Text, Any],
-        events_this_turn: List[Event]
-    ) -> None:
-        first_frame_created_now = is_first_frame_created_now(
-            tracker, events_this_turn
+        intent = user_utterance.intent
+        can_contain_frame_ref, on_frame_match_failed = get_intent_frame_props(intent)
+        dialogue_entities = FrameSet.get_framed_entities(
+            user_utterance.entities, self.domain
         )
 
-        # Get all the candidate frames.
-        # If the first frame was created recently, then fetch it from
-        # events_this_turn. Otherwise, fetch it from tracker.frames.
-        if not tracker.frames.current_frame:
-            assert first_frame_created_now, "Either the current frame must not "
-                        "be None or a frame must be created recently."
-            # Set all_frames to the first frame that was just created earlier
-            all_frames = [Frame(
-                slots=events_this_turn[0].slots,
-                idx=0,
-                created=events_this_turn[0].timestamp
-            )]
-        else:
-            all_frames = tracker.frames
+        if can_contain_frame_ref:
+            events = self._update_or_switch_frame(
+                tracker,
+                on_frame_match_failed,
+                dialogue_entities,
+            )
+            return events
 
-        # Fetches the frame id of the most recent frame having the most number of
-        # key-value matches against the entities picked up during this turn.
-        # If no best match is found, then the ref is set to the current frame's id.
-        current_frame_idx = 0 if first_frame_created_now \
-                                else tracker.frames.current_frame_idx
-        framed_entities['ref'] = get_best_matching_frame_idx(
-            all_frames, framed_entities, fallback_idx=current_frame_idx
-        )
-
-
-
-    def _handle_inform(
-        self,
-        tracker: "DialogueStateTracker",
-        framed_entities: Dict[Text, Any],
-        events_this_turn: List[Event],
-    ) -> List[Event]:
-        logger.debug(f"Received the great framed_entities: {framed_entities}")
-        for key, value in framed_entities.items():
-            logger.debug(f"Current frame: {tracker.frames.current_frame}")
-            if tracker.frames.current_frame:
-                #
-                if tracker.frames.current_frame[key] is None:
-                    logger.debug("Updating current frame")
-                    return [
-                        FrameUpdated(
-                            frame_idx=tracker.frames.current_frame_idx,
-                            name=key,
-                            value=value,
-                        )
-                        for key, value in framed_entities.items()
-                    ]
-                elif tracker.frames.current_frame[key] != value:
-                    logger.debug("Created and switched to new frame")
-                    return [FrameCreated(slots=framed_entities, switch_to=True)]
-            elif is_first_frame_created_now(tracker, events_this_turn):
-                logger.debug(
-                    "First frame has already been created. So just updating it now..."
-                )
-                return [
-                    FrameUpdated(frame_idx=0, name=key, value=value)
-                    for key, value in framed_entities.items()
-                ]
-            else:
-                logger.debug("Created and switched to new frame 2")
-                return [FrameCreated(slots=framed_entities, switch_to=True)]
         return []
 
-    def _handle_switch_frame(
+    def _get_choice_fn(self, on_frame_match_failed: Text) -> Callable:
+
+        def most_recent_frame_idx(frames: List[Frame]) -> int:
+            most_recent_frame = list(
+                sorted(frames, key=lambda frame: frame.created, reverse=True)
+            )[0]
+            return most_recent_frame.idx
+
+        def create_new(
+            matching_candidates: List[Frame],
+            non_conflicting_candidates: List[Frame],
+            all_frames: List[Frame]
+        ) -> int:
+            if matching_candidates:
+                return most_recent_frame_idx(matching_candidates)
+            if non_conflicting_candidates:
+                if all_frames.current_frame_idx in non_conflicting_candidates:
+                    return all_frames.current_frame_idx
+            return len(all_frames)
+
+        def most_recent(
+            matching_candidates: List[Frame],
+            non_conflicting_candidates: List[Frame],
+            all_frames: List[Frame]
+        ) -> int:
+            if matching_candidates:
+                return most_recent_frame_idx(matching_candidates)
+            return most_recent_frame_idx(all_frames)
+
+        if on_frame_match_failed == 'create_new':
+            return create_new
+        elif on_frame_match_failed == 'most_recent':
+            return most_recent
+
+    def _update_or_switch_frame(
         self,
         tracker: "DialogueStateTracker",
-        framed_entities: Dict[Text, Any],
-        events_this_turn: List[Event],
-    ) -> List[Event]:
-        equality_counts = Counter()
-        for key, value in framed_entities.items():
-            # If the slot value from the latest utterance is not equal to that of the
-            # current_frame, search for it among the other frames.
-            if (
-                tracker.frames.current_frame
-                and tracker.frames.current_frame[key] == value
-            ):
-                # The only reason tracker.frames.current_frame is being checked here
-                # is to ensure non-nullity.
-                continue
-            for idx, frame in enumerate(tracker.frames.frames):
-                if idx == tracker.frames.current_frame_idx:
-                    continue
-                if frame[key] == value:
-                    equality_counts[idx] += 1
-        # If all the slots mentioned in the latest utterance are matching inside the
-        # top-ranking frame, switch to that frame. Otherwise, switch to the most recently
-        # created frame.
-        best_matches = equality_counts.most_common()
-        if best_matches and best_matches[0][1] == len(framed_entities):
-            logger.debug(f"Found a complete match. Switching to {best_matches[0][0]}")
-            return [CurrentFrameChanged(frame_idx=best_matches[0][0])]
-        else:
-            most_recent_frames = list(
-                sorted(tracker.frames, key=lambda f: f.last_active, reverse=True)
-            )
-            logger.debug(
-                f"Could not find a complete match. Switching to most recent"
-                f"frame: {most_recent_frames[0].idx}"
-            )
-            return [CurrentFrameChanged(frame_idx=most_recent_frames[0].idx)]
+        on_frame_match_failed: Text,
+        framed_entities: Dict[Text, Any]
+    ) -> None:
+        ref_frame_idx = get_best_matching_frame_idx(
+            frames=self._get_latest_frames(tracker),
+            framed_entities=framed_entities,
+            choice_fn=self._get_choice_fn(on_frame_match_failed)
+        )
+
+        if ref_frame_idx == len(tracker.frames):
+            return [FrameCreated(
+                slots=framed_entities,
+                switch_to=True
+            )]
+
+        return []
+        
