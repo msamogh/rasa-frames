@@ -79,8 +79,7 @@ class FrameSet(object):
         entities: Dict[Text, Any], domain: "Domain"
     ) -> Dict[Text, Any]:
         logger.debug(f"All those slots: {domain.slots}")
-        framed_slot_names = [
-            slot.name for slot in domain.slots if slot.frame_slot]
+        framed_slot_names = [slot.name for slot in domain.slots if slot.frame_slot]
         framed_entities = {
             entity["entity"]: entity["value"]
             for entity in entities

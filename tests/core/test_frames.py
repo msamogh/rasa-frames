@@ -4,9 +4,10 @@ import pytest
 
 from rasa.core.events import SlotSet, FrameCreated, CurrentFrameDumped
 from rasa.core.frames import Frame, FrameSet, RuleBasedFramePolicy
-from rasa.core.frames.utils import push_slots_into_current_frame, pop_slots_from_current_frame
-from rasa.core.frames.rule_based_frame_policy import most_recent_frame_idx, create_new, \
-    most_recent
+from rasa.core.frames.utils import push_slots_into_current_frame, pop_slots_from_current_frame, \
+    frames_from_tracker_slots
+from rasa.core.frames.frame_policy import FrameIntent
+
 
 @pytest.fixture()
 def populated_tracker(framebot_tracker):
@@ -46,10 +47,10 @@ def test_pop_frame(populated_tracker):
     assert populated_tracker.slots["city"].value == "Tumakuru"
 
 
-def test_get_latest_frames(rule_based_frame_policy, populated_tracker):
+def test_frames_from_tracker_slots(rule_based_frame_policy, populated_tracker):
     assert populated_tracker.frames.current_frame is None
 
-    frames = rule_based_frame_policy._get_latest_frames(populated_tracker)
+    frames = frames_from_tracker_slots(populated_tracker)
     assert frames.current_frame_idx == 0
     assert frames.current_frame["city"] == "Bengaluru"
 
@@ -74,48 +75,63 @@ def populated_frames():
 
 
 @pytest.mark.parametrize(
-    "entities, strategy, best_matching_idx",
+    "entities, on_frame_match_failed, on_frame_ref_identified, best_matching_idx",
     [
         (
             {"city": "Bengaluru"},
-            most_recent, 1
+            "most_recent",
+            "switch",
+            1
         ),
         (
             {
                 "city": "Bengaluru",
                 "budget": 1500
             },
-            most_recent, 0
+            "most_recent",
+            "switch",
+            0
         ),
         (
             {"city": "Tumakuru"},
-            most_recent, 2
+            "most_recent",
+            "switch",
+            2
         ),
         (
             {"city": "Tumakuru", "budget": 1200},
-            create_new, 3
+            "create_new",
+            "switch",
+            3
         ),
         (
             {"city": "Mangaluru"},
-            create_new, 3
+            "create_new",
+            "switch",
+            3
         ),
         (
             {"city": "Mangaluru"},
-            most_recent, 2
+            "most_recent",
+            "switch",
+            2
         )
     ]
 )
 def test_get_best_matching_frame_idx(
     rule_based_frame_policy,
     populated_frames,
+    on_frame_match_failed,
+    on_frame_ref_identified,
     entities,
-    strategy,
     best_matching_idx
 ):
-    assert get_best_matching_frame_idx(
+    assert rule_based_frame_policy.get_best_matching_frame_idx(
         populated_frames,
-        entities,
-        strategy
+        FrameIntent(
+            can_contain_frame_ref=True,
+            on_frame_match_failed=on_frame_match_failed,
+            on_frame_ref_identified=on_frame_ref_identified
+        ),
+        entities
     ) == best_matching_idx
-
-

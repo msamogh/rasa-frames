@@ -32,8 +32,7 @@ from rasa.constants import DEFAULT_SANIC_WORKERS, ENV_SANIC_WORKERS
 # backwards compatibility 1.0.x
 # noinspection PyUnresolvedReferences
 from rasa.core.lock_store import LockStore, RedisLockStore
-from rasa.core.events import Event, FrameCreated, FrameUpdated, \
-    CurrentFrameDumped
+from rasa.core.events import Event, FrameCreated, FrameUpdated, CurrentFrameDumped
 from rasa.utils.endpoints import EndpointConfig, read_endpoint_config
 from sanic import Sanic
 from sanic.views import CompositionView
@@ -48,10 +47,8 @@ def configure_file_logging(logger_obj: logging.Logger, log_file: Optional[Text])
     if not log_file:
         return
 
-    formatter = logging.Formatter(
-        "%(asctime)s [%(levelname)-5.5s]  %(message)s")
-    file_handler = logging.FileHandler(
-        log_file, encoding=io_utils.DEFAULT_ENCODING)
+    formatter = logging.Formatter("%(asctime)s [%(levelname)-5.5s]  %(message)s")
+    file_handler = logging.FileHandler(log_file, encoding=io_utils.DEFAULT_ENCODING)
     file_handler.setLevel(logger_obj.level)
     file_handler.setFormatter(formatter)
     logger_obj.addHandler(file_handler)
@@ -393,16 +390,13 @@ class AvailableEndpoints:
     def read_endpoints(cls, endpoint_file: Text) -> "AvailableEndpoints":
         nlg = read_endpoint_config(endpoint_file, endpoint_type="nlg")
         nlu = read_endpoint_config(endpoint_file, endpoint_type="nlu")
-        action = read_endpoint_config(
-            endpoint_file, endpoint_type="action_endpoint")
+        action = read_endpoint_config(endpoint_file, endpoint_type="action_endpoint")
         model = read_endpoint_config(endpoint_file, endpoint_type="models")
         tracker_store = read_endpoint_config(
             endpoint_file, endpoint_type="tracker_store"
         )
-        lock_store = read_endpoint_config(
-            endpoint_file, endpoint_type="lock_store")
-        event_broker = read_endpoint_config(
-            endpoint_file, endpoint_type="event_broker")
+        lock_store = read_endpoint_config(endpoint_file, endpoint_type="lock_store")
+        event_broker = read_endpoint_config(endpoint_file, endpoint_type="event_broker")
 
         return cls(nlg, nlu, action, model, tracker_store, lock_store, event_broker)
 
@@ -517,8 +511,7 @@ def number_of_sanic_workers(lock_store: Union[EndpointConfig, LockStore, None]) 
         return DEFAULT_SANIC_WORKERS
 
     try:
-        env_value = int(os.environ.get(
-            ENV_SANIC_WORKERS, DEFAULT_SANIC_WORKERS))
+        env_value = int(os.environ.get(ENV_SANIC_WORKERS, DEFAULT_SANIC_WORKERS))
     except ValueError:
         logger.error(
             f"Cannot convert environment variable `{ENV_SANIC_WORKERS}` "

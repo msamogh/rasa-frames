@@ -500,6 +500,7 @@ class SlotSet(Event):
 
 
 class FrameCreated(Event):
+    """Create a new frame."""
 
     type_name = "create_frame"
 
@@ -543,6 +544,7 @@ class FrameCreated(Event):
 
 
 class FrameUpdated(Event):
+    """Update slot values of an existing frame."""
 
     type_name = "update_frame"
 
@@ -586,6 +588,7 @@ class FrameUpdated(Event):
 
 
 class CurrentFrameChanged(Event):
+    """Switch the current frame."""
 
     type_name = "change_current_frame"
 
@@ -621,6 +624,7 @@ class CurrentFrameChanged(Event):
 
 
 class CurrentFrameDumped(Event):
+    """Copy over the slot values from the current frame to the tracker's slots."""
 
     type_name = "dump_current_frame"
 

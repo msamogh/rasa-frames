@@ -4,12 +4,15 @@ intents:
   - inform:
       can_contain_frame_ref: true
       on_frame_match_failed: "create_new"
+      on_frame_ref_identified: "switch"
   - compare:
       can_contain_frame_ref: true
       on_frame_match_failed: "most_recent"
+      on_frame_ref_identified: "switch"
   - switch_frame:
       can_contain_frame_ref: true
       on_frame_match_failed: "most_recent"
+      on_frame_ref_identified: "switch"
 
 entities:
   - city
@@ -25,7 +28,6 @@ slots:
     frame_slot: true
   ref:
     type: unfeaturized
-    frame_slot: true
 
 templates:
   utter_greet:
