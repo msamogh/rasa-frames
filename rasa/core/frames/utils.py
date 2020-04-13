@@ -1,9 +1,14 @@
 import copy
+import logging
 import time
 from typing import List, Dict, Text, Any, Callable
 
-from rasa.core.events import Event, FrameCreated, FrameUpdated, CurrentFrameDumped
+from rasa.core.events import Event, FrameCreated, FrameUpdated, CurrentFrameDumped, \
+    SlotSet
 from rasa.core.frames.frame_policy import FrameSet
+
+
+logger = logging.getLogger(__name__)
 
 
 def push_slots_into_current_frame(tracker: "DialogueStateTracker") -> List[Event]:
@@ -12,6 +17,7 @@ def push_slots_into_current_frame(tracker: "DialogueStateTracker") -> List[Event
         key: slot.value for key, slot in tracker.slots.items() if slot.frame_slot
     }
     if tracker.frames.current_frame:
+        logger.debug("Current frame IS set")
         for key, value in framed_entities.items():
             events.append(
                 FrameUpdated(
@@ -19,7 +25,13 @@ def push_slots_into_current_frame(tracker: "DialogueStateTracker") -> List[Event
                 )
             )
     else:
+        logger.debug("Current frame is not set")
+        logger.debug(len(tracker.frames))
         events.append(FrameCreated(slots=framed_entities, switch_to=True))
+
+    # Reset ref field
+    events.append(SlotSet("ref", None))
+
     return events
 
 

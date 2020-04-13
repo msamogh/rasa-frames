@@ -2,7 +2,8 @@ import logging
 from collections import Counter
 from typing import List, Dict, Text, Any, Callable, Tuple
 
-from rasa.core.events import Event, FrameCreated, CurrentFrameChanged, SlotSet
+from rasa.core.events import Event, FrameCreated, CurrentFrameChanged, SlotSet, \
+    FrameUpdated
 from rasa.core.frames import FramePolicy
 from rasa.core.frames.frame_policy import FrameIntent
 
@@ -28,10 +29,14 @@ class RuleBasedFramePolicy(FramePolicy):
     ) -> int:
         """Create a new frame if no perfect match found."""
         if matching_candidates:
+            logger.debug("Perfect matching candidates")
             return most_recent_frame_idx(matching_candidates)
         if non_conflicting_candidates:
+            logger.debug("non_conflicting_candidates")
             if current_frame_idx in [f.idx for f in non_conflicting_candidates]:
+                logger.debug("It's the current frame")
                 return current_frame_idx
+        logger.debug("Creating a new frame")
         return len(all_frames)
 
     def get_best_matching_frame_idx(
@@ -105,27 +110,46 @@ class RuleBasedFramePolicy(FramePolicy):
             ref_frame_idx
         )
 
+        logger.debug(f"ref_frame_idx: {ref_frame_idx}")
         logger.debug(f"len(frames) = {len(frames)}")
 
         if frame_intent.on_frame_ref_identified == "switch":
-            return self._switch_or_create_frame(frames, framed_entities, ref_frame_idx)
+            return self._switch_or_create_frame(
+                frames, current_frame_idx, framed_entities, ref_frame_idx
+            )
         elif on_frame_ref_identified == "populate":
             return [SlotSet("ref", ref_frame_idx)]
         else:
             raise RuntimeError(
-                "on_frame_ref_identified must be one of " "['switch', 'populate']."
+                "on_frame_ref_identified must be one of ['switch', 'populate']."
             )
 
     def _switch_or_create_frame(
         self,
         frames: List["Frame"],
+        current_frame_idx: int,
         framed_entities: Dict[Text, Any],
         ref_frame_idx: int,
     ) -> List[Event]:
+        logger.debug("_switch_or_create_frame")
+        logger.debug(f"=======Coming for you============: {framed_entities}")
         if ref_frame_idx == len(frames):
+            logger.debug("ref_frame_idx == len(frames)")
             return [FrameCreated(slots=framed_entities, switch_to=True)]
-        else:
+        elif ref_frame_idx != current_frame_idx:
+            logger.debug(
+                "ref_frame_idx != len(frames) and ref_frame_idx != current_frame_idx"
+            )
             return [CurrentFrameChanged(frame_idx=ref_frame_idx)]
+        else:
+            updates = []
+            for key, value in framed_entities.items():
+                updates.append(FrameUpdated(
+                    frame_idx=current_frame_idx,
+                    name=key,
+                    value=value
+                ))
+            return updates
 
 
 def most_recent_frame_idx(frames: List["Frame"]) -> int:

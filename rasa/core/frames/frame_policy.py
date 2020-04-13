@@ -53,6 +53,8 @@ class FramePolicy(object):
             + pop_slots_from_current_frame()
         )
 
+        logger.debug(f"Final events: {events}")
+
         return events
 
     def get_frame_events(
@@ -60,6 +62,7 @@ class FramePolicy(object):
     ) -> List[Event]:
         intent = user_utterance.intent
         frame_intent = FrameIntent.from_intent(self.domain, intent["name"])
+        logger.debug(user_utterance.entities)
         dialogue_entities = FrameSet.get_framed_entities(
             user_utterance.entities, self.domain
         )

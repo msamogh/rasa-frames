@@ -16,6 +16,7 @@ intents:
 
 entities:
   - city
+  - budget
 
 actions:
 - utter_greet
@@ -24,6 +25,9 @@ actions:
 
 slots:
   city:
+    type: unfeaturized
+    frame_slot: true
+  budget:
     type: unfeaturized
     frame_slot: true
   ref:

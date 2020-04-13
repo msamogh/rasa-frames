@@ -1,8 +1,16 @@
 import time
+import logging
 
 import pytest
 
-from rasa.core.events import SlotSet, FrameCreated, CurrentFrameDumped
+from rasa.core.events import (
+    SlotSet,
+    FrameCreated,
+    FrameUpdated,
+    CurrentFrameDumped,
+    UserUttered,
+    CurrentFrameChanged
+)
 from rasa.core.frames import Frame, FrameSet, RuleBasedFramePolicy
 from rasa.core.frames.utils import (
     push_slots_into_current_frame,
@@ -10,6 +18,9 @@ from rasa.core.frames.utils import (
     frames_from_tracker_slots,
 )
 from rasa.core.frames.frame_policy import FrameIntent
+
+
+logger = logging.getLogger(__name__)
 
 
 @pytest.fixture()
@@ -26,7 +37,6 @@ def rule_based_frame_policy(framebot_domain):
 
 def test_push_slots(populated_tracker):
     events = push_slots_into_current_frame(populated_tracker)
-    assert len(events) == 1
     assert isinstance(events[0], FrameCreated)
 
     populated_tracker.update(events[0])
@@ -64,7 +74,8 @@ def populated_frames():
     frames.add_frame(
         slots={"city": "Bengaluru", "budget": 1500}, created=time.time(), switch_to=True
     )
-    frames.add_frame(slots={"city": "Bengaluru", "budget": 2500}, created=time.time())
+    frames.add_frame(slots={"city": "Bengaluru",
+                            "budget": 2500}, created=time.time())
     frames.add_frame(
         slots={"city": "Tumakuru", "budget": 1000}, created=time.time(),
     )
@@ -122,4 +133,155 @@ def test_from_intent(
     assert frame_intent.on_frame_ref_identified == on_frame_ref_identified
 
 
-# def test_most_ree
+@pytest.mark.parametrize(
+    "utterances",
+    [
+        ([
+            (
+                "inform",
+                [{"entity": "budget", "value": 3000}],
+                FrameCreated,
+                FrameUpdated,
+                1,
+                0,
+                None,
+                3000
+            )
+        ]),
+        ([
+            (
+                "inform",
+                [{"entity": "city", "value": "Bengaluru"}],
+                FrameCreated,
+                FrameUpdated,
+                1,
+                0,
+                "Bengaluru",
+                None
+            ),
+            (
+                "inform",
+                [{"entity": "budget", "value": 3000}],
+                FrameUpdated,
+                FrameUpdated,
+                1,
+                0,
+                "Bengaluru",
+                3000
+            ),
+        ]),
+        ([
+            (
+                "inform",
+                [{"entity": "city", "value": "X"}],
+                FrameCreated,
+                FrameUpdated,
+                1,
+                0,
+                "X",
+                None
+            ),
+            (
+                "inform",
+                [{"entity": "city", "value": "Y"}],
+                FrameUpdated,
+                FrameCreated,
+                2,
+                1,
+                "Y",
+                None
+            ),
+            (
+                "inform",
+                [{"entity": "budget", "value": 1500}],
+                FrameUpdated,
+                FrameUpdated,
+                2,
+                1,
+                "Y",
+                1500
+            ),
+            (
+                "inform",
+                [{"entity": "city", "value": "Z"}],
+                FrameUpdated,
+                FrameCreated,
+                3,
+                2,
+                "Z",
+                None
+            ),
+            (
+                "inform",
+                [{"entity": "city", "value": "X"}],
+                FrameUpdated,
+                CurrentFrameChanged,
+                3,
+                0,
+                "X",
+                None
+            ),
+            (
+                "inform",
+                [{"entity": "budget", "value": 20}],
+                FrameUpdated,
+                FrameUpdated,
+                3,
+                0,
+                "X",
+                20
+            ),
+            (
+                "inform",
+                [{"entity": "city", "value": "Z"}],
+                FrameUpdated,
+                CurrentFrameChanged,
+                3,
+                2,
+                "Z",
+                None
+            )
+        ])
+    ],
+)
+def test_rule_based_frame_policy(rule_based_frame_policy, framebot_tracker, utterances):
+    logger.debug(len(utterances))
+    for i, utterance in enumerate(utterances):
+        (
+            intent,
+            entities,
+            exp_push_event,
+            exp_frame_event,
+            exp_num_frames_post_update,
+            exp_current_frame_idx,
+            exp_city,
+            exp_budget
+        ) = utterance
+        logger.debug(f"Turn {i}")
+
+        push_events = push_slots_into_current_frame(framebot_tracker)
+        frame_events = rule_based_frame_policy.get_frame_events(
+            framebot_tracker,
+            UserUttered(
+                intent={"name": intent, "confidence": 1.0}, entities=entities)
+        )
+        pop_events = pop_slots_from_current_frame()
+
+        assert isinstance(push_events[0], exp_push_event)
+        if exp_frame_event is None:
+            assert len(frame_events) == 0
+        else:
+            assert isinstance(frame_events[0], exp_frame_event)
+        assert isinstance(pop_events[0], CurrentFrameDumped)
+
+        events = push_events + frame_events + pop_events
+        for event in events:
+            framebot_tracker.update(event)
+
+        logger.debug(framebot_tracker.frames)
+
+        assert len(framebot_tracker.frames) == exp_num_frames_post_update
+        assert framebot_tracker.frames.current_frame_idx == exp_current_frame_idx
+
+        assert framebot_tracker.frames.current_frame["city"] == exp_city
+        assert framebot_tracker.frames.current_frame["budget"] == exp_budget
