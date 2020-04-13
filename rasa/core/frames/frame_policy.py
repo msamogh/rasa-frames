@@ -82,6 +82,9 @@ class FramePolicy(object):
                 ref_frame_idx=ref_frame_idx,
                 frame_intent=frame_intent,
             )
+            logger.debug(f'Current frame......{tracker.frames}')
+            logger.debug(f'Current frame......{latest_frameset}')
+            logger.debug(f'Events....{events}')
             return events
 
         return []

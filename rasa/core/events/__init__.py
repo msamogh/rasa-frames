@@ -636,6 +636,7 @@ class CurrentFrameDumped(Event):
         super().__init__(timestamp, metadata)
 
     def apply_to(self, tracker: "DialogueStateTracker") -> None:
+        tracker._reset_slots()
         if tracker.frames.current_frame:
             for key, value in tracker.frames.current_frame.items():
                 tracker._set_slot(key, value)

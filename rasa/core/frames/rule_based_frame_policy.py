@@ -12,6 +12,7 @@ logger = logging.getLogger(__name__)
 
 
 class RuleBasedFramePolicy(FramePolicy):
+
     @staticmethod
     def most_recent(
         matching_candidates, non_conflicting_candidates, all_frames, current_frame_idx
@@ -46,7 +47,8 @@ class RuleBasedFramePolicy(FramePolicy):
         frame_intent: FrameIntent,
         framed_entities: Dict[Text, Any],
     ) -> int:
-        matching_candidates = self._fully_matching_candidates(frames, framed_entities)
+        matching_candidates = self._fully_matching_candidates(
+            frames, framed_entities)
         non_conflicting_candidates = self._non_conflicting_candidates(
             frames, framed_entities
         )
@@ -142,6 +144,7 @@ class RuleBasedFramePolicy(FramePolicy):
             )
             return [CurrentFrameChanged(frame_idx=ref_frame_idx)]
         else:
+            logger.debug("Last Condition Entered for some reason...")
             updates = []
             for key, value in framed_entities.items():
                 updates.append(FrameUpdated(

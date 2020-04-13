@@ -66,7 +66,7 @@ class FrameSet(object):
     def __str__(self) -> Text:
         s = ""
         for idx, frame in enumerate(self.frames):
-            s += f"\nFrame {idx}\n============\n"
+            s += f"\nFrame {idx}\n============ ({self.current_frame_idx})\n"
             s += str({key: slot for key, slot in frame.items()})
         return s
 
