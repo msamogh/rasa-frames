@@ -17,11 +17,8 @@ class RuleBasedFramePolicy(FramePolicy):
     def most_recent(
         matching_candidates, non_conflicting_candidates, all_frames, current_frame_idx
     ) -> int:
-        logger.debug("== most_recent ==")
         if matching_candidates:
-            logger.debug("matching_candidates")
             return most_recent_frame_idx(matching_candidates)
-        logger.debug("no matching candidates")
         return most_recent_frame_idx(all_frames)
 
     @staticmethod
@@ -30,14 +27,10 @@ class RuleBasedFramePolicy(FramePolicy):
     ) -> int:
         """Create a new frame if no perfect match found."""
         if matching_candidates:
-            logger.debug("Perfect matching candidates")
             return most_recent_frame_idx(matching_candidates)
         if non_conflicting_candidates:
-            logger.debug("non_conflicting_candidates")
             if current_frame_idx in [f.idx for f in non_conflicting_candidates]:
-                logger.debug("It's the current frame")
                 return current_frame_idx
-        logger.debug("Creating a new frame")
         return len(all_frames)
 
     def get_best_matching_frame_idx(
@@ -91,11 +84,8 @@ class RuleBasedFramePolicy(FramePolicy):
         conflict_counts = Counter()
         for key, value in framed_entities.items():
             for idx, frame in enumerate(frames):
-                if frame[key] is not None and frame[key] != value:
-                    logger.debug(f"frame[key] = {frame[key]}")
-                    logger.debug(f"value from entitiy = {value}")
+                if frame[key] is not None and frame[key] != value:                    
                     conflict_counts[idx] += 1
-        logger.debug(f"conflict_counts: {conflict_counts}")
         return [frame for idx, frame in enumerate(frames) if conflict_counts[idx] == 0]
 
     def on_frame_ref_identified(
@@ -111,9 +101,6 @@ class RuleBasedFramePolicy(FramePolicy):
         ), "ref is equal to {}. It cannot violate 0 <= ref <= len(frames)".format(
             ref_frame_idx
         )
-
-        logger.debug(f"ref_frame_idx: {ref_frame_idx}")
-        logger.debug(f"len(frames) = {len(frames)}")
 
         if frame_intent.on_frame_ref_identified == "switch":
             return self._switch_or_create_frame(
@@ -133,18 +120,11 @@ class RuleBasedFramePolicy(FramePolicy):
         framed_entities: Dict[Text, Any],
         ref_frame_idx: int,
     ) -> List[Event]:
-        logger.debug("_switch_or_create_frame")
-        logger.debug(f"=======Coming for you============: {framed_entities}")
         if ref_frame_idx == len(frames):
-            logger.debug("ref_frame_idx == len(frames)")
             return [FrameCreated(slots=framed_entities, switch_to=True)]
         elif ref_frame_idx != current_frame_idx:
-            logger.debug(
-                "ref_frame_idx != len(frames) and ref_frame_idx != current_frame_idx"
-            )
             return [CurrentFrameChanged(frame_idx=ref_frame_idx)]
         else:
-            logger.debug("Last Condition Entered for some reason...")
             updates = []
             for key, value in framed_entities.items():
                 updates.append(FrameUpdated(

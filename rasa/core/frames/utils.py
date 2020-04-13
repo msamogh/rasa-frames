@@ -16,19 +16,14 @@ def push_slots_into_current_frame(tracker: "DialogueStateTracker") -> List[Event
     framed_slots = {
         key: slot.value for key, slot in tracker.slots.items() if slot.frame_slot
     }
-    logger.debug(f"NAANE CULPRIT: {framed_slots}")
     if tracker.frames.current_frame:
-        logger.debug("Current frame IS set")
         for key, value in framed_slots.items():
-            logger.debug("Some updation happening here saar")
             events.append(
                 FrameUpdated(
                     frame_idx=tracker.frames.current_frame_idx, name=key, value=value,
                 )
             )
     else:
-        logger.debug("Current frame is not set")
-        logger.debug(len(tracker.frames))
         events.append(FrameCreated(slots=framed_slots, switch_to=True))
 
     # Reset ref field

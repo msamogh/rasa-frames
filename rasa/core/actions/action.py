@@ -747,7 +747,6 @@ class ActionChangeFrame(Action):
         tracker: "DialogueStateTracker",
         domain: "Domain",
     ) -> List[Event]:
-        logger.debug("ActionChangeFrame triggered!")
         events = tracker.events_after_latest_restart()
         idx = -1
         while isinstance(events[idx], SlotSet):
