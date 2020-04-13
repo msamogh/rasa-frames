@@ -80,7 +80,7 @@ async def trained_framebot_path() -> Text:
         domain="examples/framebot/domain.yml",
         config="examples/moodbot/config.yml",
         training_files="examples/framebot/data/",
-        output_path=FRAMEBOT_MODEL_PATH
+        output_path=FRAMEBOT_MODEL_PATH,
     )
 
 

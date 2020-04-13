@@ -280,7 +280,9 @@ class Domain:
                             raise InvalidDomain(
                                 "on_frame_ref_identified must be one of "
                                 "['populate', 'switch'] when can_contain_frame_ref is True. "
-                                "Found {} instead.".format(properties["on_frame_ref_identified"])
+                                "Found {} instead.".format(
+                                    properties["on_frame_ref_identified"]
+                                )
                             )
 
                     if (

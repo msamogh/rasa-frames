@@ -8,7 +8,7 @@ intents:
   - compare:
       can_contain_frame_ref: true
       on_frame_match_failed: "most_recent"
-      on_frame_ref_identified: "switch"
+      on_frame_ref_identified: "populate"
   - switch_frame:
       can_contain_frame_ref: true
       on_frame_match_failed: "most_recent"

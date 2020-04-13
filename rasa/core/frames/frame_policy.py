@@ -23,7 +23,7 @@ class FrameIntent(object):
         self.on_frame_ref_identified = on_frame_ref_identified
 
     @classmethod
-    def from_intent(cls, domain, intent):
+    def from_intent(cls, domain: "Domain", intent: Text):
         props = domain.intent_properties[intent]
 
         can_contain_frame_ref = props["can_contain_frame_ref"]
@@ -59,18 +59,26 @@ class FramePolicy(object):
         self, tracker: "DialogueStateTracker", user_utterance: "UserUttered"
     ) -> List[Event]:
         intent = user_utterance.intent
-        frame_intent = FrameIntent.from_intent(self.domain, intent)
+        frame_intent = FrameIntent.from_intent(self.domain, intent["name"])
         dialogue_entities = FrameSet.get_framed_entities(
             user_utterance.entities, self.domain
         )
 
+        latest_frameset = frames_from_tracker_slots(tracker)
         if frame_intent.can_contain_frame_ref:
             ref_frame_idx = self.get_best_matching_frame_idx(
-                frames=frames_from_tracker_slots(tracker).frames,
+                frames=latest_frameset.frames,
+                current_frame_idx=latest_frameset.current_frame_idx,
+                framed_entities=dialogue_entities,
                 frame_intent=frame_intent,
-                framed_entities=framed_entities,
             )
-            events = self.on_frame_ref_identified(tracker, ref_frame_idx, frame_intent)
+            events = self.on_frame_ref_identified(
+                frames=latest_frameset.frames,
+                framed_entities=dialogue_entities,
+                current_frame_idx=latest_frameset.current_frame_idx,
+                ref_frame_idx=ref_frame_idx,
+                frame_intent=frame_intent,
+            )
             return events
 
         return []

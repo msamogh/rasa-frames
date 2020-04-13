@@ -4,8 +4,11 @@ import pytest
 
 from rasa.core.events import SlotSet, FrameCreated, CurrentFrameDumped
 from rasa.core.frames import Frame, FrameSet, RuleBasedFramePolicy
-from rasa.core.frames.utils import push_slots_into_current_frame, pop_slots_from_current_frame, \
-    frames_from_tracker_slots
+from rasa.core.frames.utils import (
+    push_slots_into_current_frame,
+    pop_slots_from_current_frame,
+    frames_from_tracker_slots,
+)
 from rasa.core.frames.frame_policy import FrameIntent
 
 
@@ -59,17 +62,11 @@ def test_frames_from_tracker_slots(rule_based_frame_policy, populated_tracker):
 def populated_frames():
     frames = FrameSet()
     frames.add_frame(
-        slots={"city": "Bengaluru", "budget": 1500},
-        created=time.time(),
-        switch_to=True
+        slots={"city": "Bengaluru", "budget": 1500}, created=time.time(), switch_to=True
     )
+    frames.add_frame(slots={"city": "Bengaluru", "budget": 2500}, created=time.time())
     frames.add_frame(
-        slots={"city": "Bengaluru", "budget": 2500},
-        created=time.time()
-    )
-    frames.add_frame(
-        slots={"city": "Tumakuru", "budget": 1000},
-        created=time.time(),
+        slots={"city": "Tumakuru", "budget": 1000}, created=time.time(),
     )
     return frames
 
@@ -77,46 +74,13 @@ def populated_frames():
 @pytest.mark.parametrize(
     "entities, on_frame_match_failed, on_frame_ref_identified, best_matching_idx",
     [
-        (
-            {"city": "Bengaluru"},
-            "most_recent",
-            "switch",
-            1
-        ),
-        (
-            {
-                "city": "Bengaluru",
-                "budget": 1500
-            },
-            "most_recent",
-            "switch",
-            0
-        ),
-        (
-            {"city": "Tumakuru"},
-            "most_recent",
-            "switch",
-            2
-        ),
-        (
-            {"city": "Tumakuru", "budget": 1200},
-            "create_new",
-            "switch",
-            3
-        ),
-        (
-            {"city": "Mangaluru"},
-            "create_new",
-            "switch",
-            3
-        ),
-        (
-            {"city": "Mangaluru"},
-            "most_recent",
-            "switch",
-            2
-        )
-    ]
+        ({"city": "Bengaluru"}, "most_recent", "switch", 1),
+        ({"city": "Bengaluru", "budget": 1500}, "most_recent", "switch", 0),
+        ({"city": "Tumakuru"}, "most_recent", "switch", 2),
+        ({"city": "Tumakuru", "budget": 1200}, "create_new", "switch", 3),
+        ({"city": "Mangaluru"}, "create_new", "switch", 3),
+        ({"city": "Mangaluru"}, "most_recent", "switch", 2),
+    ],
 )
 def test_get_best_matching_frame_idx(
     rule_based_frame_policy,
@@ -124,17 +88,38 @@ def test_get_best_matching_frame_idx(
     on_frame_match_failed,
     on_frame_ref_identified,
     entities,
-    best_matching_idx
+    best_matching_idx,
 ):
-    assert rule_based_frame_policy.get_best_matching_frame_idx(
-        populated_frames,
-        FrameIntent(
-            can_contain_frame_ref=True,
-            on_frame_match_failed=on_frame_match_failed,
-            on_frame_ref_identified=on_frame_ref_identified
-        ),
-        entities
-    ) == best_matching_idx
+    assert (
+        rule_based_frame_policy.get_best_matching_frame_idx(
+            populated_frames.frames,
+            populated_frames.current_frame_idx,
+            FrameIntent(
+                can_contain_frame_ref=True,
+                on_frame_match_failed=on_frame_match_failed,
+                on_frame_ref_identified=on_frame_ref_identified,
+            ),
+            entities,
+        )
+        == best_matching_idx
+    )
 
 
+@pytest.mark.parametrize(
+    "intent, on_frame_match_failed, on_frame_ref_identified",
+    [
+        ("inform", "create_new", "switch"),
+        ("compare", "most_recent", "populate"),
+        ("switch_frame", "most_recent", "switch"),
+    ],
+)
+def test_from_intent(
+    framebot_domain, intent, on_frame_match_failed, on_frame_ref_identified
+):
+    frame_intent = FrameIntent.from_intent(framebot_domain, intent)
+    assert frame_intent.can_contain_frame_ref is True
+    assert frame_intent.on_frame_match_failed == on_frame_match_failed
+    assert frame_intent.on_frame_ref_identified == on_frame_ref_identified
 
+
+# def test_most_ree
