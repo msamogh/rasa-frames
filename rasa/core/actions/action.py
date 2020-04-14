@@ -735,7 +735,6 @@ class ActionDefaultAskRephrase(ActionUtterTemplate):
 
 
 class ActionChangeFrame(Action):
-    """Triggers a frame-change."""
 
     def name(self) -> Text:
         return ACTION_CHANGE_FRAME_NAME

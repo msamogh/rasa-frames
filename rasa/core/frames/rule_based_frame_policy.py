@@ -17,6 +17,7 @@ class RuleBasedFramePolicy(FramePolicy):
     def most_recent(
         matching_candidates, non_conflicting_candidates, all_frames, current_frame_idx
     ) -> int:
+        """"""
         if matching_candidates:
             return most_recent_frame_idx(matching_candidates)
         return most_recent_frame_idx(all_frames)
