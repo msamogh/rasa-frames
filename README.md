@@ -17,5 +17,5 @@ git clone https://github.com/msamogh/rasa-frames
 
 2. Install the package (preferably inside a virtualenv):
 ```
-pip install -e .
+cd rasa-frames && pip install -e .
 ```
