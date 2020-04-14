@@ -1,4 +1,4 @@
-# Rasa Frames
+# Rasa Frames (Rasa + Microsoft Frames)
 Decision making through conversation involves comparing items and exploring different alternatives. This requires memory.
 
 Rasa Frames is a fork of Rasa that augments the `DialogueStateTracker` with not one, but several copies of slots, each corresonding to an item of discussion.
