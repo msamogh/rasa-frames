@@ -97,17 +97,15 @@ class RuleBasedFramePolicy(FramePolicy):
         ref_frame_idx: int,
         frame_intent: FrameIntent,
     ) -> List[Event]:
-        assert ref_frame_idx <= len(
-            frames
-        ), "ref is equal to {}. It cannot violate 0 <= ref <= len(frames)".format(
-            ref_frame_idx
-        )
+        assert ref_frame_idx <= len(frames), \
+            "ref is equal to {}. It cannot violate " \
+            "0 <= ref <= len(frames)".format(ref_frame_idx)
 
         if frame_intent.on_frame_ref_identified == "switch":
             return self._switch_or_create_frame(
                 frames, current_frame_idx, framed_entities, ref_frame_idx
             )
-        elif on_frame_ref_identified == "populate":
+        elif frame_intent.on_frame_ref_identified == "populate":
             return [SlotSet("ref", ref_frame_idx)]
         else:
             raise RuntimeError(

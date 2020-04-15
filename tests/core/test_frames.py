@@ -82,6 +82,74 @@ def populated_frames():
     return frames
 
 
+def test_frameset_as_dict(populated_frames):
+    assert populated_frames.as_dict() == {
+        'frames': [
+            {
+                'slots': {
+                    'city': 'Bengaluru',
+                    'budget': 1500
+                },
+                'created': populated_frames.frames[0].created
+            },
+            {
+                'slots': {
+                    'city': 'Bengaluru',
+                    'budget': 2500
+                },
+                'created': populated_frames.frames[1].created
+            },
+            {
+                'slots': {
+                    'city': 'Tumakuru',
+                    'budget': 1000
+                },
+                'created': populated_frames.frames[2].created
+            }
+        ],
+        'current_frame_idx': 0
+    }
+
+
+def test_frameset_from_dict(populated_frames):
+    frames = FrameSet.from_dict({
+        'frames': [
+            {
+                'slots': {
+                    'city': 'Bengaluru',
+                    'budget': 1500
+                },
+                'created': populated_frames.frames[0].created
+            },
+            {
+                'slots': {
+                    'city': 'Bengaluru',
+                    'budget': 2500
+                },
+                'created': populated_frames.frames[1].created
+            },
+            {
+                'slots': {
+                    'city': 'Tumakuru',
+                    'budget': 1000
+                },
+                'created': populated_frames.frames[2].created
+            }
+        ],
+        'current_frame_idx': 0
+    })
+
+    assert frames.current_frame_idx == 0
+    assert frames[0]['city'] == 'Bengaluru'
+    assert frames[0]['budget'] == 1500
+    assert frames[1]['city'] == 'Bengaluru'
+    assert frames[1]['budget'] == 2500
+    assert frames[1].created > frames[0].created
+    assert frames[2]['city'] == 'Tumakuru'
+    assert frames[2]['budget'] == 1000
+    assert frames[2].created > frames[1].created
+
+
 @pytest.mark.parametrize(
     "entities, on_frame_match_failed, on_frame_ref_identified, best_matching_idx",
     [

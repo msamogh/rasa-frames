@@ -1,4 +1,5 @@
 import logging
+import time
 from typing import Any, List, Text, Tuple, Dict, Optional, Callable
 
 
@@ -45,6 +46,30 @@ class FrameSet(object):
         The `current_frame_idx` is set to None."""
         self.frames = []
         self.current_frame_idx = None
+
+    def as_dict(self) -> Dict[Text, Any]:
+        """Serialize FrameSet instance into a dict."""
+        return {
+            'current_frame_idx': self.current_frame_idx,
+            'frames': [
+                {
+                    'slots': {
+                        key: value for key, value in self.frames[idx].items()
+                    },
+                    'created': self.frames[idx].created
+                }
+                for idx in range(len(self))
+            ]
+        }
+
+    @classmethod
+    def from_dict(cls, data: Dict[Text, Any]) -> "FrameSet":
+        """Construct a FrameSet instance from a dict."""
+        frames = FrameSet()
+        for frame in data['frames']:
+            frames.add_frame(frame['slots'], frame['created'])
+        frames.activate_frame(data['current_frame_idx'], time.time())
+        return frames
 
     @property
     def current_frame(self) -> Frame:
