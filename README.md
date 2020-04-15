@@ -18,7 +18,7 @@ Rasa Frames aims to automatically manage the gory details of creating, switching
 referencing frames so that you can focus on writing the core "business logic" of
 your bot.
 
-<img align="right" height="580" src="https://github.com/msamogh/rasa-frames/raw/master/Frames.png">
+<img align="center" height="580" src="https://github.com/msamogh/rasa-frames/raw/master/Frames.png">
 
 ## Installation
 1. Clone the repository:
