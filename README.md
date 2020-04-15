@@ -9,7 +9,7 @@ Rasa Frames is a fork of Rasa that augments the `DialogueStateTracker` with mult
 
 This project is directly inspired by the [Microsoft Frames](https://www.microsoft.com/en-us/research/project/frames-dataset/) dataset.
 
-## What is it?
+## Introduction
 
 Here is a typical conversation between a travel agent bot and yet another Bangalorean who ends up going to Goa. You can see the user and the bot going through various options before narrowing down on the final one.
 
