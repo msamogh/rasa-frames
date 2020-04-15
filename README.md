@@ -19,3 +19,6 @@ git clone https://github.com/msamogh/rasa-frames
 ```
 cd rasa-frames && pip install -e .
 ```
+
+## Architecture
+<img align="center" height="580" src="https://github.com/msamogh/rasa-frames/raw/master/Frames.png">
