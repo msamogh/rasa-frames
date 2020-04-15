@@ -11,7 +11,7 @@ This project is directly inspired by the [Microsoft Frames](https://www.microsof
 
 ## Introduction
 
-Here is a typical conversation between a travel agent bot and yet another Bangalorean who ends up going to Goa. You can see the user and the bot going through various options before narrowing down on the final one.
+Here is a typical conversation between a travel agent bot and yet another Bangalorean who ends up going to Goa for a vacation. You can see the user and the bot going through various options before narrowing down on the final one.
 
 Rasa Frames aims to automatically manage the gory details of creating, switching, and
 referencing frames so that you can focus on writing the core "business logic" of
