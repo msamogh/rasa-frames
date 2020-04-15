@@ -9,17 +9,16 @@ Rasa Frames is a fork of Rasa that augments the `DialogueStateTracker` with mult
 
 This project is directly inspired by the [Microsoft Frames](https://www.microsoft.com/en-us/research/project/frames-dataset/) dataset.
 
-## What is it?
+## Getting Started
 
-This is a typical conversation between a user and a travel agent bot. The user and
-the bot go through various options before narrowing down on the final one.
-
-<img align="center" height="580" src="https://github.com/msamogh/rasa-frames/raw/master/Frames.png">
+Here is a typical conversation between a user and a travel agent bot. You can see
+the user and the bot going through various options before narrowing down on the final one.
 
 Rasa Frames aims to automatically manage the gory details of creating, switching, and
 referencing frames so that you can focus on writing the core "business logic" of
 your bot.
 
+<img align="right" height="580" src="https://github.com/msamogh/rasa-frames/raw/master/Frames.png">
 
 ## Installation
 1. Clone the repository:
@@ -32,3 +31,5 @@ git clone https://github.com/msamogh/rasa-frames
 cd rasa-frames && pip install -e .
 ```
 
+## References
+1. El Asri, L., Schulz, H., Sharma, S., Zumer, J., Harris, J., Fine, E., Mehrotra, R., & Suleman, K. (2018). Frames: a corpus for adding memory to goal-oriented dialogue systems. 207–219. https://doi.org/10.18653/v1/w17-5526
