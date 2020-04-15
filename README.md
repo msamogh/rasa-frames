@@ -11,7 +11,14 @@ This project is directly inspired by the [Microsoft Frames](https://www.microsof
 
 ## What is it?
 
+This is a typical conversation between a user and a travel agent bot. The user and
+the bot go through various options before narrowing down on the final one.
+
 <img align="center" height="580" src="https://github.com/msamogh/rasa-frames/raw/master/Frames.png">
+
+Rasa Frames aims to automatically manage the gory details of creating, switching, and
+referencing frames so that you can focus on writing the core "business logic" of
+your bot.
 
 
 ## Installation
