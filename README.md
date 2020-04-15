@@ -9,6 +9,8 @@ Rasa Frames is a fork of Rasa that augments the `DialogueStateTracker` with mult
 
 This project is directly inspired by the [Microsoft Frames](https://www.microsoft.com/en-us/research/project/frames-dataset/) dataset.
 
+<img align="center" height="580" src="https://github.com/msamogh/rasa-frames/raw/master/Frames.png">
+
 ## Installation
 1. Clone the repository:
 ```
@@ -19,6 +21,3 @@ git clone https://github.com/msamogh/rasa-frames
 ```
 cd rasa-frames && pip install -e .
 ```
-
-## Architecture
-<img align="center" height="580" src="https://github.com/msamogh/rasa-frames/raw/master/Frames.png">
