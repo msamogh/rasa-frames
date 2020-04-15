@@ -174,6 +174,7 @@ class DialogueStateTracker:
         return {
             "sender_id": self.sender_id,
             "slots": self.current_slot_values(),
+            "frames": self.frames.as_dict(),
             "latest_message": self.latest_message.parse_data,
             "latest_event_time": latest_event_time,
             "followup_action": self.followup_action,

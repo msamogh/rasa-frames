@@ -106,7 +106,11 @@ class RuleBasedFramePolicy(FramePolicy):
                 frames, current_frame_idx, framed_entities, ref_frame_idx
             )
         elif frame_intent.on_frame_ref_identified == "populate":
-            return [SlotSet("ref", ref_frame_idx)]
+            return [FrameUpdated(
+                frame_idx=current_frame_idx,
+                name='ref',
+                value=ref_frame_idx
+            )]
         else:
             raise RuntimeError(
                 "on_frame_ref_identified must be one of ['switch', 'populate']."

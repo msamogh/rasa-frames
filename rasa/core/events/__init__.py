@@ -639,6 +639,7 @@ class CurrentFrameDumped(Event):
         tracker._reset_slots()
         if tracker.frames.current_frame:
             for key, value in tracker.frames.current_frame.items():
+                logger.debug(f"===== SETTING {key}: {value} =====")
                 tracker._set_slot(key, value)
 
     def as_story_string(self) -> Text:
