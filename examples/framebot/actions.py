@@ -2,6 +2,7 @@ import logging
 from typing import Any, Text, Dict, List
 
 from rasa_sdk import Action, Tracker
+from rasa_sdk.events import FrameCreated
 from rasa_sdk.executor import CollectingDispatcher
 
 
@@ -19,7 +20,9 @@ class ActionSearchDB(Action):
         tracker: Tracker,
         domain: Dict[Text, Any],
     ) -> List[Dict[Text, Any]]:
-        logger.debug(f"========= {tracker.slots['ref']} =========")
-        dispatcher.utter_message(text=f"No results found for {tracker.slots['city']}")
-        logger.debug("Uttered message")
-        return []
+        dispatcher.utter_message(
+            text=f"Found 1 result for {tracker.slots['city']}"
+        )
+        return [FrameCreated(
+            slots={'city': tracker.slots['city'], 'budget': 1500}
+        )]

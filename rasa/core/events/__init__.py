@@ -527,7 +527,7 @@ class FrameCreated(Event):
         try:
             return FrameCreated(
                 parameters.get("slots"),
-                parameters.get("switch_to"),
+                parameters.get("switch_to", False),
                 parameters.get("timestamp"),
                 parameters.get("metadata"),
             )
