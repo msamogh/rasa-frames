@@ -32,6 +32,7 @@ slots:
     frame_slot: true
   ref:
     type: unfeaturized
+    frame_slot: true
 
 templates:
   utter_greet:
