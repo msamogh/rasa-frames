@@ -33,8 +33,7 @@ cd rasa-frames && pip install -e .
 ## Getting Started: Your First Framebot
 If you aren't already familiar with Rasa, then check out the [Rasa tutorial](https://rasa.com/docs/rasa/user-guide/rasa-tutorial/).
 
-### 1. Domain
-#### Slots
+### 1. Slots
 Slots that you want to be replicated across multiple frames are called frame-slots. To indicate that you want a slot to be a frame-slot, simply add the `frame_slot: True` property under that slot in your domain file.
 
 ```yaml
@@ -52,7 +51,7 @@ slots:
     type: text
 ```
 
-#### Intents
+### 2. Intents
 For each intent, there are a bunch of properties you need to configure.
 
 First off, you have to indicate whether or not this intent could potentially
@@ -87,6 +86,9 @@ intents:
       on_frame_match_failed: "most_recent"
       on_frame_ref_identified: "switch"
 ```
+
+### 3. Custom Actions
+
 
 
 ## References
