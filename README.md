@@ -33,8 +33,7 @@ cd rasa-frames && pip install -e .
 ## Getting Started: Your First Framebot
 If you aren't already familiar with Rasa, then check out the [Rasa tutorial](https://rasa.com/docs/rasa/user-guide/rasa-tutorial/).
 
-### 1. Configure your domain
-#### Slots
+### 1. Configure the slots
 To indicate that you want each frame to have its own copy of a slot, simply add the `frame_slot: True` property under that slot in your domain file.
 
 ```yaml
@@ -52,7 +51,7 @@ slots:
     type: text
 ```
 
-#### Intents
+### 2. Configure the intents
 For each intent, there are a bunch of properties you need to configure.
 
 **`can_contain_frame_ref`** - whether or not this intent could potentially include a reference to one or more frames
@@ -83,8 +82,8 @@ intents:
       on_frame_ref_identified: "switch"
 ```
 
-### 3. Custom Actions
-
+### 3. Writing custom actions
+Custom actions, for the most part, remain the same. The 
 
 
 ## References
