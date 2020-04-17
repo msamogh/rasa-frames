@@ -33,8 +33,9 @@ cd rasa-frames && pip install -e .
 ## Getting Started: Your First Framebot
 If you aren't already familiar with Rasa, then check out the [Rasa tutorial](https://rasa.com/docs/rasa/user-guide/rasa-tutorial/).
 
-### 1. Slots
-Slots that you want to be replicated across multiple frames are called frame-slots. To indicate that you want a slot to be a frame-slot, simply add the `frame_slot: True` property under that slot in your domain file.
+### 1. Configure your domain
+#### Slots
+To indicate that you want each frame to have its own copy of a slot, simply add the `frame_slot: True` property under that slot in your domain file.
 
 ```yaml
 slots:
@@ -51,21 +52,19 @@ slots:
     type: text
 ```
 
-### 2. Intents
+#### Intents
 For each intent, there are a bunch of properties you need to configure.
 
-First off, you have to indicate whether or not this intent could potentially
-contain a reference to one or more frames. This is indicated by the
-boolean `can_contain_frame_ref` property. For example, you would not expect an intent corresponding to an affirmation by the user (e.g., "Yes", "Alright") to contain a frame reference. However, a generic intent such as `inform`, which corresponds to the user
-informing the bot of their constraints could potentially contain a reference to a frame.
+*`can_contain_frame_ref`*
+This indicates whether or not this intent could potentially include a reference to one or more frames.
 
-Once you do decide that an intent can contain a frame reference, the next step is to make a couple more decisions.
-
-The first is to decide what should happen in the event that there was no match found for a frame reference among the existing frames. This is indicated by the `on_frame_match_failed` property. There are two choices.
+*`on_frame_match_failed`*
+This defines the fallback policy in the event that no existing frame matched the frame reference in the user utterance. The possible values are:
 1. `create_new` - creates a new frame with the slot-values extracted from the latest user utterance
 2. `most_recent` - informs the FramePolicy to switch to the most recently created frame.
 
-The second decision is determining what should happen once a frame reference has been identified. There are two choices here as well.
+*`on_frame_ref_identified`*
+This determines what should happen once a frame reference has been identified. The possible values are:
 1. `switch` - makes the identified frame the current (active) frame
 2. `populate` - simply populates the `ref` slot with the id of the reference frame; does not change the active frame.
 
