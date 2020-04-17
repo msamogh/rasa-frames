@@ -70,6 +70,24 @@ The second decision is determining what should happen once a frame reference has
 1. `switch` - makes the identified frame the current (active) frame
 2. `populate` - simply populates the `ref` slot with the id of the reference frame; does not change the active frame.
 
+```yaml
+intents:
+  - greet
+  - affirm
+  - inform:
+      can_contain_frame_ref: true
+      on_frame_match_failed: "create_new"
+      on_frame_ref_identified: "switch"
+  - compare:
+      can_contain_frame_ref: true
+      on_frame_match_failed: "most_recent"
+      on_frame_ref_identified: "populate"
+  - switch_frame:
+      can_contain_frame_ref: true
+      on_frame_match_failed: "most_recent"
+      on_frame_ref_identified: "switch"
+```
+
 
 ## References
 1. El Asri, L., Schulz, H., Sharma, S., Zumer, J., Harris, J., Fine, E., Mehrotra, R., & Suleman, K. (2018). Frames: a corpus for adding memory to goal-oriented dialogue systems. 207–219. https://doi.org/10.18653/v1/w17-5526
