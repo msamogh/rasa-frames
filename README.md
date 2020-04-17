@@ -90,7 +90,15 @@ intents:
 ```
 
 ### 3. Writing custom actions
-Custom actions, for the most part, remain the same. The 
+When you write custom actions, you do not have to worry about the mechanisms of frame creation and switching. The `FramePolicy` ensures that the slots in the tracker will always reflect the state of the current frame. Similarly, any updates made to the tracker from the custom action will be written back to the current frame automatically.
+
+#### Accessing frames from within a custom action
+The [rasa-frames-sdk](https://github.com/msamogh/rasa-frames-sdk) has augmented the tracker with a `frames` attribute, which holds a list of all the frames in the tracker at that point in time.
+
+#### Creating a new frame from within a custom action
+There are times when you might want to create a new frame as part of the custom action code. For this, the [rasa-frames-sdk](https://github.com/msamogh/rasa-frames-sdk) has included the `FrameCreated` event.
+
+NOTE: Custom actions cannot modify the frames other than the current frame nor can they switch out the current frame with a different one.
 
 
 ## References
