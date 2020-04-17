@@ -60,15 +60,11 @@ indicates whether or not this intent could potentially include a reference to on
 
 ##### `on_frame_match_failed`
 defines the fallback policy in the event that no existing frame matched the frame reference in the user utterance
-
-The possible values are:
 1. `create_new` - creates a new frame with the slot-values extracted from the latest user utterance
 2. `most_recent` - informs the FramePolicy to switch to the most recently created frame.
 
 ##### `on_frame_ref_identified`
 determines what should happen once a frame reference has been identified
-
-The possible values are:
 1. `switch` - makes the identified frame the current (active) frame
 2. `populate` - simply populates the `ref` slot with the id of the reference frame; does not change the active frame.
 
