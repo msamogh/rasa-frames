@@ -30,14 +30,15 @@ git clone https://github.com/msamogh/rasa-frames
 cd rasa-frames && pip install -e .
 ```
 
-## Getting Started: Your First Framebot
-
 ---
 **NOTE**
 
 Rasa Frames is based off Rasa 1.6 for now. Any changes in the syntax after that version is not supported.
 
 ---
+
+
+## Getting Started: Your First Framebot
 
 ### 1. Configure the slots
 To indicate that you want each frame to have its own copy of a slot, simply add the `frame_slot: True` property under that slot in your domain file.
