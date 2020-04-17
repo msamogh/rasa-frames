@@ -55,13 +55,13 @@ slots:
 #### Intents
 For each intent, there are a bunch of properties you need to configure.
 
-**`can_contain_frame_ref`** - indicates whether or not this intent could potentially include a reference to one or more frames
+**`can_contain_frame_ref`** - whether or not this intent could potentially include a reference to one or more frames
 
-**`on_frame_match_failed`** - defines the fallback policy in the event that no existing frame matched the frame reference in the user utterance
+**`on_frame_match_failed`** - fallback policy in the event that no existing frame matched the frame reference in the user utterance
 1. `create_new` - creates a new frame with the slot-values extracted from the latest user utterance
 2. `most_recent` - informs the FramePolicy to switch to the most recently created frame.
 
-**`on_frame_ref_identified`** - determines what should happen once a frame reference has been identified
+**`on_frame_ref_identified`** - what should happen once a frame reference has been identified
 1. `switch` - makes the identified frame the current (active) frame
 2. `populate` - simply populates the `ref` slot with the id of the reference frame; does not change the active frame.
 
