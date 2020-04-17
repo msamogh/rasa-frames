@@ -101,5 +101,17 @@ There are times when you might want to create a new frame as part of the custom 
 NOTE: Custom actions cannot modify the frames other than the current frame nor can they switch out the current frame with a different one.
 
 
+## Research
+Apart from enabling the development of assistants that can make use of the additional memory, Rasa Frames also aims to be an easy way of getting started with research in Frame Tracking.
+
+The project is organised such that the current `RuleBasedFramePolicy` can be switched out in favour of your own by extending the `FramePolicy` class. You simply have to override the `get_best_matching_frame_idx` and `on_frame_ref_identified` methods with your own.
+
+While getting dirty with the code inside `rasa/core/frames` is your best bet to understanding how this works for now, I hope to add more guidelines as I work on my own implementation of the model described in [2].
+
+## Contributing
+All PRs are open. This is a highly experimental repository and nothing is out of bounds for questioning and changes.
+
+
 ## References
 1. El Asri, L., Schulz, H., Sharma, S., Zumer, J., Harris, J., Fine, E., Mehrotra, R., & Suleman, K. (2018). Frames: a corpus for adding memory to goal-oriented dialogue systems. 207–219. https://doi.org/10.18653/v1/w17-5526
+2. Schulz, H., Zumer, J., El Asri, L., & Sharma, S. (2017). A Frame Tracking Model for Memory-Enhanced Dialogue Systems. 219–227. https://doi.org/10.18653/v1/w17-2626
