@@ -31,7 +31,27 @@ cd rasa-frames && pip install -e .
 ```
 
 ## Getting Started: Your First Framebot
-pass
+If you aren't already familiar with Rasa, then check out the [Rasa tutorial](https://rasa.com/docs/rasa/user-guide/rasa-tutorial/).
+
+### 1. The Domain
+Slots that you want to be replicated across multiple frames are called frame-slots. To indicate that you want a slot to be a frame-slot, simply add the `frame_slot: True` property under that slot in your domain file.
+
+```yaml
+slots:
+  city:
+    type: unfeaturized
+    frame_slot: true
+  budget:
+    type: unfeaturized
+    frame_slot: true
+  ref:
+    type: unfeaturized
+    frame_slot: true
+  name:                 # a regular slot that stays the same across all frames
+    type: text
+```
+
+
 
 ## References
 1. El Asri, L., Schulz, H., Sharma, S., Zumer, J., Harris, J., Fine, E., Mehrotra, R., & Suleman, K. (2018). Frames: a corpus for adding memory to goal-oriented dialogue systems. 207–219. https://doi.org/10.18653/v1/w17-5526
