@@ -6,7 +6,7 @@ attrs==19.1.0
 jsonpickle==1.1
 redis==3.3.5
 pymongo[tls,srv]==3.8.0
-numpy==1.16.3
+numpy==1.22.0
 scipy==1.2.1
 tensorflow-cpu==1.15.0
 absl-py>=0.8.0
